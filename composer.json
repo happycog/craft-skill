@@ -1,0 +1,25 @@
+{
+    "name": "markhuot/craft-mcp",
+    "type": "craft-plugin",
+    "require": {
+        "php-mcp/server": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "markhuot\\craftmcp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "markhuot",
+            "email": "mark@markhuot.com"
+        }
+    ],
+    "extra": {
+        "name": "MCP",
+        "description": "A MCP server for Craft CMS",
+        "handle": "mcp",
+        "version": "1.0.0",
+        "class": "markhuot\\craftmcp\\Plugin"
+    }
+}
