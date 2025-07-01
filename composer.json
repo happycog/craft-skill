@@ -2,7 +2,7 @@
     "name": "markhuot/craft-mcp",
     "type": "craft-plugin",
     "require": {
-        "php-mcp/server": "^2.3"
+        "php-mcp/server": "^3.2"
     },
     "autoload": {
         "psr-4": {
@@ -21,5 +21,15 @@
         "handle": "mcp",
         "version": "1.0.0",
         "class": "markhuot\\craftmcp\\Plugin"
+    },
+    "require-dev": {
+        "markhuot/craft-pest-core": "^2.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "craftcms/plugin-installer": true,
+            "yiisoft/yii2-composer": true,
+            "pestphp/pest-plugin": true
+        }
     }
 }
