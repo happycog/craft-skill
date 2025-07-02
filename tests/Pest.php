@@ -11,7 +11,7 @@
 |
 */
 
-pest()->extend(markhuot\craftpest\test\TestCase::class)->in('Feature');
+pest()->extend(markhuot\craftpest\test\TestCase::class)->in('./');
 
 /*
 |--------------------------------------------------------------------------
