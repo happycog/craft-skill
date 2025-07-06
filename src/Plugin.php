@@ -10,6 +10,7 @@ use markhuot\craftmcp\tools\GetFields;
 use markhuot\craftmcp\tools\GetSections;
 use markhuot\craftmcp\tools\SearchContent;
 use markhuot\craftmcp\transports\StreamableHttpServerTransport;
+use markhuot\craftmcp\session\CraftSessionHandler;
 use craft\web\UrlManager;
 use craft\events\RegisterUrlRulesEvent;
 use markhuot\craftmcp\tools\UpdateEntry;
@@ -19,7 +20,7 @@ use PhpMcp\Server\Server;
 class Plugin extends BasePlugin
 {
     #[BindToContainer(singleton: true)]
-    protected function registerMcpServer(): Server
+    protected function registerMcpServer($container): Server
     {
         $capabilities = new ServerCapabilities(
             tools: true,
@@ -27,9 +28,12 @@ class Plugin extends BasePlugin
             prompts: false,
         );
 
+        $sessionHandler = $container->get(CraftSessionHandler::class);
+
         return Server::make()
             ->withServerInfo('Craft CMS MCP Server', '1.0.0')
             ->withCapabilities($capabilities)
+            ->withSessionHandler($sessionHandler)
             ->withTool(SearchContent::class)
             ->withTool(GetSections::class)
             ->withTool(GetFields::class)
@@ -42,9 +46,12 @@ class Plugin extends BasePlugin
     protected function registerTransport($container): StreamableHttpServerTransport
     {
         $server = $container->get(Server::class);
-        $transport = new StreamableHttpServerTransport();
+        $sessionHandler = $container->get(CraftSessionHandler::class);
+        $transport = new StreamableHttpServerTransport($sessionHandler);
 
-        $server->listen($transport, false);
+        // Bind the protocol to the transport but don't start listening
+        $protocol = $server->getProtocol();
+        $protocol->bindTransport($transport);
         
         return $transport;
     }

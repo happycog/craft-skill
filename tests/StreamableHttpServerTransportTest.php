@@ -51,14 +51,23 @@ test('handlePost generates session ID when none provided', function () {
     expect($this->transport->getSessions())->toHaveCount(1);
 });
 
-test('handlePost uses provided session ID', function () {
-    $sessionId = 'test-session-123';
+test('handlePost uses provided session ID for non-initialize requests', function () {
+    // First, create a session with initialize
+    $initRequest = new Request();
+    $initRequest->getHeaders()->set('content-type', 'application/json');
+    $initResponse = new Response();
+    $initRequest->setBodyParams(['method' => 'initialize', 'id' => 1]);
+    
+    $this->transport->handlePost($initRequest, $initResponse);
+    $sessionId = $this->transport->getCurrentSessionId();
+    
+    // Now test a non-initialize request with the session ID
     $request = new Request();
     $request->getHeaders()->set('content-type', 'application/json');
     $response = new Response();
     
     $request->setQueryParams(['sessionId' => $sessionId]);
-    $request->setBodyParams(['method' => 'initialize', 'id' => 1]);
+    $request->setBodyParams(['method' => 'tools/list', 'id' => 2]);
 
     $result = $this->transport->handlePost($request, $response);
 
@@ -177,13 +186,11 @@ test('cleanupSessions removes old sessions', function () {
     expect($this->transport->getSessions())->toHaveKey($newSessionId);
 });
 
-test('generateSessionId creates unique IDs', function () {
-    $reflection = new ReflectionClass($this->transport);
-    $method = $reflection->getMethod('generateSessionId');
-    $method->setAccessible(true);
-
-    $id1 = $method->invoke($this->transport);
-    $id2 = $method->invoke($this->transport);
+test('session handler generates unique IDs', function () {
+    $sessionHandler = new \markhuot\craftmcp\session\CraftSessionHandler();
+    
+    $id1 = $sessionHandler->generateSessionId();
+    $id2 = $sessionHandler->generateSessionId();
 
     expect($id1)->toBeString()->toStartWith('craft_mcp_');
     expect($id2)->toBeString()->toStartWith('craft_mcp_');

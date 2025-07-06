@@ -6,6 +6,7 @@ use Craft;
 use craft\web\Request;
 use craft\web\Response;
 use PhpMcp\Server\Contracts\ServerTransportInterface;
+use PhpMcp\Server\Contracts\SessionHandlerInterface;
 use PhpMcp\Schema\JsonRpc\Message;
 use PhpMcp\Schema\JsonRpc\Parser;
 use Evenement\EventEmitterTrait;
@@ -13,14 +14,21 @@ use React\Promise\PromiseInterface;
 use React\Promise\Promise;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
+use markhuot\craftmcp\session\CraftSessionHandler;
 
 class StreamableHttpServerTransport implements ServerTransportInterface
 {
     use EventEmitterTrait;
 
-    protected array $sessions = [];
+    protected SessionHandlerInterface $sessionHandler;
+    protected array $sessions = []; // Keep for SSE message queuing
     protected ?string $currentSessionId = null;
     protected bool $listening = false;
+
+    public function __construct(SessionHandlerInterface $sessionHandler = null)
+    {
+        $this->sessionHandler = $sessionHandler ?? new CraftSessionHandler();
+    }
 
     public function listen(): void
     {
@@ -84,14 +92,7 @@ class StreamableHttpServerTransport implements ServerTransportInterface
             throw new BadRequestHttpException('Content-Type must be application/json');
         }
 
-        $sessionId = $request->getQueryParam('sessionId');
-        if (!$sessionId) {
-            $sessionId = $this->generateSessionId();
-        }
-
-        $this->currentSessionId = $sessionId;
-        $this->initializeSession($sessionId);
-
+        // Check if this is an initialize request
         $rawBody = $request->getRawBody();
         $body = $request->getBodyParams();
         
@@ -104,48 +105,53 @@ class StreamableHttpServerTransport implements ServerTransportInterface
             throw new BadRequestHttpException('Invalid JSON-RPC request');
         }
 
+        $isInitializeRequest = ($body['method'] === 'initialize');
+        $sessionId = null;
+
+        if ($isInitializeRequest) {
+            // For initialize requests, generate a new session ID
+            $sessionId = $this->sessionHandler->generateSessionId();
+            $this->currentSessionId = $sessionId;
+            $this->initializeSession($sessionId, true); // true = emit client_connected
+        } else {
+            // For other requests, session ID is required (check header first, then query param)
+            $sessionId = $request->getHeaders()->get('Mcp-Session-Id') ?? $request->getQueryParam('sessionId');
+            if (!$sessionId) {
+                throw new BadRequestHttpException('Mcp-Session-Id header or sessionId parameter required for non-initialize requests');
+            }
+            $this->currentSessionId = $sessionId;
+            $this->initializeSession($sessionId, false); // false = don't emit client_connected
+        }
+
         try {
             // Parse the JSON-RPC message - Parser expects JSON string
             $jsonString = is_string($rawBody) ? $rawBody : json_encode($body);
             $message = Parser::parse($jsonString);
             
-            // Try to get the server from container and process message directly
-            try {
-                $server = \Craft::$container->get(\PhpMcp\Server\Server::class);
-                $protocol = $server->getProtocol();
+            // Clear any pending response
+            $this->pendingResponse = null;
+            $this->pendingSessionId = null;
+            
+            // Emit the message event to let the protocol handle it
+            $this->emit('message', [$message, $sessionId, ['request' => $request, 'response' => $response]]);
+            
+            // Check if we received a response
+            if ($this->pendingResponse && $this->pendingSessionId === $sessionId) {
+                $response->format = Response::FORMAT_JSON;
+                $response->data = $this->pendingResponse;
                 
-                // Ensure the protocol is bound to this transport
-                $protocol->bindTransport($this);
-                
-                // Clear any pending response
-                $this->pendingResponse = null;
-                $this->pendingSessionId = null;
-                
-                // Process the message directly through the protocol
-                $protocol->processMessage($message, $sessionId, ['request' => $request, 'response' => $response]);
-                
-                // Check if we received a response
-                if ($this->pendingResponse && $this->pendingSessionId === $sessionId) {
-                    $response->format = Response::FORMAT_JSON;
-                    $response->data = $this->pendingResponse;
-                } else {
-                    // Fallback response
-                    $response->format = Response::FORMAT_JSON;
-                    $response->data = ['jsonrpc' => '2.0', 'id' => $body['id'] ?? null, 'result' => null];
+                // For initialize requests, include the session ID in the response headers
+                if ($isInitializeRequest) {
+                    $response->headers->set('Mcp-Session-Id', $sessionId);
                 }
-            } catch (\Exception $serverException) {
-                // Fallback to event emission
-                $this->pendingResponse = null;
-                $this->pendingSessionId = null;
+            } else {
+                // Fallback response
+                $response->format = Response::FORMAT_JSON;
+                $response->data = ['jsonrpc' => '2.0', 'id' => $body['id'] ?? null, 'result' => null];
                 
-                $this->emit('message', [$message, $sessionId, ['request' => $request, 'response' => $response]]);
-                
-                if ($this->pendingResponse && $this->pendingSessionId === $sessionId) {
-                    $response->format = Response::FORMAT_JSON;
-                    $response->data = $this->pendingResponse;
-                } else {
-                    $response->format = Response::FORMAT_JSON;
-                    $response->data = ['jsonrpc' => '2.0', 'id' => $body['id'] ?? null, 'result' => null];
+                // For initialize requests, include the session ID in the response headers
+                if ($isInitializeRequest) {
+                    $response->headers->set('Mcp-Session-Id', $sessionId);
                 }
             }
             
@@ -238,9 +244,16 @@ class StreamableHttpServerTransport implements ServerTransportInterface
     public function handleDelete(Request $request, Response $response): Response
     {
         $sessionId = $request->getQueryParam('sessionId');
-        if ($sessionId && isset($this->sessions[$sessionId])) {
+        if ($sessionId) {
+            // Remove from persistent storage
+            $this->sessionHandler->destroy($sessionId);
+            
+            // Remove from memory
+            if (isset($this->sessions[$sessionId])) {
+                unset($this->sessions[$sessionId]);
+            }
+            
             $this->emit('client_disconnected', [$sessionId, 'Client requested disconnect']);
-            unset($this->sessions[$sessionId]);
         }
 
         $response->format = Response::FORMAT_JSON;
@@ -251,25 +264,49 @@ class StreamableHttpServerTransport implements ServerTransportInterface
     /**
      * Initialize a new session
      */
-    protected function initializeSession(string $sessionId): void
+    protected function initializeSession(string $sessionId, bool $emitClientConnected = false): void
     {
+        // Initialize in-memory session for SSE message queuing if not exists
         if (!isset($this->sessions[$sessionId])) {
             $this->sessions[$sessionId] = [
                 'id' => $sessionId,
                 'created_at' => time(),
                 'messages' => [],
             ];
-            
+        }
+        
+        // Only emit client_connected for initialize requests to create new MCP sessions
+        if ($emitClientConnected) {
             $this->emit('client_connected', [$sessionId]);
         }
     }
 
     /**
-     * Generate a unique session ID
+     * Check if a session exists in persistent storage
      */
-    protected function generateSessionId(): string
+    public function sessionExists(string $sessionId): bool
     {
-        return 'craft_mcp_' . uniqid() . '_' . time();
+        return $this->sessionHandler->read($sessionId) !== false;
+    }
+
+    /**
+     * Get session data from persistent storage
+     */
+    public function getSessionData(string $sessionId): array|false
+    {
+        $data = $this->sessionHandler->read($sessionId);
+        if ($data === false) {
+            return false;
+        }
+        return json_decode($data, true) ?: false;
+    }
+
+    /**
+     * Update session data in persistent storage
+     */
+    public function updateSessionData(string $sessionId, array $data): bool
+    {
+        return $this->sessionHandler->write($sessionId, json_encode($data));
     }
 
     /**
@@ -301,9 +338,21 @@ class StreamableHttpServerTransport implements ServerTransportInterface
      */
     public function cleanupSessions(int $maxAge = 3600): void
     {
+        // Clean up persistent sessions
+        $deletedSessions = $this->sessionHandler->gc($maxAge);
+        
+        // Clean up in-memory sessions
         $now = time();
         foreach ($this->sessions as $sessionId => $session) {
             if (($now - $session['created_at']) > $maxAge) {
+                $this->emit('client_disconnected', [$sessionId, 'Session expired']);
+                unset($this->sessions[$sessionId]);
+            }
+        }
+        
+        // Also clean up any sessions that were deleted from persistent storage
+        foreach ($deletedSessions as $sessionId) {
+            if (isset($this->sessions[$sessionId])) {
                 $this->emit('client_disconnected', [$sessionId, 'Session expired']);
                 unset($this->sessions[$sessionId]);
             }
