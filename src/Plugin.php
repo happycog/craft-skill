@@ -10,6 +10,7 @@ use markhuot\craftmcp\tools\GetFields;
 use markhuot\craftmcp\tools\GetSections;
 use markhuot\craftmcp\tools\SearchContent;
 use markhuot\craftmcp\transports\StreamableHttpServerTransport;
+use markhuot\craftmcp\transports\HttpServerTransport;
 use markhuot\craftmcp\session\CraftSessionHandler;
 use craft\web\UrlManager;
 use craft\events\RegisterUrlRulesEvent;
@@ -43,7 +44,7 @@ class Plugin extends BasePlugin
     }
 
     #[BindToContainer(singleton: true)]
-    protected function registerTransport($container): StreamableHttpServerTransport
+    protected function registerHttpTransport($container): StreamableHttpServerTransport
     {
         $server = $container->get(Server::class);
         $sessionHandler = $container->get(CraftSessionHandler::class);
@@ -56,11 +57,29 @@ class Plugin extends BasePlugin
         return $transport;
     }
 
+    #[BindToContainer(singleton: true)]
+    protected function registerSseTransport($container): HttpServerTransport
+    {
+        $server = $container->get(Server::class);
+        $sessionManager = $server->getSessionManager();
+        $transport = new HttpServerTransport($sessionManager);
+
+        // Listen to the transport
+        $server->listen($transport, false);
+        
+        return $transport;
+    }
+
     #[RegisterListener(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES)]
     protected function registerSiteUrlRules(RegisterUrlRulesEvent $event): void
     {
-        $event->rules['GET mcp'] = 'mcp/mcp/listen';
-        $event->rules['POST mcp'] = 'mcp/mcp/message';
-        $event->rules['DELETE mcp'] = 'mcp/mcp/disconnect';
+        // The older SSE transport routes
+        $event->rules['GET sse'] = 'mcp/sse-transport/sse';
+        $event->rules['POST message'] = 'mcp/sse-transport/message';
+
+        // The newer streamable streaming HTTP transport
+        $event->rules['GET mcp'] = 'mcp/streamable-transport/listen';
+        $event->rules['POST mcp'] = 'mcp/streamable-transport/message';
+        $event->rules['DELETE mcp'] = 'mcp/streamable-transport/disconnect';
     }
 }
