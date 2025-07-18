@@ -6,7 +6,7 @@ use craft\web\Controller;
 use markhuot\craftmcp\transports\StreamableHttpServerTransport;
 use yii\web\Response;
 
-class McpController extends Controller
+class StreamableTransportController extends Controller
 {
     protected array|int|bool $allowAnonymous = self::ALLOW_ANONYMOUS_LIVE;
     public $enableCsrfValidation = false;
