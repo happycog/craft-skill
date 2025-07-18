@@ -22,7 +22,7 @@ class Plugin extends BasePlugin
     #[BindToContainer(singleton: true)]
     protected function registerMcpServer($container): Server
     {
-        $capabilities = new ServerCapabilities(
+        $capabilities = ServerCapabilities::make(
             tools: true,
             resources: false,
             prompts: false,
