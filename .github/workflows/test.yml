@@ -70,9 +70,6 @@ jobs:
           mkdir -p ./config/
           cp -r ./stubs/project/ ./config/project/
 
-      - name: Install Craft
-        run: php craft install --interactive=0 --username=admin --email=michael@bluth.com --password=secret --siteName=Pest --siteUrl=http://localhost:8080 --language=en-US
-
       - name: Run PHPStan
         run: ./vendor/bin/phpstan analyse src
 
