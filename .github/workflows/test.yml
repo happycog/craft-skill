@@ -66,6 +66,7 @@ jobs:
 
       - name: Copy config files
         run: |
+          mkdir -p ./config/
           cp -r ./stubs/project/ ./config/project/
 
       - name: Install Craft
