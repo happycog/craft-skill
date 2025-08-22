@@ -4,14 +4,18 @@ namespace markhuot\craftmcp\tools;
 
 use Craft;
 use craft\fields\Matrix;
+use PhpMcp\Server\Attributes\McpTool;
 
 class GetFields
 {
-    /**
-     * Get a list of all fields in Craft CMS. This is useful for understanding the available fields, their
-     * configurations, and the field handle that must be used when creating or updating entries.
-     */
-    public function __invoke(): array
+    #[McpTool(
+        name: 'get_fields',
+        description: <<<'END'
+        Get a list of all fields in Craft CMS. This is useful for understanding the available fields, their
+        configurations, and the field handle that must be used when creating or updating entries.
+        END
+    )]
+    public function get(): array
     {
         $fields = Craft::$app->getFields()->getAllFields();
         

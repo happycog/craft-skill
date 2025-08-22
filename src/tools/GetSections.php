@@ -3,15 +3,19 @@
 namespace markhuot\craftmcp\tools;
 
 use Craft;
+use PhpMcp\Server\Attributes\McpTool;
 
 class GetSections
 {
-    /**
-     * Get a list of sections and entry types in Craft CMS. This is helpful for creating new entries because
-     * you must pass a section ID and entry type ID when creating a new entry. This can also be helpful to
-     * orient yourself with the structure of the site.
-     */
-    public function __invoke(): array
+    #[McpTool(
+        name: 'get_sections',
+        description: <<<'END'
+        Get a list of sections and entry types in Craft CMS. This is helpful for creating new entries because
+        you must pass a section ID and entry type ID when creating a new entry. This can also be helpful to
+        orient yourself with the structure of the site.
+        END
+    )]
+    public function get(): array
     {
         $sections = Craft::$app->getEntries()->getAllSections();
         

@@ -24,6 +24,8 @@ class Plugin extends BasePlugin
             $this->controllerNamespace = 'markhuot\\craftmcp\\console';
         }
 
+        \Craft::setAlias('@markhuot/craftmcp', $this->getBasePath());
+
         $methods = (new \ReflectionClass($this))->getMethods();
         foreach ($methods as $method) {
             foreach ($method->getAttributes() as $attribute) {
