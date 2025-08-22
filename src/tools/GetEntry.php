@@ -14,7 +14,7 @@ class GetEntry
         Get entry details.
         END
     )]
-    public function create(
+    public function get(
         #[Schema(type: 'number')]
         int $entryId,
     ): array

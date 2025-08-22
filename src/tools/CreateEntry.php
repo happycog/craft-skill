@@ -10,6 +10,9 @@ use PhpMcp\Server\Attributes\Schema;
 
 class CreateEntry
 {
+    /**
+     * @return array{entryId: int, title: string, slug: string, postDate: string, url: string}
+     */
     #[McpTool(
         name: 'create_entry',
         description: <<<'END'
