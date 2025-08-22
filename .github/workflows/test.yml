@@ -61,6 +61,7 @@ jobs:
           key: ${{ runner.os }}-craft-${{ matrix.version.constraint }}-vendor-${{ hashFiles('composer.json') }}
 
       - name: Install dependencies
+        if: steps.composer-cache.outputs.cache-hit != 'true'
         run: |
           composer require "craftcms/cms:~5.8.8" --prefer-dist --no-progress
 
