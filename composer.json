@@ -23,7 +23,8 @@
         "class": "markhuot\\craftmcp\\Plugin"
     },
     "require-dev": {
-        "markhuot/craft-pest-core": "^2.0"
+        "markhuot/craft-pest-core": "^2.0",
+        "phpstan/phpstan": "^2.1"
     },
     "config": {
         "allow-plugins": {
