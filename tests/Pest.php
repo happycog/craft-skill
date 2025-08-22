@@ -11,7 +11,13 @@
 |
 */
 
-pest()->extend(markhuot\craftpest\test\TestCase::class)->in('./');
+use markhuot\craftpest\test\RefreshesDatabase;
+use markhuot\craftpest\test\TestCase;
+
+pest()->extend(
+    TestCase::class,
+    RefreshesDatabase::class,
+)->in('./');
 
 /*
 |--------------------------------------------------------------------------
