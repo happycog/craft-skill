@@ -1,6 +1,6 @@
 <?php
 
-namespace markhuot\craftmcp\transports;
+namespace happycog\craftmcp\transports;
 
 use Craft;
 use craft\web\Request;
@@ -14,7 +14,7 @@ use React\Promise\PromiseInterface;
 use React\Promise\Promise;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
-use markhuot\craftmcp\session\CraftSessionHandler;
+use happycog\craftmcp\session\CraftSessionHandler;
 
 class StreamableHttpServerTransport implements ServerTransportInterface
 {

@@ -1,12 +1,12 @@
 <?php
 
-namespace markhuot\craftmcp\base;
+namespace happycog\craftmcp\base;
 
 use craft\base\Plugin as BasePlugin;
 use craft\console\Request;
-use markhuot\craftmcp\attributes\BindToContainer;
-use markhuot\craftmcp\attributes\Init;
-use markhuot\craftmcp\attributes\RegisterListener;
+use happycog\craftmcp\attributes\BindToContainer;
+use happycog\craftmcp\attributes\Init;
+use happycog\craftmcp\attributes\RegisterListener;
 
 class Plugin extends BasePlugin
 {
@@ -18,13 +18,13 @@ class Plugin extends BasePlugin
 
         self::$plugin = $this;
 
-        $this->controllerNamespace = 'markhuot\\craftmcp\\controllers';
+        $this->controllerNamespace = 'happycog\\craftmcp\\controllers';
 
         if (\Craft::$app->getRequest() instanceof Request) {
-            $this->controllerNamespace = 'markhuot\\craftmcp\\console';
+            $this->controllerNamespace = 'happycog\\craftmcp\\console';
         }
 
-        \Craft::setAlias('@markhuot/craftmcp', $this->getBasePath());
+        \Craft::setAlias('@happycog/craftmcp', $this->getBasePath());
 
         $methods = (new \ReflectionClass($this))->getMethods();
         foreach ($methods as $method) {

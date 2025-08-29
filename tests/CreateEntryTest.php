@@ -1,6 +1,6 @@
 <?php
 
-use markhuot\craftmcp\tools\CreateEntry;
+use happycog\craftmcp\tools\CreateEntry;
 
 beforeEach(function () {
     $this->createEntry = function (array $attributeAndFieldData) {

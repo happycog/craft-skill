@@ -1,10 +1,10 @@
 <?php
 
-namespace markhuot\craftmcp\tools;
+namespace happycog\craftmcp\tools;
 
 use Craft;
 use craft\helpers\ElementHelper;
-use markhuot\craftmcp\actions\UpsertEntry;
+use happycog\craftmcp\actions\UpsertEntry;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
 

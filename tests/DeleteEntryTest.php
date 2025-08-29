@@ -1,6 +1,6 @@
 <?php
 
-use markhuot\craftmcp\tools\DeleteEntry;
+use happycog\craftmcp\tools\DeleteEntry;
 use markhuot\craftpest\factories\Entry;
 
 it('can soft delete an entry (default behavior)', function () {

@@ -1,14 +1,14 @@
 <?php
 
-namespace markhuot\craftmcp;
+namespace happycog\craftmcp;
 
 use Craft;
-use markhuot\craftmcp\attributes\BindToContainer;
-use markhuot\craftmcp\attributes\RegisterListener;
-use markhuot\craftmcp\base\Plugin as BasePlugin;
-use markhuot\craftmcp\transports\StreamableHttpServerTransport;
-use markhuot\craftmcp\transports\HttpServerTransport;
-use markhuot\craftmcp\session\CraftSessionHandler;
+use happycog\craftmcp\attributes\BindToContainer;
+use happycog\craftmcp\attributes\RegisterListener;
+use happycog\craftmcp\base\Plugin as BasePlugin;
+use happycog\craftmcp\transports\StreamableHttpServerTransport;
+use happycog\craftmcp\transports\HttpServerTransport;
+use happycog\craftmcp\session\CraftSessionHandler;
 use craft\web\UrlManager;
 use craft\events\RegisterUrlRulesEvent;
 use PhpMcp\Schema\ServerCapabilities;
@@ -34,7 +34,7 @@ class Plugin extends BasePlugin
             ->build();
 
         $server->discover(
-            basePath: Craft::getAlias('@markhuot/craftmcp'),
+            basePath: Craft::getAlias('@happycog/craftmcp'),
             scanDirs: ['tools'],
             force: Craft::$app->getConfig()->getGeneral()->devMode,
         );

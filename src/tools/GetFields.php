@@ -1,6 +1,6 @@
 <?php
 
-namespace markhuot\craftmcp\tools;
+namespace happycog\craftmcp\tools;
 
 use Craft;
 use craft\fields\Matrix;
