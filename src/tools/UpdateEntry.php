@@ -17,7 +17,10 @@ class UpdateEntry
         name: 'update_entry',
         description: <<<'END'
         Update an entry in Craft.
-        
+
+        - An "Entry" in Craft is a generic term. Entries could hold categories, media, and a variety of other data types.
+        - You should query the sections to get the types of entries that can be updated. Always use the section type and
+        section definition to determine if the user is requesting an "Entry".
         - When updating a new entry pass an integer `$sectionId` and an integer `$entryTypeId`. You can use other tools
         to determine the appropriate IDs to use.
         - Attribute and field data can be passed native attributes like title, slug, postDate, etc. as well as any
@@ -26,7 +29,7 @@ class UpdateEntry
         - The attribute and field data is a JSON object keyed by the field handle. For example, a body field would be
         set by passing {"body":"This is the body content"}. And if you pass multiple fields like a title and body field
         like {"title":"This is the title","body":"This is the body content"}
-        
+
         After updating the entry always link the user back to the entry in the Craft control panel so they can review
         the changes in the context of the Craft UI.
         END
