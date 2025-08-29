@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace markhuot\craftmcp\session;
+namespace happycog\craftmcp\session;
 
 use Craft;
 use craft\helpers\StringHelper;

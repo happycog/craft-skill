@@ -1,6 +1,6 @@
 <?php
 
-use markhuot\craftmcp\tools\GetSections;
+use happycog\craftmcp\tools\GetSections;
 
 it('gets all sections and entry types', function () {
     $response = Craft::$container->get(GetSections::class)->get();

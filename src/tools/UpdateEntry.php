@@ -1,13 +1,13 @@
 <?php
 
-namespace markhuot\craftmcp\tools;
+namespace happycog\craftmcp\tools;
 
 use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
 use craft\models\Section;
-use markhuot\craftmcp\actions\normalizers\SectionIdOrHandleToSectionId;
-use markhuot\craftmcp\actions\UpsertEntry;
+use happycog\craftmcp\actions\normalizers\SectionIdOrHandleToSectionId;
+use happycog\craftmcp\actions\UpsertEntry;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
 

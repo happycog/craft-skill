@@ -1,6 +1,6 @@
 <?php
 
-namespace markhuot\craftmcp\tools;
+namespace happycog\craftmcp\tools;
 
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;

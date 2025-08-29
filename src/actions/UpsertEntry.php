@@ -1,10 +1,10 @@
 <?php
 
-namespace markhuot\craftmcp\actions;
+namespace happycog\craftmcp\actions;
 
 use Craft;
 use craft\elements\Entry;
-use markhuot\craftmcp\actions\normalizers\SectionIdOrHandleToSectionId;
+use happycog\craftmcp\actions\normalizers\SectionIdOrHandleToSectionId;
 
 class UpsertEntry
 {

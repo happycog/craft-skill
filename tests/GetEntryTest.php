@@ -1,6 +1,6 @@
 <?php
 
-use markhuot\craftmcp\tools\GetEntry;
+use happycog\craftmcp\tools\GetEntry;
 use markhuot\craftpest\factories\Entry;
 
 it('gets entry details', function () {

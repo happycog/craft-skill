@@ -1,6 +1,6 @@
 <?php
 
-use markhuot\craftmcp\transports\StreamableHttpServerTransport;
+use happycog\craftmcp\transports\StreamableHttpServerTransport;
 use PhpMcp\Server\Server;
 use PhpMcp\Schema\ServerCapabilities;
 use PhpMcp\Schema\ListToolsCapability;
@@ -187,7 +187,7 @@ test('cleanupSessions removes old sessions', function () {
 });
 
 test('session handler generates unique IDs', function () {
-    $sessionHandler = new \markhuot\craftmcp\session\CraftSessionHandler();
+    $sessionHandler = new \happycog\craftmcp\session\CraftSessionHandler();
     
     $id1 = $sessionHandler->generateSessionId();
     $id2 = $sessionHandler->generateSessionId();

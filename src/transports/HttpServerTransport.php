@@ -1,6 +1,6 @@
 <?php
 
-namespace markhuot\craftmcp\transports;
+namespace happycog\craftmcp\transports;
 
 use Craft;
 use craft\helpers\App;

@@ -1,6 +1,6 @@
 <?php
 
-namespace markhuot\craftmcp\attributes;
+namespace happycog\craftmcp\attributes;
 
 use Attribute;
 use yii\base\Event;

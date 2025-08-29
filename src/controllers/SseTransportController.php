@@ -1,9 +1,9 @@
 <?php
 
-namespace markhuot\craftmcp\controllers;
+namespace happycog\craftmcp\controllers;
 
 use craft\web\Controller;
-use markhuot\craftmcp\transports\HttpServerTransport;
+use happycog\craftmcp\transports\HttpServerTransport;
 use yii\web\Response;
 
 class SseTransportController extends Controller

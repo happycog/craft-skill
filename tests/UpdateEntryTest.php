@@ -1,6 +1,6 @@
 <?php
 
-use markhuot\craftmcp\tools\UpdateEntry;
+use happycog\craftmcp\tools\UpdateEntry;
 use markhuot\craftpest\factories\Entry;
 
 it('can update entry title', function () {

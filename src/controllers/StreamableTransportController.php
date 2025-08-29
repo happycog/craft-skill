@@ -1,9 +1,9 @@
 <?php
 
-namespace markhuot\craftmcp\controllers;
+namespace happycog\craftmcp\controllers;
 
 use craft\web\Controller;
-use markhuot\craftmcp\transports\StreamableHttpServerTransport;
+use happycog\craftmcp\transports\StreamableHttpServerTransport;
 use yii\web\Response;
 
 class StreamableTransportController extends Controller

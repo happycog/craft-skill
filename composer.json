@@ -1,5 +1,5 @@
 {
-    "name": "markhuot/craft-mcp",
+    "name": "happycog/craft-mcp",
     "description": "A MCP server for Craft CMS",
     "license": "proprietary",
     "type": "craft-plugin",
@@ -8,7 +8,7 @@
     },
     "autoload": {
         "psr-4": {
-            "markhuot\\craftmcp\\": "src/"
+            "happycog\\craftmcp\\": "src/"
         }
     },
     "authors": [
@@ -22,7 +22,7 @@
         "description": "A MCP server for Craft CMS",
         "handle": "mcp",
         "version": "1.0.0",
-        "class": "markhuot\\craftmcp\\Plugin"
+        "class": "happycog\\craftmcp\\Plugin"
     },
     "require-dev": {
         "markhuot/craft-pest-core": "^2.0",
