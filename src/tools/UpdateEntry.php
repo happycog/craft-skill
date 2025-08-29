@@ -51,6 +51,7 @@ class UpdateEntry
         $url = ElementHelper::elementEditorUrl($entry);
 
         return [
+            '_notes' => 'The entry was successfully updated.',
             'entryId' => $entry->id,
             'title' => $entry->title,
             'slug' => $entry->slug,
