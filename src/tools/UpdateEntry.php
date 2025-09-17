@@ -29,6 +29,9 @@ class UpdateEntry
         - The attribute and field data is a JSON object keyed by the field handle. For example, a body field would be
         set by passing {"body":"This is the body content"}. And if you pass multiple fields like a title and body field
         like {"title":"This is the title","body":"This is the body content"}
+        - You should prefer creating a Draft instead of updating an entry in place. You can do this with the CreateDraft
+        tool and its corresponding UpdateDraft tool. This way the user can reciew their changes in thr Craft UI before
+        accepting them.
 
         After updating the entry always link the user back to the entry in the Craft control panel so they can review
         the changes in the context of the Craft UI.
