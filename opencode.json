@@ -3,7 +3,7 @@
   "mcp": {
     "craft": {
       "type": "remote",
-      "url": "https://craft-mcp.test/mcp",
+      "url": "http://craft-mcp.dev.markhuot.com/mcp",
       "enabled": true
     }
   }
