@@ -12,6 +12,7 @@ class UpsertEntry
         ?int $entryId=null,
         ?int $sectionId=null,
         ?int $entryTypeId=null,
+        ?int $siteId=null,
         array $attributeAndFieldData = [],
     ): Entry {
         if ($entryId) {
@@ -21,6 +22,11 @@ class UpsertEntry
             $entry = new Entry();
             $entry->sectionId = $sectionId;
             $entry->typeId = $entryTypeId;
+            
+            // Set siteId for new entries only (don't change existing entry's site)
+            if ($siteId) {
+                $entry->siteId = $siteId;
+            }
         }
 
         $customFields = collect($entry->getFieldLayout()->getCustomFields())

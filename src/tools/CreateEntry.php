@@ -29,6 +29,8 @@ class CreateEntry
         - The attribute and field data is a JSON object keyed by the field handle. For example, a body field would be
         set by passing {"body":"This is the body content"}. And if you pass multiple fields like a title and body field
         like {"title":"This is the title","body":"This is the body content"}
+        - siteId: Optional site ID for multi-site installations. Defaults to primary site if not provided.
+        Use the GetSites tool to discover valid siteId values.
 
         After creating the entry always link the user back to the entry in the Craft control panel so they can review
         the changes in the context of the Craft UI.
@@ -40,15 +42,30 @@ class CreateEntry
         #[Schema(type: 'number')]
         int $entryTypeId,
 
+        #[Schema(type: 'number', description: 'Site ID, defaults to primary site')]
+        ?int $siteId = null,
+
         #[Schema(type: 'object', description: 'The attribute and field data keyed by the handle. For example, to set the body to "foo" you would pass {"body":"foo"}. This field is idempotent so setting a field here will replace all field contents with the provided field contents.')]
         array $attributeAndFieldData = [],
     ): array
     {
+        // Set default site if not provided
+        if (!$siteId) {
+            $siteId = Craft::$app->getSites()->getPrimarySite()->id;
+        }
+
+        // Validate site exists
+        $site = Craft::$app->getSites()->getSiteById($siteId);
+        if (!$site) {
+            throw new \InvalidArgumentException("Site with ID {$siteId} does not exist.");
+        }
+
         $upsertEntry = Craft::$container->get(UpsertEntry::class);
 
         $entry = $upsertEntry(
             sectionId: $sectionId,
             entryTypeId: $entryTypeId,
+            siteId: $siteId,
             attributeAndFieldData: $attributeAndFieldData,
         );
 
