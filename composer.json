@@ -25,7 +25,7 @@
         "class": "happycog\\craftmcp\\Plugin"
     },
     "require-dev": {
-        "markhuot/craft-pest-core": "^2.0",
+        "markhuot/craft-pest-core": "dev-phpunit-db-overrides",
         "phpstan/phpstan": "^2.1"
     },
     "config": {
