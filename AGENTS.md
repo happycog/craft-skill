@@ -115,6 +115,13 @@ curl -X POST http://craft-mcp.dev.markhuot.com/mcp \
 ### 1. Creating New MCP Tools
 Create tool classes in `src/tools/`. Tools must implement MCP tool interface:
 
+**IMPORTANT**: All tools that create, update, or modify content MUST include an explicit instruction in their description to link the user back to the Craft control panel for review. Follow the CreateEntry pattern:
+
+```
+After [action] always link the user back to the entry in the Craft control panel so they can review
+the changes in the context of the Craft UI.
+```
+
 ```php
 // src/tools/ExampleTool.php
 namespace happycog\craftmcp\tools;
@@ -235,6 +242,12 @@ test('endpoint returns valid response', function () {
 - [ ] Asset management tools
 
 ## Important Notes for Future Agents
+
+### MCP Tool Development Guidelines
+- **Control Panel Links**: All tools that create, update, or modify Craft content MUST include explicit instructions in their descriptions to link users back to the control panel for review
+- **Pattern**: "After [action] always link the user back to the entry in the Craft control panel so they can review the changes in the context of the Craft UI."
+- **Implementation**: Use `ElementHelper::elementEditorUrl($entry)` to generate control panel URLs consistently across all tools
+- **Examples**: See CreateEntry.php, UpdateEntry.php, and ApplyDraft.php for proper implementation patterns
 
 ### MCP Protocol Implementation
 - This plugin implements the Model Context Protocol (MCP) specification
