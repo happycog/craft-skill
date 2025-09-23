@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @template T
+ * @param T $value
+ * @param string $message
+ * @return T
+ * @phpstan-assert !null $value
+ * @phpstan-assert-if-true !null $value
+ */
+function throw_unless($value, $message) {
+    if (!$value) {
+        throw new \RuntimeException($message);
+    }
+    return $value;
+}
+
+/**
+ * @param bool $condition
+ * @param string $message
+ * @return void
+ * @phpstan-assert-if-false true $condition
+ */
+function throw_if($condition, $message) {
+    if ($condition) {
+        throw new \RuntimeException($message);
+    }
+}

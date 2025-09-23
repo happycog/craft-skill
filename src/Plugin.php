@@ -13,11 +13,12 @@ use craft\web\UrlManager;
 use craft\events\RegisterUrlRulesEvent;
 use PhpMcp\Schema\ServerCapabilities;
 use PhpMcp\Server\Server;
+use Psr\Container\ContainerInterface;
 
 class Plugin extends BasePlugin
 {
     #[BindToContainer(singleton: true)]
-    protected function registerMcpServer($container): Server
+    protected function registerMcpServer(ContainerInterface $container): Server
     {
         $capabilities = ServerCapabilities::make(
             tools: true,
@@ -33,8 +34,11 @@ class Plugin extends BasePlugin
             ->withSessionHandler($sessionHandler)
             ->build();
 
+        $basePath = Craft::getAlias('@happycog/craftmcp');
+        throw_unless($basePath !== false, \RuntimeException::class, 'Unable to resolve plugin alias path');
+
         $server->discover(
-            basePath: Craft::getAlias('@happycog/craftmcp'),
+            basePath: $basePath,
             scanDirs: ['tools'],
             force: Craft::$app->getConfig()->getGeneral()->devMode,
         );
@@ -43,7 +47,7 @@ class Plugin extends BasePlugin
     }
 
     #[BindToContainer(singleton: true)]
-    protected function registerHttpTransport($container): StreamableHttpServerTransport
+    protected function registerHttpTransport(ContainerInterface $container): StreamableHttpServerTransport
     {
         $server = $container->get(Server::class);
         $sessionHandler = $container->get(CraftSessionHandler::class);
@@ -57,7 +61,7 @@ class Plugin extends BasePlugin
     }
 
     #[BindToContainer(singleton: true)]
-    protected function registerSseTransport($container): HttpServerTransport
+    protected function registerSseTransport(ContainerInterface $container): HttpServerTransport
     {
         $server = $container->get(Server::class);
         $sessionManager = $server->getSessionManager();

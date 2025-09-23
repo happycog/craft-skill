@@ -51,6 +51,7 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 ├── tests/                           # Pest test suite
 ├── stubs/project/                   # Craft project configuration
 ├── specs/                           # Implementation specifications
+├── .phpstorm.meta.php/              # IDE and static analysis type hints
 ├── composer.json                    # PHP dependencies
 └── phpunit.xml                      # Test configuration
 ```
@@ -78,6 +79,11 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 - Pest configuration with Craft-specific test case
 - RefreshesDatabase trait for clean test isolation
 - Custom expectations and helper functions
+
+### 5. `.phpstorm.meta.php/`
+- PhpStorm metadata for improved IDE type hints and autocomplete
+- PHPStan stub files for proper static analysis type resolution
+- Container generics ensure `$container->get(ClassName::class)` returns correct types
 
 ## Development Commands
 
@@ -307,6 +313,30 @@ test('endpoint returns valid response', function () {
 - Tools should return proper CallToolResult with error content on failures
 - HTTP transport handles JSON-RPC error responses automatically
 - Session errors are logged and cleaned up gracefully
+
+### Helper Functions
+- **Laravel-style Helpers**: The project includes `throw_if()` and `throw_unless()` helpers from Laravel for cleaner conditional error handling
+- **Location**: `src/helpers/functions.php` (autoloaded via composer.json)
+- **Usage Patterns**:
+  ```php
+  // PREFERRED: Simple error message (helpers auto-instantiate RuntimeException)
+  throw_unless($entry, "Entry with ID {$entryId} not found");
+  throw_if($sectionId === null, 'sectionId is required for new entries');
+  
+  // ALTERNATIVE: Explicit exception class for non-RuntimeException cases
+  throw_unless($user, \InvalidArgumentException::class, 'User cannot be null');
+  
+  // ANTI-PATTERN: Verbose if/throw patterns (avoid these)
+  if (!$entry) {
+      throw new \RuntimeException("Entry with ID {$entryId} not found");
+  }
+  ```
+- **Best Practices**:
+  - Use `throw_unless($value, 'message')` instead of `throw_if($value === null, 'message')`
+  - Omit exception class for RuntimeException (default behavior)
+  - Only specify exception class when throwing non-RuntimeException types
+- **Benefits**: More expressive code, reduced boilerplate, better readability
+- **Type Safety**: Includes full PHPStan template annotations for proper static analysis
 
 ### Performance Considerations
 - Tool discovery is cached in production mode (devMode=false)

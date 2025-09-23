@@ -1,0 +1,90 @@
+<?php
+
+namespace craft\services {
+
+    use craft\elements\db\ElementQuery;
+    use craft\base\ElementInterface;
+
+    class Elements
+    {
+        /**
+         * @template T of ElementInterface
+         * @param int $id
+         * @param class-string<T>|null $elementType
+         * @param int|null $siteId
+         * @param array|null $criteria
+         * @return T|null
+         */
+        public function getElementById($id, $elementType = null, $siteId = null, $criteria = null);
+
+        /**
+         * @param ElementInterface $element
+         * @return bool
+         */
+        public function saveElement($element, $runValidation = true, $propagate = true, $updateTimestamps = null, $resaveCanonical = false);
+    }
+}
+
+namespace craft\elements {
+
+    use craft\base\Element;
+    use craft\models\FieldLayout;
+
+    class Entry extends Element
+    {
+        /** @var int */
+        public $typeId;
+
+        /** @var int */
+        public $sectionId;
+
+        /** @var int */
+        public $siteId;
+
+        /**
+         * @return FieldLayout|null
+         */
+        public function getFieldLayout();
+
+        /**
+         * @param string $handle
+         * @param mixed $value
+         * @return void
+         */
+        public function setFieldValue($handle, $value);
+
+        /**
+         * @param bool $includeAttributeNames
+         * @return string[]
+         */
+        public function getErrorSummary($includeAttributeNames = false);
+    }
+}
+
+namespace craft\models {
+
+    class FieldLayout
+    {
+        /**
+         * @return \craft\base\FieldInterface[]
+         */
+        public function getCustomFields();
+    }
+}
+
+namespace {
+
+    class Craft
+    {
+        /** @var \craft\web\Application */
+        public static $app;
+    }
+}
+
+namespace craft\web {
+
+    class Application
+    {
+        public function getElements(): \craft\services\Elements;
+    }
+}

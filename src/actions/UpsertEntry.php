@@ -8,6 +8,9 @@ use happycog\craftmcp\actions\normalizers\SectionIdOrHandleToSectionId;
 
 class UpsertEntry
 {
+    /**
+     * @param array<string, mixed> $attributeAndFieldData
+     */
     public function __invoke(
         ?int $entryId=null,
         ?int $sectionId=null,
@@ -16,10 +19,13 @@ class UpsertEntry
         array $attributeAndFieldData = [],
     ): Entry {
         if ($entryId) {
-            $entry = Craft::$app->getElements()->getElementById($entryId);
+            $entry = Craft::$app->getElements()->getElementById($entryId, Entry::class);
+            throw_unless($entry, "Entry with ID {$entryId} not found");
         }
         else {
             $entry = new Entry();
+            throw_unless($sectionId, 'sectionId is required for new entries');
+            throw_unless($entryTypeId, 'entryTypeId is required for new entries');
             $entry->sectionId = $sectionId;
             $entry->typeId = $entryTypeId;
             
@@ -29,7 +35,10 @@ class UpsertEntry
             }
         }
 
-        $customFields = collect($entry->getFieldLayout()->getCustomFields())
+        $fieldLayout = $entry->getFieldLayout();
+        throw_unless($fieldLayout, 'Entry field layout not found');
+        
+        $customFields = collect($fieldLayout->getCustomFields())
             ->keyBy('handle')
             ->toArray();
 
@@ -39,9 +48,7 @@ class UpsertEntry
                 : $entry->$key = $value;
         }
 
-        if (! Craft::$app->getElements()->saveElement($entry)) {
-            throw new \RuntimeException(implode(' ', $entry->getErrorSummary(true)));
-        }
+        throw_unless(Craft::$app->getElements()->saveElement($entry), implode(' ', $entry->getErrorSummary(true)));
 
         return $entry;
     }

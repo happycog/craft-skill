@@ -1,0 +1,39 @@
+<?php
+
+namespace yii\di {
+    
+    class Container
+    {
+        /**
+         * @template T
+         * @param class-string<T> $id
+         * @return T
+         */
+        public function get($id);
+
+        /**
+         * @param string $id
+         * @return bool
+         */
+        public function has($id);
+    }
+}
+
+namespace Psr\Container {
+
+    interface ContainerInterface
+    {
+        /**
+         * @template T
+         * @param class-string<T> $id
+         * @return T
+         */
+        public function get($id);
+
+        /**
+         * @param string $id
+         * @return bool
+         */
+        public function has($id);
+    }
+}

@@ -9,7 +9,10 @@
     "autoload": {
         "psr-4": {
             "happycog\\craftmcp\\": "src/"
-        }
+        },
+        "files": [
+            "src/helpers/functions.php"
+        ]
     },
     "authors": [
         {
@@ -26,7 +29,14 @@
     },
     "require-dev": {
         "markhuot/craft-pest-core": "dev-phpunit-db-overrides",
-        "phpstan/phpstan": "^2.1"
+    "phpstan/phpstan": "*",
+        "craftcms/phpstan": "dev-main"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "phpstan": "phpstan --memory-limit=1G",
+        "phpstan-baseline": "phpstan --generate-baseline --memory-limit=1G"
     },
     "config": {
         "allow-plugins": {
