@@ -12,25 +12,18 @@ class DeleteField
     #[McpTool(
         name: 'delete_field',
         description: <<<'END'
-        Delete a field from Craft CMS. This tool supports both soft deletion (default) and permanent
-        deletion of fields.
+        Delete a field from Craft CMS. Field deletion is permanent and cannot be undone.
         
         **WARNING**: Deleting a field will remove all content stored in that field across all entries.
-        This action cannot be undone if permanent deletion is used.
+        This action is permanent and cannot be undone.
         
-        By default, this performs a soft delete where the field is removed but can potentially be
-        restored. Set permanentlyDelete to true for permanent removal.
-        
-        The tool will also show which layouts and sections are using the field before deletion
+        The tool will show which layouts and sections are using the field before deletion
         to help you understand the impact.
         END
     )]
     public function delete(
         #[Schema(type: 'number', description: 'The ID of the field to delete')]
-        int $fieldId,
-        
-        #[Schema(type: 'boolean', description: 'Set to true to permanently delete the field. Default is false (soft delete).')]
-        bool $permanentlyDelete = false
+        int $fieldId
     ): array
     {
         $fieldsService = Craft::$app->getFields();
@@ -87,10 +80,8 @@ class DeleteField
             throw new \Exception("Failed to delete field: " . $e->getMessage());
         }
         
-        // Generate appropriate warning message
-        $warningMessage = $permanentlyDelete 
-            ? "Field '{$fieldInfo['name']}' has been permanently deleted and cannot be restored."
-            : "Field '{$fieldInfo['name']}' has been deleted.";
+        // Generate warning message
+        $warningMessage = "Field '{$fieldInfo['name']}' has been permanently deleted and cannot be restored.";
             
         if ($fieldInfo['usageCount'] > 0) {
             $warningMessage .= " This field was used in {$fieldInfo['usageCount']} layout(s) and all associated content has been removed.";
@@ -99,7 +90,6 @@ class DeleteField
         return [
             '_notes' => $warningMessage,
             'deletedField' => $fieldInfo,
-            'permanentlyDeleted' => $permanentlyDelete,
             'affectedLayouts' => $fieldInfo['usageCount'],
             'success' => true,
         ];

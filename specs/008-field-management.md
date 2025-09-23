@@ -32,8 +32,7 @@ Create MCP tools that enable complete field lifecycle management in Craft CMS, a
 
 ### 4. Delete Field Tool (`DeleteField`)
 - Remove fields from Craft with proper cleanup
-- Support both soft delete (archive) and permanent deletion
-- Warn about content loss implications
+- Warn about permanent content loss implications
 
 ## Technical Implementation Notes
 
@@ -191,9 +190,9 @@ $field->settings;          // Field type-specific settings array
    - Returns control panel URL and change summary
 
 4. **DeleteField** (`src/tools/DeleteField.php`)
-   - Supports both soft delete (default) and permanent deletion
+   - Permanently deletes fields from Craft with proper cleanup
    - Shows field usage information before deletion to assess impact
-   - Provides appropriate warnings about content loss
+   - Provides appropriate warnings about permanent content loss
    - Returns comprehensive information about the deleted field
    - Uses `Craft::$app->getFields()->findFieldUsages()` to identify affected layouts
 
