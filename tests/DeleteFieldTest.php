@@ -6,7 +6,7 @@ use happycog\craftmcp\tools\DeleteField;
 beforeEach(function () {
     // Clean up any existing test fields before each test
     $fieldsService = Craft::$app->getFields();
-    $testHandles = ['testField', 'deletionTest', 'warningTest', 'permanentWarningTest'];
+    $testHandles = ['testField', 'deletionTest', 'warningTest'];
     
     foreach ($testHandles as $handle) {
         $field = $fieldsService->getFieldByHandle($handle);
@@ -39,12 +39,11 @@ beforeEach(function () {
     };
     
     // Helper to delete a field
-    $this->deleteField = function (int $fieldId, bool $permanentlyDelete = false) {
+    $this->deleteField = function (int $fieldId) {
         $deleteField = Craft::$container->get(DeleteField::class);
         
         return $deleteField->delete(
-            fieldId: $fieldId,
-            permanentlyDelete: $permanentlyDelete
+            fieldId: $fieldId
         );
     };
 });
@@ -61,12 +60,11 @@ afterEach(function () {
     }
 });
 
-it('can delete a field (soft delete by default)', function () {
+it('can delete a field', function () {
     $created = ($this->createTestField)();
     $result = ($this->deleteField)($created['fieldId']);
     
     expect($result['success'])->toBeTrue();
-    expect($result['permanentlyDeleted'])->toBeFalse();
     expect($result['deletedField']['id'])->toBe($created['fieldId']);
     expect($result['deletedField']['name'])->toBe($created['name']);
     expect($result['deletedField']['handle'])->toBe($created['handle']);
@@ -76,18 +74,6 @@ it('can delete a field (soft delete by default)', function () {
     expect($field)->toBeNull();
 });
 
-it('can permanently delete a field', function () {
-    $created = ($this->createTestField)();
-    $result = ($this->deleteField)($created['fieldId'], true);
-    
-    expect($result['success'])->toBeTrue();
-    expect($result['permanentlyDeleted'])->toBeTrue();
-    expect($result['_notes'])->toContain('permanently deleted');
-    
-    // Verify field is deleted
-    $field = Craft::$app->getFields()->getFieldById($created['fieldId']);
-    expect($field)->toBeNull();
-});
 
 it('returns field information before deletion', function () {
     $created = ($this->createTestField)('Test Field for Deletion', [
@@ -120,16 +106,9 @@ it('throws exception for non-existent field', function () {
 it('includes appropriate warning messages', function () {
     $created = ($this->createTestField)('Warning Test Field', ['handle' => 'warningTest']);
     
-    // Test soft delete message
-    $result = ($this->deleteField)($created['fieldId'], false);
-    expect($result['_notes'])->toContain('has been deleted');
-    expect($result['_notes'])->not->toContain('permanently deleted');
-    
-    // Test permanent delete message
-    $created2 = ($this->createTestField)('Permanent Warning Test Field', ['handle' => 'permanentWarningTest']);
-    $result2 = ($this->deleteField)($created2['fieldId'], true);
-    expect($result2['_notes'])->toContain('permanently deleted');
-    expect($result2['_notes'])->toContain('cannot be restored');
+    $result = ($this->deleteField)($created['fieldId']);
+    expect($result['_notes'])->toContain('permanently deleted');
+    expect($result['_notes'])->toContain('cannot be restored');
 });
 
 it('warns about content loss when field has usages', function () {
@@ -147,7 +126,7 @@ it('warns about content loss when field has usages', function () {
     } else {
         // Even with no usages, assert that the deletion was successful
         expect($result['success'])->toBeTrue();
-        expect($result['_notes'])->toContain('has been deleted');
+        expect($result['_notes'])->toContain('permanently deleted');
     }
 });
 
