@@ -37,7 +37,7 @@ class DeleteEntry
     {
         $entry = Craft::$app->getElements()->getElementById($entryId, Entry::class);
         
-        throw_unless($entry, "Entry with ID {$entryId} not found");
+        throw_unless($entry, \InvalidArgumentException::class, "Entry with ID {$entryId} not found");
 
         $section = $entry->getSection();
         $entryInfo = [
