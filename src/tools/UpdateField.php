@@ -9,6 +9,10 @@ use PhpMcp\Server\Attributes\Schema;
 
 class UpdateField
 {
+    /**
+     * @param array<string, mixed>|null $settings
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'update_field',
         description: <<<'END'

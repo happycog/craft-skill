@@ -13,6 +13,10 @@ use PhpMcp\Server\Attributes\Schema;
 
 class UpdateEntry
 {
+    /**
+     * @param array<string, mixed> $attributeAndFieldData
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'update_entry',
         description: <<<'END'

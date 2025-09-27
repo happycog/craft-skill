@@ -9,6 +9,10 @@ use PhpMcp\Server\Attributes\Schema;
 
 class CreateField
 {
+    /**
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'create_field',
         description: <<<'END'

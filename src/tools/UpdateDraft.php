@@ -10,6 +10,10 @@ use PhpMcp\Server\Attributes\Schema;
 
 class UpdateDraft
 {
+    /**
+     * @param array<string, mixed> $attributeAndFieldData
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'update_draft',
         description: <<<'END'
@@ -47,10 +51,10 @@ class UpdateDraft
     {
         // Find the draft by ID
         $draft = Entry::find()->id($draftId)->drafts()->one();
-        if (!$draft) {
+        if (!$draft instanceof Entry) {
             // Check if the ID exists as a published entry
             $published = Entry::find()->id($draftId)->one();
-            if ($published) {
+            if ($published instanceof Entry) {
                 throw new \InvalidArgumentException("Entry with ID {$draftId} is not a draft. Use update_entry for published entries.");
             }
             throw new \InvalidArgumentException("Entry with ID {$draftId} does not exist.");
@@ -72,9 +76,7 @@ class UpdateDraft
         
         // Update field and attribute data using PATCH semantics
         if (!empty($attributeAndFieldData)) {
-            $customFields = collect($draft->getFieldLayout()->getCustomFields())
-                ->keyBy('handle')
-                ->toArray();
+            $customFields = collect($draft->getFieldLayout()?->getCustomFields() ?? [])->keyBy('handle')->toArray();
 
             foreach ($attributeAndFieldData as $key => $value) {
                 if (isset($customFields[$key])) {

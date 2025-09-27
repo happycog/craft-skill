@@ -371,6 +371,19 @@ test('endpoint returns valid response', function () {
 - **Benefits**: More expressive code, reduced boilerplate, better readability
 - **Type Safety**: Includes full PHPStan template annotations for proper static analysis
 
+### PHP Operator Preferences
+- **Null Coalescing Assignment (`??=`)**: Prefer the concise null coalescing assignment operator for setting default values:
+  ```php
+  // PREFERRED: Concise null coalescing assignment
+  $siteId ??= Craft::$app->getSites()->getPrimarySite()->id;
+  
+  // ANTI-PATTERN: Verbose null check (avoid these)
+  if ($siteId === null) {
+      $siteId = Craft::$app->getSites()->getPrimarySite()->id;
+  }
+  ```
+- **Benefits**: More readable code, fewer lines, clearer intent
+
 ### Type Safety and PHPStan Patterns
 - **PHPStan Level**: Project runs at `level: max` (strictest analysis) with official Craft CMS integration
 - **Array Return Types**: All methods returning arrays must have PHPDoc annotations:

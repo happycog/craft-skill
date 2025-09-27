@@ -7,6 +7,9 @@ use PhpMcp\Server\Attributes\McpTool;
 
 class GetSites
 {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     #[McpTool(
         name: 'get_sites',
         description: <<<'END'

@@ -8,6 +8,9 @@ use PhpMcp\Server\Attributes\McpTool;
 
 class GetFields
 {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     #[McpTool(
         name: 'get_fields',
         description: <<<'END'
@@ -35,6 +38,10 @@ class GetFields
         return $result;
     }
 
+    /**
+     * @param mixed $field
+     * @return array<string, mixed>
+     */
     private function formatField($field): array
     {
         $fieldData = [
