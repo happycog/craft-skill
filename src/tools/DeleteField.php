@@ -9,6 +9,9 @@ use PhpMcp\Server\Attributes\Schema;
 
 class DeleteField
 {
+    /**
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'delete_field',
         description: <<<'END'
@@ -42,7 +45,7 @@ class DeleteField
             $usageInfo[] = [
                 'context' => $usage['context'] ?? 'unknown',
                 'layout' => $usage['layout'] ?? null,
-                'type' => get_class($usage['layout'] ?? null) ?: 'unknown',
+                'type' => isset($usage['layout']) && is_object($usage['layout']) ? get_class($usage['layout']) : 'unknown',
             ];
         }
         

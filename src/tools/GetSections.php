@@ -7,6 +7,9 @@ use PhpMcp\Server\Attributes\McpTool;
 
 class GetSections
 {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     #[McpTool(
         name: 'get_sections',
         description: <<<'END'

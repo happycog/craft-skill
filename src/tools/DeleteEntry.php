@@ -11,6 +11,9 @@ use PhpMcp\Server\Attributes\Schema;
 
 class DeleteEntry
 {
+    /**
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'delete_entry',
         description: <<<'END'
@@ -34,9 +37,7 @@ class DeleteEntry
     {
         $entry = Craft::$app->getElements()->getElementById($entryId, Entry::class);
         
-        if (!$entry) {
-            throw new \InvalidArgumentException("Entry with ID {$entryId} not found.");
-        }
+        throw_unless($entry, "Entry with ID {$entryId} not found");
 
         $section = $entry->getSection();
         $entryInfo = [
@@ -45,12 +46,12 @@ class DeleteEntry
             'title' => $entry->title,
             'slug' => $entry->slug,
             'sectionId' => $entry->sectionId,
-            'sectionName' => $entry->getSection()->name,
+            'sectionName' => $section?->name,
             'postDate' => $entry->postDate?->format('c'),
             'deletedPermanently' => $permanentlyDelete,
         ];
 
-        if (! $permanentlyDelete) {
+        if (!$permanentlyDelete && $section !== null) {
             $entryInfo['restoreUrl'] = UrlHelper::cpUrl('entries/'.$section->handle, ['source' => 'section:'.$section->uid, 'status' => 'trashed']);
         }
 

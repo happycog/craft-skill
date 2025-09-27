@@ -50,6 +50,9 @@ namespace craft\elements {
     use craft\models\FieldLayout;
     use DateTime;
 
+    /**
+     * @mixin \craft\behaviors\DraftBehavior
+     */
     class Entry extends Element
     {
         /** @var int */

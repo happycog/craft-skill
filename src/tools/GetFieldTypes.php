@@ -7,6 +7,9 @@ use PhpMcp\Server\Attributes\McpTool;
 
 class GetFieldTypes
 {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     #[McpTool(
         name: 'get_field_types',
         description: <<<'END'

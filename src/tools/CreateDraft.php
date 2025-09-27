@@ -10,6 +10,10 @@ use PhpMcp\Server\Attributes\Schema;
 
 class CreateDraft
 {
+    /**
+     * @param array<string, mixed> $attributeAndFieldData
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'create_draft',
         description: <<<'END'
@@ -71,7 +75,7 @@ class CreateDraft
         }
 
         // Set default site if not provided
-        if (!$siteId) {
+        if ($siteId === null) {
             $siteId = Craft::$app->getSites()->getPrimarySite()->id;
         }
 
@@ -84,7 +88,7 @@ class CreateDraft
         if ($canonicalId) {
             // Create draft from existing entry
             $canonicalEntry = Entry::find()->id($canonicalId)->one();
-            if (!$canonicalEntry) {
+            if (!$canonicalEntry instanceof Entry) {
                 throw new \InvalidArgumentException("Entry with ID {$canonicalId} does not exist.");
             }
 

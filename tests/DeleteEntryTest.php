@@ -88,7 +88,7 @@ it('throws exception when entry not found', function () {
         Craft::$container->get(DeleteEntry::class)->delete(
             entryId: 99999, // Non-existent ID
         );
-    })->toThrow(\InvalidArgumentException::class, 'Entry with ID 99999 not found.');
+    })->toThrow(\RuntimeException::class, 'Entry with ID 99999 not found');
 });
 
 it('can delete entries from different sections', function () {

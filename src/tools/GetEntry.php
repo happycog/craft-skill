@@ -8,6 +8,9 @@ use PhpMcp\Server\Attributes\Schema;
 
 class GetEntry
 {
+    /**
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'get_entry',
         description: <<<'END'
