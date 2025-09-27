@@ -75,9 +75,7 @@ class CreateDraft
         }
 
         // Set default site if not provided
-        if ($siteId === null) {
-            $siteId = Craft::$app->getSites()->getPrimarySite()->id;
-        }
+        $siteId ??= Craft::$app->getSites()->getPrimarySite()->id;
 
         // Validate site exists
         $site = Craft::$app->getSites()->getSiteById($siteId);
