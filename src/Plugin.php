@@ -14,11 +14,12 @@ use craft\events\RegisterUrlRulesEvent;
 use PhpMcp\Schema\ServerCapabilities;
 use PhpMcp\Server\Server;
 use Psr\Container\ContainerInterface;
+use yii\di\Container;
 
 class Plugin extends BasePlugin
 {
     #[BindToContainer(singleton: true)]
-    protected function registerMcpServer(ContainerInterface $container): Server
+    protected function registerMcpServer(Container $container): Server
     {
         $capabilities = ServerCapabilities::make(
             tools: true,
@@ -35,7 +36,7 @@ class Plugin extends BasePlugin
             ->build();
 
         $basePath = Craft::getAlias('@happycog/craftmcp');
-        throw_unless($basePath !== false, \RuntimeException::class, 'Unable to resolve plugin alias path');
+        throw_unless($basePath !== false, 'Unable to resolve plugin alias path');
 
         $server->discover(
             basePath: $basePath,
@@ -47,7 +48,7 @@ class Plugin extends BasePlugin
     }
 
     #[BindToContainer(singleton: true)]
-    protected function registerHttpTransport(ContainerInterface $container): StreamableHttpServerTransport
+    protected function registerHttpTransport(Container $container): StreamableHttpServerTransport
     {
         $server = $container->get(Server::class);
         $sessionHandler = $container->get(CraftSessionHandler::class);
@@ -61,7 +62,7 @@ class Plugin extends BasePlugin
     }
 
     #[BindToContainer(singleton: true)]
-    protected function registerSseTransport(ContainerInterface $container): HttpServerTransport
+    protected function registerSseTransport(Container $container): HttpServerTransport
     {
         $server = $container->get(Server::class);
         $sessionManager = $server->getSessionManager();
