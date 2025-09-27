@@ -10,6 +10,9 @@ use PhpMcp\Server\Attributes\Schema;
 
 class ApplyDraft
 {
+    /**
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'apply_draft',
         description: <<<'END'
@@ -43,10 +46,10 @@ class ApplyDraft
     {
         // Find the draft by ID
         $draft = Entry::find()->id($draftId)->drafts()->one();
-        if (!$draft) {
+        if (!$draft instanceof Entry) {
             // Check if the ID exists as a published entry
             $published = Entry::find()->id($draftId)->one();
-            if ($published) {
+            if ($published instanceof Entry) {
                 throw new \InvalidArgumentException("Entry with ID {$draftId} is not a draft. This tool can only be used with drafts.");
             }
             throw new \InvalidArgumentException("Draft with ID {$draftId} does not exist.");
@@ -59,7 +62,7 @@ class ApplyDraft
         
         // Get the canonical entry before applying the draft
         $canonicalEntry = $draft->getCanonical(true);
-        if (!$canonicalEntry) {
+        if (!$canonicalEntry instanceof Entry) {
             throw new \RuntimeException("Unable to find canonical entry for draft {$draftId}.");
         }
         
@@ -68,20 +71,23 @@ class ApplyDraft
             $updatedEntry = Craft::$app->getDrafts()->applyDraft($draft);
             
             // Refresh the entry to get the latest data
-            $updatedEntry = Entry::find()->id($updatedEntry->id)->one();
+            $refreshedEntry = Entry::find()->id($updatedEntry->id)->one();
+            if (!$refreshedEntry instanceof Entry) {
+                throw new \RuntimeException("Unable to refresh entry after applying draft {$draftId}.");
+            }
             
             return [
                 '_notes' => 'The draft was successfully applied to the canonical entry.',
-                'entryId' => $updatedEntry->id,
-                'title' => $updatedEntry->title,
-                'slug' => $updatedEntry->slug,
-                'status' => $updatedEntry->status,
-                'sectionId' => $updatedEntry->sectionId,
-                'entryTypeId' => $updatedEntry->typeId,
-                'siteId' => $updatedEntry->siteId,
-                'postDate' => $updatedEntry->postDate?->format('c'),
-                'dateUpdated' => $updatedEntry->dateUpdated?->format('c'),
-                'url' => ElementHelper::elementEditorUrl($updatedEntry),
+                'entryId' => $refreshedEntry->id,
+                'title' => $refreshedEntry->title,
+                'slug' => $refreshedEntry->slug,
+                'status' => $refreshedEntry->status,
+                'sectionId' => $refreshedEntry->sectionId,
+                'entryTypeId' => $refreshedEntry->typeId,
+                'siteId' => $refreshedEntry->siteId,
+                'postDate' => $refreshedEntry->postDate?->format('c'),
+                'dateUpdated' => $refreshedEntry->dateUpdated?->format('c'),
+                'url' => ElementHelper::elementEditorUrl($refreshedEntry),
             ];
             
         } catch (\Throwable $e) {

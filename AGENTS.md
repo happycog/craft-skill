@@ -85,6 +85,12 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 - PHPStan stub files for proper static analysis type resolution
 - Container generics ensure `$container->get(ClassName::class)` returns correct types
 
+### 6. `phpstan.neon`
+- PHPStan configuration at maximum strictness level (`level: max`)
+- Includes official Craft CMS PHPStan configuration (`craftcms/phpstan:dev-main`)
+- Custom stub files for enhanced type safety
+- Memory limits configured for Craft CMS analysis
+
 ## Development Commands
 
 ### PHP/Backend
@@ -101,8 +107,14 @@ composer install
 # Run specific test file
 ./vendor/bin/pest tests/CreateEntryTest.php
 
-# Static analysis
+# Static analysis (max level with Craft CMS integration)
 ./vendor/bin/phpstan analyse
+
+# Static analysis with specific file
+./vendor/bin/phpstan analyse src/tools/ExampleTool.php
+
+# Generate PHPStan baseline (if needed)
+./vendor/bin/phpstan analyse --generate-baseline
 ```
 
 ### MCP Testing
@@ -115,6 +127,27 @@ curl -X POST http://craft-mcp.dev.markhuot.com/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0.0"}}}'
 ```
+
+### PHPStan Configuration
+The project uses PHPStan at **level max** (strictest possible) with official Craft CMS integration:
+
+```neon
+# phpstan.neon
+includes:
+    - vendor/craftcms/phpstan/phpstan.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+```
+
+**Key Points:**
+- Uses `craftcms/phpstan:dev-main` package for proper Craft CMS type recognition
+- All `Craft::$app` and `Yii::$app` references are properly typed
+- Level max requires explicit array type annotations
+- Memory limit increased to 1GB for Craft CMS analysis
+- Custom stub files in `.phpstorm.meta.php/` for enhanced IDE support
 
 ## Development Patterns
 
@@ -337,6 +370,49 @@ test('endpoint returns valid response', function () {
   - Only specify exception class when throwing non-RuntimeException types
 - **Benefits**: More expressive code, reduced boilerplate, better readability
 - **Type Safety**: Includes full PHPStan template annotations for proper static analysis
+
+### Type Safety and PHPStan Patterns
+- **PHPStan Level**: Project runs at `level: max` (strictest analysis) with official Craft CMS integration
+- **Array Return Types**: All methods returning arrays must have PHPDoc annotations:
+  ```php
+  /**
+   * @return array<string, mixed>
+   */
+  public function methodName(): array
+  ```
+- **Craft Element Queries**: Craft's `Entry::find()->one()` returns `array|Entry|null`, always use `instanceof` checks:
+  ```php
+  // CORRECT: Proper type checking
+  $entry = Entry::find()->id($id)->one();
+  if (!$entry instanceof Entry) {
+      throw new \InvalidArgumentException("Entry not found");
+  }
+  
+  // INCORRECT: Loose null check
+  if (!$entry) {
+      throw new \InvalidArgumentException("Entry not found");
+  }
+  ```
+- **Nullable Property Access**: Use null-safe operator for potentially null properties:
+  ```php
+  'postDate' => $entry->postDate?->format('c'),
+  'dateUpdated' => $entry->dateUpdated?->format('c'),
+  ```
+- **Method Parameters**: Specify array types for complex parameters:
+  ```php
+  /**
+   * @param array<string, mixed> $attributeAndFieldData
+   */
+  public function methodName(array $attributeAndFieldData): void
+  ```
+- **PHPDoc Positioning**: Place PHPDoc immediately before method declarations (before attributes):
+  ```php
+  /**
+   * @return array<string, mixed>
+   */
+  #[McpTool(name: 'tool_name')]
+  public function methodName(): array
+  ```
 
 ### Performance Considerations
 - Tool discovery is cached in production mode (devMode=false)

@@ -56,7 +56,7 @@ class CreateEntry
 
         // Validate site exists  
         $site = Craft::$app->getSites()->getSiteById((int) $siteId);
-        throw_unless($site, "Site with ID {$siteId} does not exist.");
+        throw_unless($site, \InvalidArgumentException::class, "Site with ID {$siteId} does not exist.");
 
         $upsertEntry = Craft::$container->get(UpsertEntry::class);
 
