@@ -4,6 +4,7 @@ namespace craft\services {
 
     use craft\elements\db\ElementQuery;
     use craft\base\ElementInterface;
+    use craft\models\Site;
 
     class Elements
     {
@@ -12,16 +13,34 @@ namespace craft\services {
          * @param int $id
          * @param class-string<T>|null $elementType
          * @param int|null $siteId
-         * @param array|null $criteria
+         * @param array<string, mixed>|null $criteria
          * @return T|null
          */
         public function getElementById($id, $elementType = null, $siteId = null, $criteria = null);
 
         /**
          * @param ElementInterface $element
+         * @param bool $runValidation
+         * @param bool $propagate
+         * @param bool|null $updateTimestamps
+         * @param bool $resaveCanonical
          * @return bool
          */
         public function saveElement($element, $runValidation = true, $propagate = true, $updateTimestamps = null, $resaveCanonical = false);
+    }
+
+    class Sites
+    {
+        /**
+         * @return Site
+         */
+        public function getPrimarySite();
+
+        /**
+         * @param int|null $siteId
+         * @return Site|null
+         */
+        public function getSiteById(?int $siteId);
     }
 }
 
@@ -29,6 +48,7 @@ namespace craft\elements {
 
     use craft\base\Element;
     use craft\models\FieldLayout;
+    use DateTime;
 
     class Entry extends Element
     {
@@ -40,6 +60,36 @@ namespace craft\elements {
 
         /** @var int */
         public $siteId;
+
+        /** @var int|null */
+        public $id;
+
+        /** @var string|null */
+        public $title;
+
+        /** @var string|null */
+        public $slug;
+
+        /** @var DateTime|null */
+        public $postDate;
+
+        /** @var string */
+        public $status;
+
+        /** @var DateTime|null */
+        public $dateUpdated;
+
+        /** @var string|null */
+        public $draftName;
+
+        /** @var string|null */
+        public $draftNotes;
+
+        /** @var bool */
+        public $isProvisionalDraft;
+
+        /** @var int|null */
+        public $canonicalId;
 
         /**
          * @return FieldLayout|null
@@ -58,6 +108,16 @@ namespace craft\elements {
          * @return string[]
          */
         public function getErrorSummary($includeAttributeNames = false);
+
+        /**
+         * @return bool
+         */
+        public function getIsDraft();
+
+        /**
+         * @return Entry|null
+         */
+        public function getCanonical();
     }
 }
 
@@ -70,6 +130,32 @@ namespace craft\models {
          */
         public function getCustomFields();
     }
+
+    class Site
+    {
+        /** @var int */
+        public $id;
+
+        /** @var string */
+        public $name;
+
+        /** @var string */
+        public $handle;
+    }
+}
+
+namespace craft\helpers {
+
+    use craft\base\ElementInterface;
+
+    class ElementHelper
+    {
+        /**
+         * @param ElementInterface $element
+         * @return string
+         */
+        public static function elementEditorUrl($element);
+    }
 }
 
 namespace {
@@ -78,6 +164,9 @@ namespace {
     {
         /** @var \craft\web\Application */
         public static $app;
+
+        /** @var \yii\di\Container */
+        public static $container;
     }
 }
 
@@ -86,5 +175,6 @@ namespace craft\web {
     class Application
     {
         public function getElements(): \craft\services\Elements;
+        public function getSites(): \craft\services\Sites;
     }
 }

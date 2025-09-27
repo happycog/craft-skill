@@ -11,7 +11,8 @@ use PhpMcp\Server\Attributes\Schema;
 class CreateEntry
 {
     /**
-     * @return array{entryId: int, title: string, slug: string, postDate: string, url: string}
+     * @param array<string, mixed> $attributeAndFieldData
+     * @return array{_notes: string, entryId: int|null, title: string|null, slug: string|null, postDate: string|null, url: string}
      */
     #[McpTool(
         name: 'create_entry',
@@ -50,15 +51,12 @@ class CreateEntry
     ): array
     {
         // Set default site if not provided
-        if (!$siteId) {
-            $siteId = Craft::$app->getSites()->getPrimarySite()->id;
-        }
+        $siteId = $siteId ?? Craft::$app->getSites()->getPrimarySite()->id;
+        throw_unless(is_int($siteId), 'Failed to determine valid site ID');
 
-        // Validate site exists
-        $site = Craft::$app->getSites()->getSiteById($siteId);
-        if (!$site) {
-            throw new \InvalidArgumentException("Site with ID {$siteId} does not exist.");
-        }
+        // Validate site exists  
+        $site = Craft::$app->getSites()->getSiteById((int) $siteId);
+        throw_unless($site, "Site with ID {$siteId} does not exist.");
 
         $upsertEntry = Craft::$container->get(UpsertEntry::class);
 

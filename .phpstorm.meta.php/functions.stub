@@ -7,6 +7,8 @@
  * @return T
  * @phpstan-assert !null $value
  * @phpstan-assert-if-true !null $value
+ * @phpstan-assert-if-true !false $value
+ * @phpstan-assert truthy $value
  */
 function throw_unless($value, $message) {
     if (!$value) {
@@ -25,4 +27,15 @@ function throw_if($condition, $message) {
     if ($condition) {
         throw new \RuntimeException($message);
     }
+}
+
+/**
+ * @template T
+ * @param T|null $value
+ * @param T $default
+ * @return T
+ * @phpstan-return T
+ */
+function value_or(?int $value, int $default): int {
+    return $value ?? $default;
 }
