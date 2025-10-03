@@ -3,7 +3,9 @@
 namespace happycog\craftmcp\tools;
 
 use Craft;
+use craft\base\FieldInterface;
 use craft\fields\Matrix;
+use craft\models\FieldLayout;
 use PhpMcp\Server\Attributes\McpTool;
 
 class GetFields
@@ -24,6 +26,8 @@ class GetFields
     {
         if ($fieldLayoutId) {
             $layout = Craft::$app->getFields()->getLayoutById($fieldLayoutId);
+	    throw_unless($layout, "Field layout with ID {$fieldLayoutId} not found");
+
             $fields = $layout->getCustomFields();
         }
         else {
@@ -39,10 +43,9 @@ class GetFields
     }
 
     /**
-     * @param mixed $field
      * @return array<string, mixed>
      */
-    private function formatField($field): array
+    private function formatField(FieldInterface $field): array
     {
         $fieldData = [
             'id' => $field->id,

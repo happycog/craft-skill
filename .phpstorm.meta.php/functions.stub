@@ -5,10 +5,7 @@
  * @param T $value
  * @param string $message
  * @return T
- * @phpstan-assert !null $value
- * @phpstan-assert-if-true !null $value
- * @phpstan-assert-if-true !false $value
- * @phpstan-assert truthy $value
+ * @phpstan-assert true $value
  */
 function throw_unless($value, $message) {
     if (!$value) {
@@ -21,7 +18,7 @@ function throw_unless($value, $message) {
  * @param bool $condition
  * @param string $message
  * @return void
- * @phpstan-assert-if-false true $condition
+ * @phpstan-assert !true $condition
  */
 function throw_if($condition, $message) {
     if ($condition) {
