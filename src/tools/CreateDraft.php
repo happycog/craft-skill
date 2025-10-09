@@ -80,9 +80,7 @@ class CreateDraft
         // Validate site exists
         if ($siteId !== null) {
             $site = Craft::$app->getSites()->getSiteById($siteId);
-            if (!$site) {
-                throw new \InvalidArgumentException("Site with ID {$siteId} does not exist.");
-            }
+            throw_unless($site, \InvalidArgumentException::class, "Site with ID {$siteId} does not exist.");
         }
 
         if ($canonicalId) {
