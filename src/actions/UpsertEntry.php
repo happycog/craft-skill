@@ -4,6 +4,7 @@ namespace happycog\craftmcp\actions;
 
 use Craft;
 use craft\elements\Entry;
+use Illuminate\Support\Collection;
 use happycog\craftmcp\actions\normalizers\SectionIdOrHandleToSectionId;
 
 class UpsertEntry
@@ -38,7 +39,8 @@ class UpsertEntry
         $fieldLayout = $entry->getFieldLayout();
         throw_unless($fieldLayout, 'Entry field layout not found');
         
-        $customFields = collect($fieldLayout->getCustomFields())
+        /** @phpstan-ignore-next-line */
+        $customFields = Collection::make($fieldLayout->getCustomFields())
             ->keyBy('handle')
             ->toArray();
 

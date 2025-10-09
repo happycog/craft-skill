@@ -2,11 +2,11 @@
 
 namespace happycog\craftmcp\tools;
 
-use Collection;
 use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
 use craft\helpers\UrlHelper;
+use Illuminate\Support\Collection;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
 
@@ -14,7 +14,7 @@ class SearchContent
 {
     /**
      * @param array<int>|null $sectionIds
-     * @return array{_notes: string, results: Collection}
+     * @return array{_notes: string, results: Collection<int, array{entryId: int, title: string, url: string}>}
      */
     #[McpTool(
         name: 'search_content',
@@ -83,7 +83,7 @@ class SearchContent
 
         return [
             '_notes' => $notesText,
-            'results' => collect($result)->map(function (Entry $entry) {
+            'results' => Collection::make($result)->map(function (Entry $entry) {
                 return [
                     'entryId' => (int) $entry->id,
                     'title' => (string) $entry->title,
