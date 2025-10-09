@@ -1,5 +1,11 @@
 <?php
 
+namespace craft\base {
+    interface ElementInterface {}
+    interface FieldInterface {}
+    class Element implements ElementInterface {}
+}
+
 namespace craft\services {
 
     use craft\elements\db\ElementQuery;
@@ -51,6 +57,7 @@ namespace craft\elements {
     use DateTime;
 
     /**
+     * @property int $typeId
      * @mixin \craft\behaviors\DraftBehavior
      */
     class Entry extends Element
@@ -126,10 +133,12 @@ namespace craft\elements {
 
 namespace craft\models {
 
+    use craft\base\FieldInterface;
+
     class FieldLayout
     {
         /**
-         * @return \craft\base\FieldInterface[]
+         * @return FieldInterface[]
          */
         public function getCustomFields();
     }

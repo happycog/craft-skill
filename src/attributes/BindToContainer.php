@@ -16,7 +16,8 @@ class BindToContainer
 
     public function __invoke(callable $callable, \ReflectionMethod $method): void
     {
-        $as = $this->as ?? $method->getReturnType()?->getName() ?? $method->getName();
+        $returnType = $method->getReturnType();
+        $as = $this->as ?? ($returnType instanceof \ReflectionNamedType ? $returnType->getName() : $method->getName());
 
         if ($this->singleton) {
             Craft::$container->setSingleton($as, $callable);

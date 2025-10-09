@@ -29,9 +29,11 @@ class CraftSessionHandler implements SessionHandlerInterface
     /**
      * Create a new Craft session handler instance.
      */
-    public function __construct(CacheInterface $cache = null, int $ttl = 3600, string $prefix = 'mcp_session')
+    public function __construct(?CacheInterface $cache = null, int $ttl = 3600, string $prefix = 'mcp_session')
     {
-        $this->cache = $cache ?? Craft::$app->getCache();
+        $craftCache = Craft::$app->getCache();
+        throw_unless($craftCache, 'Cache component is not available');
+        $this->cache = $cache ?: $craftCache;
         $this->ttl = $ttl;
         $this->prefix = $prefix;
     }
@@ -44,11 +46,11 @@ class CraftSessionHandler implements SessionHandlerInterface
         $cacheKey = $this->getCacheKey($sessionId);
         $data = $this->cache->get($cacheKey);
         
-        if ($data === false) {
+        if ($data === false || $data === null) {
             return false;
         }
 
-        return $data;
+        return is_string($data) ? $data : false;
     }
 
     /**
@@ -71,6 +73,7 @@ class CraftSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     * @return array<mixed>
      */
     public function gc(int $maxLifetime): array
     {

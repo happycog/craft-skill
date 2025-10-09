@@ -78,9 +78,11 @@ class CreateDraft
         $siteId ??= Craft::$app->getSites()->getPrimarySite()->id;
 
         // Validate site exists
-        $site = Craft::$app->getSites()->getSiteById($siteId);
-        if (!$site) {
-            throw new \InvalidArgumentException("Site with ID {$siteId} does not exist.");
+        if ($siteId !== null) {
+            $site = Craft::$app->getSites()->getSiteById($siteId);
+            if (!$site) {
+                throw new \InvalidArgumentException("Site with ID {$siteId} does not exist.");
+            }
         }
 
         if ($canonicalId) {
@@ -132,19 +134,22 @@ class CreateDraft
 
         // Apply additional field data if provided (for updates from canonical)
         if (!empty($attributeAndFieldData)) {
-            $customFields = collect($draft->getFieldLayout()->getCustomFields())
-                ->keyBy('handle')
-                ->toArray();
+            $fieldLayout = $draft->getFieldLayout();
+            if ($fieldLayout) {
+                $customFields = collect($fieldLayout->getCustomFields())
+                    ->keyBy('handle')
+                    ->toArray();
 
-            foreach ($attributeAndFieldData as $key => $value) {
-                ($customFields[$key] ?? null)
-                    ? $draft->setFieldValue($key, $value)
-                    : $draft->$key = $value;
-            }
+                foreach ($attributeAndFieldData as $key => $value) {
+                    ($customFields[$key] ?? null)
+                        ? $draft->setFieldValue($key, $value)
+                        : $draft->$key = $value;
+                }
 
-            // Save the updated draft
-            if (!Craft::$app->getElements()->saveElement($draft)) {
-                throw new \RuntimeException('Failed to update draft: ' . implode(' ', $draft->getErrorSummary(true)));
+                // Save the updated draft
+                if (!Craft::$app->getElements()->saveElement($draft)) {
+                    throw new \RuntimeException('Failed to update draft: ' . implode(' ', $draft->getErrorSummary(true)));
+                }
             }
         }
 

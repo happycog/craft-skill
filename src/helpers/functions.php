@@ -21,7 +21,13 @@ if (! function_exists('throw_if')) {
                 $exception = new $exception(...$parameters);
             }
 
-            throw is_string($exception) ? new RuntimeException($exception) : $exception;
+            if (is_string($exception)) {
+                throw new \RuntimeException($exception);
+            } elseif ($exception instanceof \Throwable) {
+                throw $exception;
+            } else {
+                throw new \RuntimeException('Invalid exception type');
+            }
         }
 
         return $condition;
@@ -47,5 +53,70 @@ if (! function_exists('throw_unless')) {
         throw_if(! $condition, $exception, ...$parameters);
 
         return $condition;
+    }
+}
+
+if (! function_exists('collect')) {
+    /**
+     * Create a new collection from the given items.
+     *
+     * @param array<mixed> $items
+     * @return Collection
+     */
+    function collect(array $items = []): Collection
+    {
+        return new Collection($items);
+    }
+}
+
+/**
+ * Simple collection class for helper methods.
+ */
+class Collection
+{
+    /** @var array<mixed> */
+    private array $items;
+
+    /** @param array<mixed> $items */
+    public function __construct(array $items = [])
+    {
+        $this->items = $items;
+    }
+
+    /**
+     * @param string|callable $key
+     * @return self
+     */
+    public function keyBy($key): self
+    {
+        $keyed = [];
+        foreach ($this->items as $item) {
+            if (is_callable($key)) {
+                $keyValue = $key($item);
+            } elseif (is_object($item) && property_exists($item, $key)) {
+                $keyValue = $item->$key;
+            } else {
+                $keyValue = $key;
+            }
+            $keyed[$keyValue] = $item;
+        }
+        return new self($keyed);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function toArray(): array
+    {
+        return $this->items;
+    }
+
+    /**
+     * @param callable $callback
+     * @return self
+     */
+    public function map(callable $callback): self
+    {
+        return new self(array_map($callback, $this->items));
     }
 }
