@@ -25,9 +25,7 @@ class GetEntry
     {
         $entry = Craft::$app->getElements()->getElementById($entryId, Entry::class);
         
-        if (!$entry instanceof Entry) {
-            throw new \InvalidArgumentException("Entry with ID {$entryId} not found");
-        }
+        throw_unless($entry instanceof Entry, \InvalidArgumentException::class, "Entry with ID {$entryId} not found");
 
         return $entry->toArray();
     }
