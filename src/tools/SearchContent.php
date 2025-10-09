@@ -83,7 +83,7 @@ class SearchContent
 
         return [
             '_notes' => $notesText,
-            'results' => collect($result)->map(function (Entry $entry) {
+            'results' => Collection::make($result)->map(function (Entry $entry) {
                 return [
                     'entryId' => (int) $entry->id,
                     'title' => (string) $entry->title,

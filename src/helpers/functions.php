@@ -21,7 +21,13 @@ if (! function_exists('throw_if')) {
                 $exception = new $exception(...$parameters);
             }
 
-            throw is_string($exception) ? new RuntimeException($exception) : $exception;
+            if (is_string($exception)) {
+                throw new \RuntimeException($exception);
+            } elseif ($exception instanceof \Throwable) {
+                throw $exception;
+            } else {
+                throw new \RuntimeException('Invalid exception type');
+            }
         }
 
         return $condition;
@@ -49,3 +55,4 @@ if (! function_exists('throw_unless')) {
         return $condition;
     }
 }
+

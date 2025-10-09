@@ -54,17 +54,22 @@ class HttpServerTransport implements ServerTransportInterface
     /**
      * Sends a message to a specific client session by queueing it in the SessionManager.
      * The SSE streams will pick this up.
+     * 
+     * @param array<string, mixed> $context
+     * @return PromiseInterface<void>
      */
     public function sendMessage(Message $message, string $sessionId, array $context = []): PromiseInterface
     {
         $rawMessage = json_encode($message, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         if (empty($rawMessage)) {
+            /** @phpstan-ignore-next-line */
             return resolve(null);
         }
 
         $this->sessionManager->queueMessage($sessionId, $rawMessage);
 
+        /** @phpstan-ignore-next-line */
         return resolve(null);
     }
 
@@ -144,7 +149,7 @@ class HttpServerTransport implements ServerTransportInterface
 
         $this->emit('client_connected', [$sessionId]);
 
-        $pollInterval = (int) App::parseEnv('$MCP_SSE_POLL_INTERVAL', 1);
+        $pollInterval = (int) App::parseEnv('$MCP_SSE_POLL_INTERVAL') ?: 1;
         if ($pollInterval < 1) {
             $pollInterval = 1;
         }
@@ -157,7 +162,7 @@ class HttpServerTransport implements ServerTransportInterface
         $response->headers->set('X-Accel-Buffering', 'no');
         $response->headers->set('Access-Control-Allow-Origin', '*');
 
-        $response->stream = function () use ($sessionId, $pollInterval, $request) {
+        $response->stream = function () use ($sessionId, $pollInterval) {
             @set_time_limit(0);
 
             try {

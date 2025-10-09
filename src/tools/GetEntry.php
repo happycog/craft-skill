@@ -3,6 +3,7 @@
 namespace happycog\craftmcp\tools;
 
 use Craft;
+use craft\elements\Entry;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
 
@@ -22,7 +23,9 @@ class GetEntry
         int $entryId,
     ): array
     {
-        $entry = Craft::$app->getElements()->getElementById($entryId);
+        $entry = Craft::$app->getElements()->getElementById($entryId, Entry::class);
+        
+        throw_unless($entry instanceof Entry, \InvalidArgumentException::class, "Entry with ID {$entryId} not found");
 
         return $entry->toArray();
     }

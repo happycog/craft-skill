@@ -3,6 +3,7 @@
 namespace happycog\craftmcp\tools;
 
 use Craft;
+use craft\base\FieldInterface;
 use craft\helpers\UrlHelper;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
@@ -84,8 +85,13 @@ class UpdateField
         }
         
         // Prepare field configuration
+        $fieldType = $type ?: get_class($existingField);
+        throw_unless(is_a($fieldType, FieldInterface::class, true), "Invalid field type: {$fieldType}");
+        throw_unless($existingField->uid, 'Field UID is required');
+        
+        /** @var array{type: class-string<FieldInterface>, id: int, uid: string} $fieldConfig */
         $fieldConfig = [
-            'type' => $type ?: get_class($existingField),
+            'type' => $fieldType,
             'id' => $fieldId,
             'uid' => $existingField->uid,
             'columnSuffix' => $existingField->columnSuffix,

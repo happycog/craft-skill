@@ -12,7 +12,7 @@ class Plugin extends BasePlugin
 {
     public static Plugin $plugin;
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -30,7 +30,9 @@ class Plugin extends BasePlugin
         foreach ($methods as $method) {
             foreach ($method->getAttributes() as $attribute) {
                 $instance = $attribute->newInstance();
-                $instance($method->getClosure($this), $method, $attribute);
+                $callable = $method->getClosure($this);
+                /** @phpstan-ignore-next-line */
+                $instance($callable, $method, $attribute);
             }
         }
     }

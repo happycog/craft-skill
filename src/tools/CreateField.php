@@ -123,7 +123,7 @@ class CreateField
     {
         // Convert to camelCase handle
         $handle = preg_replace('/[^a-zA-Z0-9]/', ' ', $name);
-        $handle = ucwords(strtolower($handle));
+        $handle = ucwords(strtolower($handle ?? ''));
         $handle = str_replace(' ', '', $handle);
         $handle = lcfirst($handle);
         

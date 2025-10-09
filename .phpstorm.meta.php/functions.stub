@@ -31,8 +31,7 @@ function throw_if($condition, $message) {
  * @param T|null $value
  * @param T $default
  * @return T
- * @phpstan-return T
  */
-function value_or(?int $value, int $default): int {
+function value_or($value, $default) {
     return $value ?? $default;
 }
