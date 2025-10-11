@@ -4,7 +4,6 @@ namespace happycog\craftmcp\tools;
 
 use Craft;
 use craft\fieldlayoutelements\CustomField;
-use craft\models\EntryType;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use happycog\craftmcp\exceptions\ModelSaveException;
@@ -20,16 +19,17 @@ class UpdateFieldLayout
     #[McpTool(
         name: 'update_field_layout',
         description: <<<'END'
-        Update the field layout for an entry type. Allows organizing fields into tabs, setting field properties
-        like required status, and controlling field order.
+        Update a field layout by organizing fields into tabs and setting field properties like required status
+        and controlling field order. Works with any Craft model that has a field layout (entry types, users,
+        assets, etc.).
 
-        After updating the field layout always link the user back to the entry type settings in the Craft control
+        After updating the field layout always link the user back to the relevant settings in the Craft control
         panel so they can review the changes in the context of the Craft UI.
         END
     )]
     public function update(
-        #[Schema(type: 'integer', description: 'The ID of the entry type to update the field layout for')]
-        int $entryTypeId,
+        #[Schema(type: 'integer', description: 'The ID of the field layout to update')]
+        int $fieldLayoutId,
 
         #[Schema(
             type: 'array',
@@ -72,20 +72,11 @@ class UpdateFieldLayout
         )]
         array $tabs
     ): array {
-        $entriesService = Craft::$app->getEntries();
         $fieldsService = Craft::$app->getFields();
 
-        // Get the entry type
-        $entryType = $entriesService->getEntryTypeById($entryTypeId);
-        \throw_unless($entryType instanceof EntryType, "Entry type with ID {$entryTypeId} not found");
-
-        // Get the current field layout
-        $fieldLayout = $entryType->getFieldLayout();
-        if (!$fieldLayout instanceof FieldLayout) {
-            throw new \RuntimeException("Field layout not found for entry type {$entryTypeId}");
-        }
-
-        // Validate all field IDs exist before proceeding
+        // Get the field layout directly
+        $fieldLayout = $fieldsService->getLayoutById($fieldLayoutId);
+        \throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");        // Validate all field IDs exist before proceeding
         $allFieldIds = [];
         foreach ($tabs as $tabData) {
             assert(is_array($tabData));
@@ -148,20 +139,10 @@ class UpdateFieldLayout
         // Save the field layout
         throw_unless($fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
 
-        // Get section information for edit URL
-        $section = null;
-        $sections = $entriesService->getAllSections();
-        foreach ($sections as $sectionCandidate) {
-            foreach ($sectionCandidate->getEntryTypes() as $sectionEntryType) {
-                if ($sectionEntryType->id === $entryType->id) {
-                    $section = $sectionCandidate;
-                    break 2;
-                }
-            }
-        }
-
         // Get updated field layout information
-        $updatedFieldLayout = $entryType->getFieldLayout();
+        $updatedFieldLayout = $fieldsService->getLayoutById($fieldLayoutId);
+        \throw_unless($updatedFieldLayout instanceof FieldLayout, "Updated field layout not found");
+
         $fieldLayoutInfo = [
             'id' => $updatedFieldLayout->id,
             'type' => $updatedFieldLayout->type,
@@ -195,18 +176,11 @@ class UpdateFieldLayout
 
         return [
             '_notes' => [
-                'Field layout updated successfully for entry type',
+                'Field layout updated successfully',
                 'Fields have been organized into the specified tabs with the configured properties',
-                'Visit the edit URL to review the changes in the Craft control panel',
-            ],
-            'entryType' => [
-                'id' => $entryType->id,
-                'name' => $entryType->name,
-                'handle' => $entryType->handle,
-                'fieldLayoutId' => $entryType->fieldLayoutId,
+                'The field layout can now be used by any model that references it',
             ],
             'fieldLayout' => $fieldLayoutInfo,
-            'editUrl' => $section ? Craft::$app->getConfig()->getGeneral()->cpUrl . "/settings/sections/{$section->id}/entrytypes/{$entryType->id}" : null, // @phpstan-ignore-line
         ];
     }
 }

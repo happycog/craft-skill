@@ -22,8 +22,8 @@ class UpdateEntryType
         name: 'update_entry_type',
         description: <<<'END'
         Update an existing entry type in Craft CMS. Allows modification of entry type properties
-        including name, handle, icon, color, and title field settings while preserving field layout
-        and existing content.
+        including name, handle, icon, color, title field settings, and field layout assignment while
+        preserving existing content.
 
         Entry type updates will preserve field layouts and any existing entries unless structural
         changes affect compatibility. Handle changes require uniqueness validation.
@@ -65,6 +65,9 @@ class UpdateEntryType
 
         #[Schema(type: 'boolean', description: 'Whether entries of this type show the status field in the admin UI')]
         ?bool $showStatusField = null,
+
+        #[Schema(type: 'integer', description: 'The ID of the field layout to assign to this entry type')]
+        ?int $fieldLayoutId = null,
     ): array
     {
         $entriesService = Craft::$app->getEntries();
@@ -112,6 +115,13 @@ class UpdateEntryType
 
         if ($showStatusField !== null) {
             $entryType->showStatusField = $showStatusField;
+        }
+
+        if ($fieldLayoutId !== null) {
+            $fieldsService = Craft::$app->getFields();
+            $fieldLayout = $fieldsService->getLayoutById($fieldLayoutId);
+            throw_unless($fieldLayout instanceof \craft\models\FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
+            $entryType->fieldLayoutId = $fieldLayoutId;
         }
 
         // Save the updated entry type

@@ -109,7 +109,9 @@ class CreateEntryType
         throw_unless($savedEntryType instanceof EntryType, \RuntimeException::class, "Failed to retrieve saved entry type with ID {$entryTypeId}");
 
         return [
-            '_notes' => 'The entry type was successfully created. You can further configure it in the Craft control panel.',
+            '_notes' => 'The entry type was successfully created. You can further configure it in the Craft control panel.' . (
+                ! $hasTitleField ? ' Because the entry was created without a title field it will not have a field layout. To add fields to this entry type you must first call CreateFieldLayout and then UpdateEntryType with the associated `fieldLayoutId`.' : ''
+            ),
             'entryTypeId' => $savedEntryType->id,
             'name' => $savedEntryType->name,
             'handle' => $savedEntryType->handle,
