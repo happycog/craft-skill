@@ -64,7 +64,17 @@ class CreateSection
         #[Schema(type: 'integer', description: 'Maximum number of authors that can be assigned to entries in this section')]
         ?int $maxAuthors = null,
 
-        #[Schema(type: 'array', description: 'Site-specific settings. If not provided, section will be enabled for all sites with default settings.')]
+        #[Schema(type: 'array', description: 'Site-specific settings. If not provided, section will be enabled for all sites with default settings.', items: [
+            'type' => 'object',
+            'properties' => [
+                'siteId' => ['type' => 'integer', 'description' => 'Site ID'],
+                'enabledByDefault' => ['type' => 'boolean', 'description' => 'Enable entries by default'],
+                'hasUrls' => ['type' => 'boolean', 'description' => 'Whether entries have URLs'],
+                'uriFormat' => ['type' => 'string', 'description' => 'URI format pattern'],
+                'template' => ['type' => 'string', 'description' => 'Template path for rendering']
+            ],
+            'required' => ['siteId']
+        ])]
         ?array $siteSettings = null
     ): array {
         throw_unless(in_array($type, [Section::TYPE_SINGLE, Section::TYPE_CHANNEL, Section::TYPE_STRUCTURE]),
