@@ -38,7 +38,7 @@ beforeEach(function () {
 
     // Helper to create a test entry
     $this->createTestEntry = function (int $sectionId, int $entryTypeId, string $title = 'Test Entry'): array {
-        $tool = new CreateEntry();
+        $tool = Craft::$container->get(CreateEntry::class);
         return $tool->create($sectionId, $entryTypeId, null, ['title' => $title]);
     };
 });
@@ -48,9 +48,9 @@ test('delete section tool schema is valid', function () {
     $reflection = new ReflectionClass($tool);
     $method = $reflection->getMethod('delete');
     $attributes = $method->getAttributes(\PhpMcp\Server\Attributes\McpTool::class);
-    
+
     expect($attributes)->toHaveCount(1);
-    
+
     // Verify the McpTool attribute has the correct name
     $mcpToolAttribute = $attributes[0]->newInstance();
     expect($mcpToolAttribute->name)->toBe('delete_section');

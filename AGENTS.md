@@ -161,7 +161,7 @@ After [action] always link the user back to the entry in the Craft control panel
 the changes in the context of the Craft UI.
 ```
 
-**PREFERRED: Modern PHP8 Attribute Approach (use this for all new tools):**
+**PREFERRED: Modern PHP8 Attribute Approach with Dependency Injection (use this for all new tools):**
 
 ```php
 // src/tools/ExampleTool.php
@@ -172,6 +172,13 @@ use PhpMcp\Server\Attributes\Schema;
 
 class ExampleTool
 {
+    // CRITICAL: Use constructor injection instead of Craft::$container->get()
+    public function __construct(
+        protected ExampleService $exampleService,
+        protected AnotherDependency $anotherDependency,
+    ) {
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -191,7 +198,8 @@ class ExampleTool
         #[Schema(type: 'integer', description: 'Optional number parameter')]
         ?int $optionalNumber = null
     ): array {
-        // Tool implementation logic
+        // Use injected dependencies instead of manual container access
+        $result = ($this->exampleService)($parameter);
 
         return [
             'success' => true,
@@ -371,6 +379,33 @@ test('endpoint returns valid response', function () {
 - Uses #[BindToContainer] and #[RegisterListener] attributes for clean architecture
 - Tool implementations work directly with Craft's element system
 - Respects Craft's permissions and user context when available
+
+### Dependency Injection Pattern (Added after entry-types branch migration)
+- **CRITICAL**: All tools in `src/tools/` directory MUST use constructor injection instead of manual container access
+- **Container Access Prohibition**: NEVER use `Craft::$container->get()` or `$container->get()` within tool classes
+- **Constructor Injection Pattern**:
+  ```php
+  class ExampleTool
+  {
+      public function __construct(
+          protected ExampleService $exampleService,
+          protected AnotherDependency $anotherDependency,
+      ) {
+      }
+
+      public function toolMethod(): array
+      {
+          // CORRECT: Use injected dependencies
+          $result = ($this->exampleService)($parameter);
+
+          // INCORRECT: Manual container access (prohibited)
+          // $service = Craft::$container->get(ExampleService::class);
+      }
+  }
+  ```
+- **Testing Pattern**: Tests should use `Craft::$container->get(ToolClass::class)` to get properly injected instances
+- **Benefits**: Better type safety, cleaner architecture, easier testing, proper dependency management
+- **Enforcement**: Architecture tests ensure compliance with this pattern across the codebase
 
 ### Draft System Implementation (Added in 005-add-draft-support.md)
 - **CRITICAL**: Craft 5.x uses specific property names for draft metadata

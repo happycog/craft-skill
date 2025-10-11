@@ -13,6 +13,11 @@ use PhpMcp\Server\Attributes\Schema;
 
 class UpdateEntry
 {
+    public function __construct(
+        protected UpsertEntry $upsertEntry,
+    ) {
+    }
+
     /**
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
@@ -48,9 +53,7 @@ class UpdateEntry
         array $attributeAndFieldData = [],
     ): array
     {
-        $upsertEntry = Craft::$container->get(UpsertEntry::class);
-
-        $entry = $upsertEntry(
+        $entry = ($this->upsertEntry)(
             entryId: $entryId,
             attributeAndFieldData: $attributeAndFieldData,
         );

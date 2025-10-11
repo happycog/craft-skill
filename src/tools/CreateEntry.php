@@ -10,6 +10,11 @@ use PhpMcp\Server\Attributes\Schema;
 
 class CreateEntry
 {
+    public function __construct(
+        protected UpsertEntry $upsertEntry,
+    ) {
+    }
+
     /**
      * @param array<string, mixed> $attributeAndFieldData
      * @return array{_notes: string, entryId: int|null, title: string|null, slug: string|null, postDate: string|null, url: string}
@@ -54,20 +59,16 @@ class CreateEntry
         $siteId = $siteId ?? Craft::$app->getSites()->getPrimarySite()->id;
         throw_unless(is_int($siteId), 'Failed to determine valid site ID');
 
-        // Validate site exists  
+        // Validate site exists
         $site = Craft::$app->getSites()->getSiteById((int) $siteId);
         throw_unless($site, \InvalidArgumentException::class, "Site with ID {$siteId} does not exist.");
 
-        $upsertEntry = Craft::$container->get(UpsertEntry::class);
-
-        $entry = $upsertEntry(
+        $entry = ($this->upsertEntry)(
             sectionId: $sectionId,
             entryTypeId: $entryTypeId,
             siteId: $siteId,
             attributeAndFieldData: $attributeAndFieldData,
-        );
-
-        return [
+        );        return [
             '_notes' => 'The entry was successfully created.',
             'entryId' => $entry->id,
             'title' => $entry->title,

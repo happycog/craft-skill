@@ -11,6 +11,11 @@ use PhpMcp\Server\Attributes\Schema;
 
 class CreateDraft
 {
+    public function __construct(
+        protected \happycog\craftmcp\actions\UpsertEntry $upsertEntry,
+    ) {
+    }
+
     /**
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
@@ -19,49 +24,49 @@ class CreateDraft
         name: 'create_draft',
         description: <<<'END'
         Create a draft in Craft CMS either from scratch or from an existing published entry.
-        
+
         Drafts allow content creators to work on changes without affecting live content and save work in progress.
-        
+
         **Creating from scratch:**
         - Provide sectionId and entryTypeId (similar to CreateEntry)
         - Optionally provide initial field data
-        
+
         **Creating from existing entry:**
         - Provide canonicalId (the ID of the published entry to create a draft from)
         - The draft inherits the canonical entry's content
         - Optionally provide field data to override specific fields
-        
+
         **Draft options:**
         - draftName: Optional name for the draft (defaults to auto-generated name)
         - draftNotes: Optional notes about the draft
         - provisional: Set to true for provisional drafts (auto-save drafts), defaults to false
         - siteId: Optional site ID, defaults to primary site
-        
+
         Returns draft information including ID and edit URL for the Craft control panel.
         END
     )]
     public function create(
         #[Schema(type: 'number', description: 'Section ID when creating from scratch')]
         ?int $sectionId = null,
-        
+
         #[Schema(type: 'number', description: 'Entry type ID when creating from scratch')]
         ?int $entryTypeId = null,
-        
+
         #[Schema(type: 'number', description: 'Canonical entry ID when creating from existing entry')]
         ?int $canonicalId = null,
-        
+
         #[Schema(type: 'string', description: 'Optional draft name')]
         ?string $draftName = null,
-        
+
         #[Schema(type: 'string', description: 'Optional draft notes')]
         ?string $draftNotes = null,
-        
+
         #[Schema(type: 'boolean', description: 'Whether to create a provisional draft (auto-save draft)')]
         bool $provisional = false,
-        
+
         #[Schema(type: 'number', description: 'Site ID, defaults to primary site')]
         ?int $siteId = null,
-        
+
         #[Schema(type: 'object', description: 'Initial field data for the draft')]
         array $attributeAndFieldData = [],
     ): array
@@ -70,7 +75,7 @@ class CreateDraft
         if ($canonicalId && ($sectionId || $entryTypeId)) {
             throw new \InvalidArgumentException('Cannot specify both canonicalId and sectionId/entryTypeId. Use canonicalId for drafts from existing entries, or sectionId/entryTypeId for new drafts.');
         }
-        
+
         if (!$canonicalId && (!$sectionId || !$entryTypeId)) {
             throw new \InvalidArgumentException('Must specify either canonicalId (for draft from existing entry) or both sectionId and entryTypeId (for new draft).');
         }
@@ -106,18 +111,15 @@ class CreateDraft
                 $draft->siteId = $siteId;
             }
         } else {
-            // For from-scratch drafts, we need to create a regular entry first as Craft's 
+            // For from-scratch drafts, we need to create a regular entry first as Craft's
             // draft system requires a canonical element. This is the standard approach.
-            $upsertEntry = Craft::$container->get(\happycog\craftmcp\actions\UpsertEntry::class);
-            
+
             // Create the canonical entry first
-            $canonicalEntry = $upsertEntry(
+            $canonicalEntry = ($this->upsertEntry)(
                 sectionId: $sectionId,
                 entryTypeId: $entryTypeId,
                 attributeAndFieldData: $attributeAndFieldData
-            );
-            
-            // Now create a draft from this canonical entry
+            );            // Now create a draft from this canonical entry
             $draft = Craft::$app->getDrafts()->createDraft(
                 $canonicalEntry,
                 null, // creator
@@ -126,7 +128,7 @@ class CreateDraft
                 [], // newAttributes
                 $provisional
             );
-            
+
             // Clear the attributeAndFieldData since we already applied it
             $attributeAndFieldData = [];
         }
