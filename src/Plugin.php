@@ -5,6 +5,7 @@ namespace happycog\craftmcp;
 use Craft;
 use happycog\craftmcp\attributes\BindToContainer;
 use happycog\craftmcp\attributes\RegisterListener;
+use happycog\craftmcp\base\Container as Psr11ContainerProxy;
 use happycog\craftmcp\base\Plugin as BasePlugin;
 use happycog\craftmcp\transports\StreamableHttpServerTransport;
 use happycog\craftmcp\transports\HttpServerTransport;
@@ -13,7 +14,6 @@ use craft\web\UrlManager;
 use craft\events\RegisterUrlRulesEvent;
 use PhpMcp\Schema\ServerCapabilities;
 use PhpMcp\Server\Server;
-use Psr\Container\ContainerInterface;
 use yii\di\Container;
 
 class Plugin extends BasePlugin
@@ -33,6 +33,7 @@ class Plugin extends BasePlugin
             ->withServerInfo('Craft CMS MCP Server', '1.0.0')
             ->withCapabilities($capabilities)
             ->withSessionHandler($sessionHandler)
+            ->withContainer(Craft::$container->get(Psr11ContainerProxy::class))
             ->build();
 
         $basePath = Craft::getAlias('@happycog/craftmcp');

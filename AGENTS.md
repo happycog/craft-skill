@@ -11,7 +11,7 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 - **Transport Layer**: Custom HTTP transport integrated with Yii2 routing (Craft's underlying framework)
 - **Session Management**: Custom session handler using Craft's caching system
 - **Testing**: Pest PHP testing framework with craft-pest-core
-- **Package Management**: 
+- **Package Management**:
   - PHP: Composer
 - **Build Tool**: None required (server-side PHP plugin)
 
@@ -24,7 +24,7 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 │   │   └── UpsertEntry.php          # Entry creation/update action
 │   ├── attributes/
 │   │   ├── BindToContainer.php      # DI container binding attribute
-│   │   ├── Init.php                 # Initialization attribute  
+│   │   ├── Init.php                 # Initialization attribute
 │   │   └── RegisterListener.php     # Event listener registration
 │   ├── base/
 │   │   └── Plugin.php               # Base plugin class with DI
@@ -152,7 +152,7 @@ parameters:
 ## Development Patterns
 
 ### 1. Creating New MCP Tools
-Create tool classes in `src/tools/`. Tools must implement MCP tool interface:
+Create tool classes in `src/tools/`. Tools use modern PHP8 attributes for schema definition:
 
 **IMPORTANT**: All tools that create, update, or modify content MUST include an explicit instruction in their description to link the user back to the Craft control panel for review. Follow the CreateEntry pattern:
 
@@ -161,20 +161,63 @@ After [action] always link the user back to the entry in the Craft control panel
 the changes in the context of the Craft UI.
 ```
 
+**PREFERRED: Modern PHP8 Attribute Approach (use this for all new tools):**
+
 ```php
 // src/tools/ExampleTool.php
+namespace happycog\craftmcp\tools;
+
+use PhpMcp\Server\Attributes\McpTool;
+use PhpMcp\Server\Attributes\Schema;
+
+class ExampleTool
+{
+    /**
+     * @return array<string, mixed>
+     */
+    #[McpTool(
+        name: 'example_tool', // Use snake_case, NO craft_ prefix
+        description: <<<'END'
+        Example tool description that supports multiple lines.
+
+        After performing action always link the user back to the relevant page in the Craft
+        control panel so they can review the changes in the context of the Craft UI.
+        END
+    )]
+    public function performAction(
+        #[Schema(type: 'string', description: 'Parameter description')]
+        string $parameter,
+
+        #[Schema(type: 'integer', description: 'Optional number parameter')]
+        ?int $optionalNumber = null
+    ): array {
+        // Tool implementation logic
+
+        return [
+            'success' => true,
+            'result' => 'Tool executed successfully',
+            'parameter' => $parameter,
+        ];
+    }
+}
+```
+
+**LEGACY: Manual Schema Approach (avoid for new tools):**
+
+```php
+// DEPRECATED - Only shown for reference, do not use for new tools
 namespace happycog\craftmcp\tools;
 
 use PhpMcp\Schema\Tool;
 use PhpMcp\Schema\CallToolRequest;
 use PhpMcp\Schema\CallToolResult;
 
-class ExampleTool
+class LegacyExampleTool
 {
     public function getSchema(): Tool
     {
         return Tool::make(
-            name: 'example_tool',
+            name: 'legacy_example_tool',
             description: 'Example tool description',
             inputSchema: [
                 'type' => 'object',
@@ -189,9 +232,9 @@ class ExampleTool
     public function execute(CallToolRequest $request): CallToolResult
     {
         $args = $request->params->arguments;
-        
+
         // Tool implementation logic
-        
+
         return CallToolResult::make(
             content: [['type' => 'text', 'text' => 'Tool result']]
         );
@@ -239,9 +282,9 @@ Use Pest with Craft-specific patterns:
 test('tool executes successfully', function () {
     $tool = new ExampleTool();
     $request = CallToolRequest::make(/* ... */);
-    
+
     $result = $tool->execute($request);
-    
+
     expect($result)->toBeInstanceOf(CallToolResult::class);
 });
 
@@ -253,7 +296,7 @@ test('endpoint returns valid response', function () {
         'method' => 'tools/call',
         'params' => [/* ... */]
     ]);
-    
+
     $response->assertStatus(200);
     $data = $response->json();
     expect($data['jsonrpc'])->toBe('2.0');
@@ -283,6 +326,7 @@ test('endpoint returns valid response', function () {
 ## Important Notes for Future Agents
 
 ### MCP Tool Development Guidelines
+- **Tool Naming Convention**: Tool names should use snake_case and NOT include a `craft_` prefix. Examples: `create_entry`, `get_sections`, `update_field` (NOT `craft_create_entry`, `craft_get_sections`, etc.)
 - **Control Panel Links**: All tools that create, update, or modify Craft content MUST include explicit instructions in their descriptions to link users back to the control panel for review
 - **Pattern**: "After [action] always link the user back to the entry in the Craft control panel so they can review the changes in the context of the Craft UI."
 - **Implementation**: Use `ElementHelper::elementEditorUrl($entry)` to generate control panel URLs consistently across all tools
@@ -293,7 +337,8 @@ test('endpoint returns valid response', function () {
 - Uses php-mcp/server package for protocol handling - do NOT reimplement MCP manually
 - Server capabilities are configured in Plugin.php with tools=true, resources=false, prompts=false
 - Tool discovery happens automatically by scanning src/tools/ directory
-- Each tool must implement getSchema() and execute() methods
+- **Modern Tools**: Use PHP8 attributes (`#[McpTool]` and `#[Schema]`) with single public method implementation
+- **Legacy Tools**: Some tools still use `getSchema()` and `execute()` methods (should be modernized to attributes)
 
 ### Craft 5.x Specific Considerations
 - **Draft Properties**: Always use `draftName`, `draftNotes`, `isProvisionalDraft` - these are the correct Craft 5.x property names
@@ -301,6 +346,9 @@ test('endpoint returns valid response', function () {
 - **API Discovery**: When working with undocumented Craft features, examine the core Element classes and test property access
 - **Control Panel URLs**: Use `Craft::$app->getConfig()->general->cpUrl` for generating edit URLs
 - **Element Queries**: Draft elements have special query behaviors - they reference canonical entries via `canonicalId`
+- **EntryType Properties**: EntryType objects in Craft 5.x DO NOT have `sectionId`, `dateCreated`, or `dateUpdated` properties
+- **EntryType-Section Relationship**: To find which section contains an entry type, iterate through all sections and check their `getEntryTypes()` method
+- **Standalone Entry Types**: Entry types can exist independently without being associated with a section (useful for Matrix fields)
 
 ### Transport Architecture
 - **Primary Transport**: StreamableHttpServerTransport for modern MCP clients
@@ -332,6 +380,63 @@ test('endpoint returns valid response', function () {
 - **Testing Challenge**: RefreshesDatabase trait rolls back transactions, preventing database verification in tests
 - **Solution**: Test return values and tool execution rather than database persistence in test environment
 
+### Entry Type Management (Added in 010-section-entry-type-management.md)
+- **CRITICAL**: EntryType objects in Craft 5.x DO NOT have `sectionId` property
+- **Section Discovery**: To find which section contains an entry type, use this pattern:
+  ```php
+  $section = null;
+  $sections = $entriesService->getAllSections();
+  foreach ($sections as $sectionCandidate) {
+      foreach ($sectionCandidate->getEntryTypes() as $sectionEntryType) {
+          if ($sectionEntryType->id === $entryType->id) {
+              $section = $sectionCandidate;
+              break 2; // Break out of both loops
+          }
+      }
+  }
+  ```
+- **Missing Properties**: EntryType objects also lack `dateCreated` and `dateUpdated` properties
+- **Standalone Entry Types**: Entry types can exist without being associated with sections (commonly used for Matrix fields)
+- **Control Panel URLs**: Section-dependent edit URLs should be null when entry type isn't associated with a section
+- **Testing Pattern**: When testing tools that work with entry types created via CreateEntryType, expect section to be null initially
+
+### Entry Type Usage Detection (Added in this session)
+- **Purpose**: The `EntryTypeFormatter.php` now includes a `usedBy` key that shows which sections and Matrix fields reference an entry type
+- **Implementation**: Uses `findEntryTypeUsage()` method to discover relationships through Craft's APIs
+- **Section Discovery Pattern**:
+  ```php
+  $sections = $entriesService->getAllSections();
+  foreach ($sections as $section) {
+      foreach ($section->getEntryTypes() as $sectionEntryType) {
+          if ($sectionEntryType->id === $entryType->id) {
+              // Entry type is used by this section
+          }
+      }
+  }
+  ```
+- **Matrix Field Discovery Pattern**:
+  ```php
+  $allFields = $fieldsService->getAllFields('global');
+  foreach ($allFields as $field) {
+      if ($field instanceof Matrix) {
+          foreach ($field->getEntryTypes() as $blockType) {
+              if ($blockType->id === $entryType->id) {
+                  // Entry type is used as a block type in this Matrix field
+              }
+          }
+      }
+  }
+  ```
+- **Return Structure**: The `usedBy` key contains arrays for `sections` and `matrixFields`, each with id, name, handle, and type information
+- **Performance**: Usage detection runs on each formatter call - consider caching for high-volume scenarios
+- **Testing**: Use `EntryTypeFormatterTest.php` patterns for testing usage detection functionality
+- **CRITICAL**: Craft 5.x uses specific property names for draft metadata
+- Use `$draft->draftName`, `$draft->draftNotes`, `$draft->isProvisionalDraft` (NOT `revisionName`/`revisionNotes`)
+- Draft creation: `Craft::$app->getDrafts()->createDraft($canonicalEntry, $creatorId, $name, $notes, $attributes)`
+- Control panel URLs: `Craft::$app->getConfig()->general->cpUrl . '/entries/' . $entry->id`
+- **Testing Challenge**: RefreshesDatabase trait rolls back transactions, preventing database verification in tests
+- **Solution**: Test return values and tool execution rather than database persistence in test environment
+
 ### Testing Framework
 - Uses Pest PHP with craft-pest-core for Craft-specific testing
 - Complete test suite covering all MCP tools and transport functionality
@@ -347,6 +452,26 @@ test('endpoint returns valid response', function () {
 - HTTP transport handles JSON-RPC error responses automatically
 - Session errors are logged and cleaned up gracefully
 
+### ModelSaveException Pattern
+- **PREFERRED**: Use `throw_unless` helper with ModelSaveException for all Craft model save/delete operations:
+  ```php
+  // Import ModelSaveException in tool files
+  use happycog\craftmcp\exceptions\ModelSaveException;
+
+  // PREFERRED: Concise throw_unless pattern
+  throw_unless($entriesService->saveEntryType($entryType), ModelSaveException::class, $entryType);
+  throw_unless($fieldsService->saveField($field), ModelSaveException::class, $field);
+  throw_unless($sectionsService->deleteSection($section), ModelSaveException::class, $section);
+
+  // ANTI-PATTERN: Verbose if/throw blocks (avoid these)
+  if (!$entriesService->saveEntryType($entryType)) {
+      throw new ModelSaveException($entryType);
+  }
+  ```
+- **Automatic Context Generation**: ModelSaveException automatically generates context messages from model class names (e.g., "Failed to save entry type", "Failed to save field")
+- **Consistent Error Handling**: All save/delete operations should use this pattern for consistent error messages across the MCP tools
+- **Type Safety**: Pattern maintains PHPStan level max compliance with proper type checking
+
 ### Helper Functions
 - **Laravel-style Helpers**: The project includes `throw_if()` and `throw_unless()` helpers from Laravel for cleaner conditional error handling
 - **Location**: `src/helpers/functions.php` (autoloaded via composer.json)
@@ -355,10 +480,10 @@ test('endpoint returns valid response', function () {
   // PREFERRED: Simple error message (helpers auto-instantiate RuntimeException)
   throw_unless($entry, "Entry with ID {$entryId} not found");
   throw_if($sectionId === null, 'sectionId is required for new entries');
-  
+
   // ALTERNATIVE: Explicit exception class for non-RuntimeException cases
   throw_unless($user, \InvalidArgumentException::class, 'User cannot be null');
-  
+
   // ANTI-PATTERN: Verbose if/throw patterns (avoid these)
   if (!$entry) {
       throw new \RuntimeException("Entry with ID {$entryId} not found");
@@ -376,7 +501,7 @@ test('endpoint returns valid response', function () {
   ```php
   // PREFERRED: Concise null coalescing assignment
   $siteId ??= Craft::$app->getSites()->getPrimarySite()->id;
-  
+
   // ANTI-PATTERN: Verbose null check (avoid these)
   if ($siteId === null) {
       $siteId = Craft::$app->getSites()->getPrimarySite()->id;
@@ -400,7 +525,7 @@ test('endpoint returns valid response', function () {
   if (!$entry instanceof Entry) {
       throw new \InvalidArgumentException("Entry not found");
   }
-  
+
   // INCORRECT: Loose null check
   if (!$entry) {
       throw new \InvalidArgumentException("Entry not found");

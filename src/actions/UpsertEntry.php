@@ -29,7 +29,7 @@ class UpsertEntry
             throw_unless($entryTypeId, 'entryTypeId is required for new entries');
             $entry->sectionId = $sectionId;
             $entry->typeId = $entryTypeId;
-            
+
             // Set siteId for new entries only (don't change existing entry's site)
             if ($siteId) {
                 $entry->siteId = $siteId;
@@ -38,7 +38,7 @@ class UpsertEntry
 
         $fieldLayout = $entry->getFieldLayout();
         throw_unless($fieldLayout, 'Entry field layout not found');
-        
+
         /** @phpstan-ignore-next-line */
         $customFields = Collection::make($fieldLayout->getCustomFields())
             ->keyBy('handle')

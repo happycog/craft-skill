@@ -29,7 +29,7 @@ class StreamableHttpServerTransport implements ServerTransportInterface
     protected ?string $currentSessionId = null;
     protected bool $listening = false;
 
-    public function __construct(SessionHandlerInterface $sessionHandler = null)
+    public function __construct(?SessionHandlerInterface $sessionHandler = null)
     {
         $this->sessionHandler = $sessionHandler ?? new CraftSessionHandler();
     }

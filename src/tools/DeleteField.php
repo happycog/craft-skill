@@ -4,6 +4,7 @@ namespace happycog\craftmcp\tools;
 
 use Craft;
 use craft\helpers\UrlHelper;
+use happycog\craftmcp\exceptions\ModelSaveException;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
 
@@ -61,24 +62,7 @@ class DeleteField
         
         // Perform the deletion
         try {
-            $success = $fieldsService->deleteField($field);
-            
-            if (!$success) {
-                // Get any errors from the field model
-                $errors = $field->getErrors();
-                $errorMessages = [];
-                foreach ($errors as $attribute => $attributeErrors) {
-                    foreach ($attributeErrors as $error) {
-                        $errorMessages[] = "{$attribute}: {$error}";
-                    }
-                }
-                
-                if (empty($errorMessages)) {
-                    throw new \Exception("Failed to delete field for unknown reason.");
-                } else {
-                    throw new \Exception("Failed to delete field: " . implode(', ', $errorMessages));
-                }
-            }
+            throw_unless($fieldsService->deleteField($field), ModelSaveException::class, $field);
         } catch (\Exception $e) {
             throw new \Exception("Failed to delete field: " . $e->getMessage());
         }

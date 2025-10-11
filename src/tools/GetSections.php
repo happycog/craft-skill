@@ -4,10 +4,18 @@ namespace happycog\craftmcp\tools;
 
 use Craft;
 use PhpMcp\Server\Attributes\McpTool;
+use PhpMcp\Server\Attributes\Schema;
+use happycog\craftmcp\actions\EntryTypeFormatter;
 
 class GetSections
 {
+    public function __construct(
+        protected EntryTypeFormatter $entryTypeFormatter,
+    ) {
+    }
+
     /**
+     * @param array<int>|null $sectionIds
      * @return array<int, array<string, mixed>>
      */
     #[McpTool(
@@ -23,20 +31,22 @@ class GetSections
         layout.
         END
     )]
-    public function get(): array
+    public function get(
+        #[Schema(type: 'array', items: ['type' => 'number'], description: 'Optional list of section IDs to limit results')]
+        ?array $sectionIds = null
+    ): array
     {
         $sections = Craft::$app->getEntries()->getAllSections();
 
         $result = [];
         foreach ($sections as $section) {
+            if (is_array($sectionIds) && $sectionIds !== [] && !in_array($section->id, $sectionIds, true)) {
+                continue;
+            }
+
             $entryTypes = [];
             foreach ($section->getEntryTypes() as $entryType) {
-                $entryTypes[] = [
-                    'id' => $entryType->id,
-                    'handle' => $entryType->handle,
-                    'name' => $entryType->name,
-                    'fieldLayoutId' => $entryType->fieldLayoutId,
-                ];
+                $entryTypes[] = $this->entryTypeFormatter->formatEntryType($entryType, false);
             }
 
             $result[] = [

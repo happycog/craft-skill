@@ -5,6 +5,7 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\base\FieldInterface;
 use craft\helpers\UrlHelper;
+use happycog\craftmcp\exceptions\ModelSaveException;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
 
@@ -111,16 +112,7 @@ class UpdateField
         $field = $fieldsService->createField($fieldConfig);
         
         // Save the field
-        if (!$fieldsService->saveField($field)) {
-            $errors = $field->getErrors();
-            $errorMessages = [];
-            foreach ($errors as $attribute => $attributeErrors) {
-                foreach ($attributeErrors as $error) {
-                    $errorMessages[] = "{$attribute}: {$error}";
-                }
-            }
-            throw new \Exception("Failed to save field: " . implode(', ', $errorMessages));
-        }
+        throw_unless($fieldsService->saveField($field), ModelSaveException::class, $field);
         
         // Generate control panel URL
         $editUrl = UrlHelper::cpUrl('settings/fields/edit/' . $field->id);

@@ -5,6 +5,7 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
+use happycog\craftmcp\exceptions\ModelSaveException;
 use PhpMcp\Server\Attributes\McpTool;
 use PhpMcp\Server\Attributes\Schema;
 
@@ -145,9 +146,7 @@ class CreateDraft
                 }
 
                 // Save the updated draft
-                if (!Craft::$app->getElements()->saveElement($draft)) {
-                    throw new \RuntimeException('Failed to update draft: ' . implode(' ', $draft->getErrorSummary(true)));
-                }
+                throw_unless(Craft::$app->getElements()->saveElement($draft), ModelSaveException::class, $draft);
             }
         }
 

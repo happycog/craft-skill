@@ -4,7 +4,7 @@ use happycog\craftmcp\tools\CreateEntry;
 
 beforeEach(function () {
     $this->createEntry = function (array $attributeAndFieldData, ?int $siteId = null) {
-        $section = Craft::$app->getEntries()->getAllSections()[0];
+        $section = Craft::$app->getEntries()->getSectionByHandle('news');
         $sectionId = $section->id;
         $entryTypeId = $section->getEntryTypes()[0]->id;
 
@@ -44,7 +44,7 @@ it('can create custom text fields', function () {
 
 it('creates entry for primary site when siteId is not provided', function () {
     $primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
-    
+
     $entry = ($this->createEntry)([
         'title' => 'Primary site entry',
     ]);
@@ -54,7 +54,7 @@ it('creates entry for primary site when siteId is not provided', function () {
 
 it('creates entry for specified site when siteId is provided', function () {
     $primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
-    
+
     $entry = ($this->createEntry)([
         'title' => 'Specific site entry',
     ], $primarySiteId);
@@ -66,9 +66,9 @@ it('throws exception for invalid siteId', function () {
     $section = Craft::$app->getEntries()->getAllSections()[0];
     $sectionId = $section->id;
     $entryTypeId = $section->getEntryTypes()[0]->id;
-    
+
     $createEntry = Craft::$container->get(CreateEntry::class);
-    
+
     expect(fn() => $createEntry->create(
         sectionId: $sectionId,
         entryTypeId: $entryTypeId,
