@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"craft7": {
+			"url": "https://craft-mcp.test/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

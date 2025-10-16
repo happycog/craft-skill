@@ -5,6 +5,7 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use PhpMcp\Server\Attributes\McpTool;
 use happycog\craftmcp\actions\FieldFormatter;
+use PhpMcp\Server\Attributes\Schema;
 
 class GetFields
 {
@@ -22,11 +23,14 @@ class GetFields
         Get a list of all fields in Craft CMS. This is useful for understanding the available fields, their
         configurations, and the field handle that must be used when creating or updating entries.
 
-        You can pass an optional fieldLayoutId, if you know it, to only get the fields associated with that layout.
+        You can pass an optional fieldLayoutId, if you know it, to only get the fields associated with that layout. Passing
+        null will return all global fields.
         END
     )]
-    public function get(?int $fieldLayoutId): array
-    {
+    public function get(
+        #[Schema(type: 'integer', description: 'Optional field layout ID to filter fields. Can be `null` to return all global fields.')]
+        ?int $fieldLayoutId = null
+    ): array {
         return $fieldLayoutId
             ? $this->getFieldsForLayout($fieldLayoutId)
             : $this->getAllGlobalFields();

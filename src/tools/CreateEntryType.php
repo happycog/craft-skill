@@ -95,6 +95,9 @@ class CreateEntryType
             }
         }
 
+        // If hasTitleField is false, make sure the titleFormat is set, otherwise throw an error
+        throw_if(! $hasTitleField && ! empty($titleFormat), \InvalidArgumentException::class, "If 'hasTitleField' is false, 'titleFormat' must be set to define how titles are automatically generated.");
+
         // Save the entry type
         throw_unless($entriesService->saveEntryType($entryType), ModelSaveException::class, $entryType);
 

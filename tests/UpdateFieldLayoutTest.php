@@ -119,9 +119,19 @@ describe('UpdateFieldLayout', function () {
         $tabs = [
             [
                 'name' => 'Content',
-                'fields' => [
-                    ['fieldId' => $field1Id, 'required' => true, 'width' => 100],
-                    ['fieldId' => $field2Id, 'required' => false, 'width' => 50],
+                'elements' => [
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field1Id,
+                        'required' => true,
+                        'width' => 100
+                    ],
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field2Id,
+                        'required' => false,
+                        'width' => 50
+                    ],
                 ]
             ]
         ];
@@ -131,17 +141,17 @@ describe('UpdateFieldLayout', function () {
         expect($result)->toHaveKey('fieldLayout');
         expect($result['fieldLayout']['tabs'])->toHaveCount(1);        $contentTab = $result['fieldLayout']['tabs'][0];
         expect($contentTab['name'])->toBe('Content');
-        expect($contentTab['fields'])->toHaveCount(2);
+        expect($contentTab['elements'])->toHaveCount(2);
 
-        $firstField = $contentTab['fields'][0];
-        expect($firstField['id'])->toBe($field1Id);
-        expect($firstField['required'])->toBe(true);
-        expect($firstField['width'])->toBe(100);
+        $firstElement = $contentTab['elements'][0];
+        expect($firstElement['fieldId'])->toBe($field1Id);
+        expect($firstElement['required'])->toBe(true);
+        expect($firstElement['width'])->toBe(100);
 
-        $secondField = $contentTab['fields'][1];
-        expect($secondField['id'])->toBe($field2Id);
-        expect($secondField['required'])->toBe(false);
-        expect($secondField['width'])->toBe(50);
+        $secondElement = $contentTab['elements'][1];
+        expect($secondElement['fieldId'])->toBe($field2Id);
+        expect($secondElement['required'])->toBe(false);
+        expect($secondElement['width'])->toBe(50);
     });
 
     test('can update field layout with multiple tabs', function () {
@@ -160,15 +170,30 @@ describe('UpdateFieldLayout', function () {
         $tabs = [
             [
                 'name' => 'Content',
-                'fields' => [
-                    ['fieldId' => $field1Id, 'required' => true, 'width' => 100],
+                'elements' => [
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field1Id,
+                        'required' => true,
+                        'width' => 100
+                    ],
                 ]
             ],
             [
                 'name' => 'Metadata',
-                'fields' => [
-                    ['fieldId' => $field2Id, 'required' => false, 'width' => 50],
-                    ['fieldId' => $field3Id, 'required' => true, 'width' => 50],
+                'elements' => [
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field2Id,
+                        'required' => false,
+                        'width' => 50
+                    ],
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field3Id,
+                        'required' => true,
+                        'width' => 50
+                    ],
                 ]
             ]
         ];
@@ -178,14 +203,14 @@ describe('UpdateFieldLayout', function () {
         expect($result)->toHaveKey('fieldLayout');
         expect($result['fieldLayout']['tabs'])->toHaveCount(2);        $contentTab = $result['fieldLayout']['tabs'][0];
         expect($contentTab['name'])->toBe('Content');
-        expect($contentTab['fields'])->toHaveCount(1);
-        expect($contentTab['fields'][0]['id'])->toBe($field1Id);
+        expect($contentTab['elements'])->toHaveCount(1);
+        expect($contentTab['elements'][0]['fieldId'])->toBe($field1Id);
 
         $metadataTab = $result['fieldLayout']['tabs'][1];
         expect($metadataTab['name'])->toBe('Metadata');
-        expect($metadataTab['fields'])->toHaveCount(2);
-        expect($metadataTab['fields'][0]['id'])->toBe($field2Id);
-        expect($metadataTab['fields'][1]['id'])->toBe($field3Id);
+        expect($metadataTab['elements'])->toHaveCount(2);
+        expect($metadataTab['elements'][0]['fieldId'])->toBe($field2Id);
+        expect($metadataTab['elements'][1]['fieldId'])->toBe($field3Id);
     });
 
     test('can update field layout with empty tabs', function () {
@@ -197,7 +222,7 @@ describe('UpdateFieldLayout', function () {
         $tabs = [
             [
                 'name' => 'Empty Tab',
-                'fields' => []
+                'elements' => []
             ]
         ];
 
@@ -206,7 +231,7 @@ describe('UpdateFieldLayout', function () {
         expect($result)->toHaveKey('fieldLayout');
         expect($result['fieldLayout']['tabs'])->toHaveCount(1);        $emptyTab = $result['fieldLayout']['tabs'][0];
         expect($emptyTab['name'])->toBe('Empty Tab');
-        expect($emptyTab['fields'])->toHaveCount(0);
+        expect($emptyTab['elements'])->toHaveCount(0);
     });
 
     test('validates required field layout ID', function () {
@@ -223,8 +248,13 @@ describe('UpdateFieldLayout', function () {
         $tabs = [
             [
                 'name' => 'Content',
-                'fields' => [
-                    ['fieldId' => 999999, 'required' => false, 'width' => 100],
+                'elements' => [
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => 999999,
+                        'required' => false,
+                        'width' => 100
+                    ],
                 ]
             ]
         ];
@@ -251,22 +281,42 @@ describe('UpdateFieldLayout', function () {
         $tabs = [
             [
                 'name' => 'Content',
-                'fields' => [
-                    ['fieldId' => $field1Id, 'required' => false, 'width' => 25],
-                    ['fieldId' => $field2Id, 'required' => false, 'width' => 50],
-                    ['fieldId' => $field3Id, 'required' => false, 'width' => 75],
-                    ['fieldId' => $field4Id, 'required' => false, 'width' => 100],
+                'elements' => [
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field1Id,
+                        'required' => false,
+                        'width' => 25
+                    ],
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field2Id,
+                        'required' => false,
+                        'width' => 50
+                    ],
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field3Id,
+                        'required' => false,
+                        'width' => 75
+                    ],
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field4Id,
+                        'required' => false,
+                        'width' => 100
+                    ],
                 ]
             ]
         ];
 
         $result = ($this->updateFieldLayout)($entryTypeId, $tabs);
 
-        $fields = $result['fieldLayout']['tabs'][0]['fields'];
-        expect($fields[0]['width'])->toBe(25);
-        expect($fields[1]['width'])->toBe(50);
-        expect($fields[2]['width'])->toBe(75);
-        expect($fields[3]['width'])->toBe(100);
+        $elements = $result['fieldLayout']['tabs'][0]['elements'];
+        expect($elements[0]['width'])->toBe(25);
+        expect($elements[1]['width'])->toBe(50);
+        expect($elements[2]['width'])->toBe(75);
+        expect($elements[3]['width'])->toBe(100);
     });
 
     test('includes edit URL when entry type is associated with a section', function () {
@@ -278,7 +328,7 @@ describe('UpdateFieldLayout', function () {
         $tabs = [
             [
                 'name' => 'Content',
-                'fields' => []
+                'elements' => []
             ]
         ];
 
@@ -301,8 +351,13 @@ describe('UpdateFieldLayout', function () {
         $tabs = [
             [
                 'name' => 'Content',
-                'fields' => [
-                    ['fieldId' => $fieldId, 'required' => true, 'width' => 100],
+                'elements' => [
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $fieldId,
+                        'required' => true,
+                        'width' => 100
+                    ],
                 ]
             ]
         ];
@@ -316,7 +371,7 @@ describe('UpdateFieldLayout', function () {
         expect($result['fieldLayout']['tabs'])->toBeArray();
 
         // Verify field structure within tab
-        $field = $result['fieldLayout']['tabs'][0]['fields'][0];
-        expect($field)->toHaveKeys(['id', 'name', 'handle', 'type', 'required', 'width']);
+        $element = $result['fieldLayout']['tabs'][0]['elements'][0];
+        expect($element)->toHaveKeys(['uid', 'type', 'width', 'fieldId', 'required']);
     });
 });
