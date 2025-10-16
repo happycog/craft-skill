@@ -21,7 +21,7 @@ class SearchContent
         description: <<<'END'
         Search for content in the Craft CMS system. Returns a list of entries that match the search query, their
         associated entryId, title, and URL for editing in the control panel.
-        
+
         You can filter results by section using the sectionIds parameter, and optionally provide a search query.
         Examples:
         - Search within specific sections: provide both query and sectionIds
@@ -35,7 +35,14 @@ class SearchContent
         int $limit = 5,
         #[Schema(description: 'The status of the entry to search for. By default only "live" entries are returned. You can also pass "pending", "expired" or "disabled" to get additional entries.')]
         string $status = Entry::STATUS_LIVE,
-        #[Schema(description: 'Optional array of section IDs to filter results. Only entries from these sections will be returned.')]
+        #[Schema(
+            type: 'array',
+            description: 'Optional array of section IDs to filter results. Only entries from these sections will be returned.',
+            items: [
+                'type' => 'integer',
+                'description' => 'A section ID to include in the results'
+            ]
+        )]
         ?array $sectionIds = null
     ): array {
         // Validate section IDs if provided
@@ -48,17 +55,17 @@ class SearchContent
 
         // Build the entry query
         $query_builder = Entry::find()->limit($limit)->status($status);
-        
+
         // Apply section filtering if provided
         if ($sectionIds !== null) {
             $query_builder->sectionId($sectionIds);
         }
-        
+
         // Apply search query if provided
         if ($query !== null) {
             $query_builder->search($query);
         }
-        
+
         $result = $query_builder->all();
 
         // Generate appropriate notes message
@@ -76,8 +83,8 @@ class SearchContent
             }
             $notes[] = "section(s): " . implode(', ', $sectionNames);
         }
-        
-        $notesText = empty($notes) 
+
+        $notesText = empty($notes)
             ? 'The following entries were found.'
             : 'The following entries were found matching ' . implode(' and ', $notes) . '.';
 
