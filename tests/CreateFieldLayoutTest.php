@@ -155,9 +155,19 @@ test('complete workflow: create entry type, field layout, fields, assign layout'
         tabs: [
             [
                 'name' => 'Content',
-                'fields' => [
-                    ['fieldId' => $field1Id, 'required' => true, 'width' => 100],
-                    ['fieldId' => $field2Id, 'required' => false, 'width' => 50],
+                'elements' => [
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field1Id,
+                        'required' => true,
+                        'width' => 100
+                    ],
+                    [
+                        'type' => 'craft\\fieldlayoutelements\\CustomField',
+                        'fieldId' => $field2Id,
+                        'required' => false,
+                        'width' => 50
+                    ],
                 ]
             ]
         ]
