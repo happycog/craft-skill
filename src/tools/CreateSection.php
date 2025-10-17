@@ -8,75 +8,54 @@ use craft\helpers\UrlHelper;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class CreateSection
 {
-
     /**
-     * @param array<int> $entryTypeIds
-     * @param array<int, array<string, mixed>>|null $siteSettings
-     * @return array<string, mixed>
+     * Create a new section in Craft CMS. Sections define the structural organization of content with different types:
+     * - Single: One entry per section (e.g., homepage, about page)
+     * - Channel: Multiple entries with flexible structure (e.g., news, blog posts)
+     * - Structure: Hierarchical entries with parent-child relationships (e.g., pages with nested structure)
+     *
+     * Supports multi-site installations with site-specific settings. Entry types must be created separately using the
+     * CreateEntryType tool and can be assigned to the section after creation.
+     *
+     * Returns the section details including control panel URL for further configuration.
+     *
+     * After creating the section always link the user back to the section settings in the Craft control panel
+     * so they can review and further configure the section in the context of the Craft UI.
      */
-    #[McpTool(
-        name: 'create_section',
-        description: <<<'END'
-        Create a new section in Craft CMS. Sections define the structural organization of content with different types:
-        - Single: One entry per section (e.g., homepage, about page)
-        - Channel: Multiple entries with flexible structure (e.g., news, blog posts)
-        - Structure: Hierarchical entries with parent-child relationships (e.g., pages with nested structure)
-
-        Supports multi-site installations with site-specific settings. Entry types must be created separately using the
-        CreateEntryType tool and can be assigned to the section after creation.
-
-        Returns the section details including control panel URL for further configuration.
-
-        After creating the section always link the user back to the section settings in the Craft control panel
-        so they can review and further configure the section in the context of the Craft UI.
-        END
-    )]
     public function create(
-        #[Schema(type: 'string', description: 'The display name for the section')]
-        string $name,
+         /** The display name for the section */
+         string $name,
 
-        #[Schema(type: 'string', enum: ['single', 'channel', 'structure'], description: 'Section type: single (one entry), channel (multiple entries), or structure (hierarchical entries)')]
-        string $type,
+	 /** @var string<'single'|'channel'|'structure'> $type Section type: single (one entry), channel (multiple entries), or structure (hierarchical entries). One of: single, channel, structure */
+         string $type,
 
-        #[Schema(type: 'array', items: ['type' => 'integer'], description: 'Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first.')]
-        array $entryTypeIds,
+         /** @var array<int> $entryTypeIds Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first. This can also be empty to create a section without any entry types. Although not common this is possible. */
+         array $entryTypeIds,
 
-        #[Schema(type: 'string', description: 'The section handle (machine-readable name). Auto-generated from name if not provided.')]
-        ?string $handle = null,
+         /** The section handle (machine-readable name). Auto-generated from name if not provided. */
+         ?string $handle = null,
 
-        #[Schema(type: 'boolean', description: 'Whether to enable entry versioning for this section')]
-        bool $enableVersioning = true,
+         /** Whether to enable entry versioning for this section */
+         bool $enableVersioning = true,
 
-        #[Schema(type: 'string', enum: ['all', 'siteGroup', 'language', 'custom', 'none'], description: 'How content propagates across sites: all, siteGroup, language, custom, or none')]
-        string $propagationMethod = Section::PROPAGATION_METHOD_ALL,
+         /** @var string<'all'|'siteGroup'|'language'|'custom'|'none'> How content propagates across sites */
+         string $propagationMethod = Section::PROPAGATION_METHOD_ALL,
 
-        #[Schema(type: 'integer', description: 'Maximum hierarchy levels (only for structure sections). Null/0 for unlimited.')]
-        ?int $maxLevels = null,
+         /** Maximum hierarchy levels (only for structure sections). Null/0 for unlimited. */
+         ?int $maxLevels = null,
 
-        #[Schema(type: 'string', enum: ['beginning', 'end'], description: 'Where new entries are placed by default (only for structure sections)')]
-        string $defaultPlacement = 'end',
+         /** @var string<'beginning'|'end'> Where new entries are placed by default (only for structure sections). One of: beginning, end */
+         string $defaultPlacement = 'end',
 
-        #[Schema(type: 'integer', description: 'Maximum number of authors that can be assigned to entries in this section')]
-        ?int $maxAuthors = null,
+         /** Maximum number of authors that can be assigned to entries in this section */
+         ?int $maxAuthors = null,
 
-        #[Schema(type: 'array', description: 'Site-specific settings. If not provided, section will be enabled for all sites with default settings.', items: [
-            'type' => 'object',
-            'properties' => [
-                'siteId' => ['type' => 'integer', 'description' => 'Site ID'],
-                'enabledByDefault' => ['type' => 'boolean', 'description' => 'Enable entries by default'],
-                'hasUrls' => ['type' => 'boolean', 'description' => 'Whether entries have URLs'],
-                'uriFormat' => ['type' => 'string', 'description' => 'URI format pattern'],
-                'template' => ['type' => 'string', 'description' => 'Template path for rendering']
-            ],
-            'required' => ['siteId']
-        ])]
-        ?array $siteSettings = null
-    ): array {
+         /** @var array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null Site-specific settings. If not provided, section will be enabled for all sites with default settings. */
+         ?array $siteSettings = null
+     ): array {
         throw_unless(in_array($type, [Section::TYPE_SINGLE, Section::TYPE_CHANNEL, Section::TYPE_STRUCTURE]),
                     'Section type must be single, channel, or structure');
 

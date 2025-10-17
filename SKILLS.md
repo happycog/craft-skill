@@ -54,14 +54,19 @@ Content-Type: application/json
 **Parameters:**
 - `name` (string, required): Display name for the section
 - `type` (string, required): Section type: `single`, `channel`, or `structure`
-- `entryTypeIds` (array of integers, required): Entry type IDs to assign to this section
+- `entryTypeIds` (array of integers, required): Entry type IDs to assign to this section. Can be an empty array to create a section without entry types (uncommon but possible).
 - `handle` (string, optional): Machine-readable name (auto-generated from name if omitted)
 - `enableVersioning` (boolean, optional): Enable entry versioning. Default: `true`
 - `propagationMethod` (string, optional): How content propagates across sites: `all`, `siteGroup`, `language`, `custom`, or `none`. Default: `all`
-- `maxLevels` (integer, optional): Maximum hierarchy levels for structure sections. `null` or `0` for unlimited
+- `maxLevels` (integer, optional): Maximum hierarchy levels for structure sections. `null` or `0` for unlimited. Default: `null` (structure sections only)
 - `defaultPlacement` (string, optional): Where new entries are placed: `beginning` or `end`. Default: `end` (structure sections only)
-- `maxAuthors` (integer, optional): Maximum number of authors per entry
-- `siteSettings` (array, optional): Site-specific settings for multi-site installations
+- `maxAuthors` (integer, optional): Maximum number of authors per entry. Default: `null`
+- `siteSettings` (array of objects, optional): Site-specific settings for multi-site installations. If not provided, section will be enabled for all sites with default settings. Each object should contain:
+  - `siteId` (integer, required): The site ID
+  - `enabledByDefault` (boolean, optional): Whether entries are enabled by default for this site. Default: `true`
+  - `hasUrls` (boolean, optional): Whether entries have URLs. Default: `true`
+  - `uriFormat` (string, optional): URI format pattern. Default: `{handle}` for single sections, `{handle}/{slug}` for channel/structure sections
+  - `template` (string, optional): Template path for rendering entries. Default: `null`
 
 **Response:**
 ```json
