@@ -18,10 +18,10 @@ class Plugin extends BasePlugin
 
         self::$plugin = $this;
 
-        $this->controllerNamespace = 'happycog\\craftmcp\\controllers';
-
         if (\Craft::$app->getRequest() instanceof Request) {
             $this->controllerNamespace = 'happycog\\craftmcp\\console';
+        } else {
+            $this->controllerNamespace = 'happycog\\craftmcp\\controllers';
         }
 
         \Craft::setAlias('@happycog/craftmcp', $this->getBasePath());
@@ -35,5 +35,13 @@ class Plugin extends BasePlugin
                 $instance($callable, $method, $attribute);
             }
         }
+    }
+
+    /**
+     * @return class-string
+     */
+    protected static function settingsClass(): ?string
+    {
+        return \happycog\craftmcp\Settings::class;
     }
 }

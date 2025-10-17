@@ -86,5 +86,12 @@ class Plugin extends BasePlugin
         $event->rules['GET mcp'] = 'mcp/streamable-transport/listen';
         $event->rules['POST mcp'] = 'mcp/streamable-transport/message';
         $event->rules['DELETE mcp'] = 'mcp/streamable-transport/disconnect';
+
+        // API routes for Skills
+        $apiPrefix = $this->getSettings()->apiPrefix ?? 'api';
+        $event->rules['POST ' . $apiPrefix . '/sections'] = 'mcp/sections/create';
+        $event->rules['GET ' . $apiPrefix . '/sections'] = 'mcp/sections/list';
+        $event->rules['PUT ' . $apiPrefix . '/sections/<id>'] = 'mcp/sections/update';
+        $event->rules['DELETE ' . $apiPrefix . '/sections/<id>'] = 'mcp/sections/delete';
     }
 }

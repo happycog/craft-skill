@@ -4,7 +4,7 @@
     "craft": {
       "type": "remote",
       "url": "https://craft-mcp.test/mcp",
-      "enabled": true
+      "enabled": false
     }
   }
 }

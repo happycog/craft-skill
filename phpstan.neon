@@ -9,3 +9,6 @@ parameters:
         - .phpstorm.meta.php/Container.stub
         - .phpstorm.meta.php/Craft.stub
         - .phpstorm.meta.php/functions.stub
+    ignoreErrors:
+        - message: '#Method happycog\\craftmcp\\Settings::defineRules\(\) should return array<string, mixed> but returns#'
+          path: src/Settings.php
