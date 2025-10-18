@@ -29,6 +29,7 @@ abstract class Controller extends CraftController
         try {
             $mapper = (new MapperBuilder())
                 ->allowPermissiveTypes()
+                ->allowScalarValueCasting()
                 ->argumentsMapper();
             $sourceArray = $useQueryParams 
                 ? $this->request->getQueryParams()
@@ -36,9 +37,6 @@ abstract class Controller extends CraftController
             
             // Merge additional params (e.g., path params) into source array
             $sourceArray = array_merge($sourceArray, $params);
-            
-            // Convert numeric strings to integers recursively
-            $sourceArray = $this->castNumericStringsToIntegers($sourceArray);
             
             $source = Source::array($sourceArray);
             
@@ -51,23 +49,5 @@ abstract class Controller extends CraftController
             $this->response->setStatusCode(400);
             return $this->asJson(['error' => (string) $error]);
         }
-    }
-
-    /**
-     * Recursively cast numeric strings to integers in an array
-     *
-     * @param array<string, mixed> $array
-     * @return array<string, mixed>
-     */
-    private function castNumericStringsToIntegers(array $array): array
-    {
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $array[$key] = $this->castNumericStringsToIntegers($value);
-            } elseif (is_string($value) && is_numeric($value) && ctype_digit($value)) {
-                $array[$key] = (int) $value;
-            }
-        }
-        return $array;
     }
 }
