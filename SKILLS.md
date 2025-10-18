@@ -1,11 +1,11 @@
 ---
-name: Craft CMS Section and Entry Type Management
-description: Manage sections and entry types in Craft CMS. Sections define content structure organization, while entry types define content schemas with field layouts.
+name: Craft CMS Content Management HTTP API
+description: Complete HTTP API for managing all aspects of Craft CMS content including sections, entry types, fields, entries, drafts, field layouts, and sites.
 ---
 
-# Craft CMS Section and Entry Type Management
+# Craft CMS Content Management HTTP API
 
-This skill provides HTTP endpoints to manage sections and entry types in Craft CMS.
+This skill provides a comprehensive RESTful HTTP API for managing all Craft CMS content and configuration.
 
 **Sections** define how content is organized and structured. They support three types: Single (one entry per section), Channel (multiple entries with flexible structure), and Structure (hierarchical entries with parent-child relationships).
 
@@ -476,3 +476,311 @@ Error responses include an error message explaining the issue.
 - **Usage Detection**: The list endpoint shows which sections and Matrix fields reference each entry type via the `usedBy` property
 - **Force Delete**: Deleting entry types with existing entries requires `force=true` and causes permanent data loss. Always get user approval before forcing deletion
 - **Control Panel Links**: After creating or updating entry types, users can review changes in the Craft control panel using the `editUrl` provided in responses
+
+---
+
+## Field Management
+
+Manage custom fields in Craft CMS. Fields define the content structure and data types for entries.
+
+### Field Endpoints
+
+#### Create a Field
+```
+POST /api/fields
+Content-Type: application/json
+
+{
+  "name": "Body Content",
+  "handle": "bodyContent",
+  "type": "craft\\fields\\PlainText",
+  "instructions": "Enter the main body content",
+  "translationMethod": "site",
+  "settings": {
+    "columnType": "text",
+    "placeholder": "Enter content here..."
+  }
+}
+```
+
+#### List Fields
+```
+GET /api/fields
+```
+
+#### Get Field Types
+```
+GET /api/fields/types
+```
+
+Returns all available field types in Craft CMS with their class names.
+
+#### Update a Field
+```
+PUT /api/fields/1
+Content-Type: application/json
+
+{
+  "name": "Updated Body Content",
+  "instructions": "Updated instructions",
+  "settings": {
+    "columnType": "mediumtext"
+  }
+}
+```
+
+#### Delete a Field
+```
+DELETE /api/fields/1
+Content-Type: application/json
+
+{
+  "force": false
+}
+```
+
+---
+
+## Entry Management
+
+Manage content entries in Craft CMS.
+
+### Entry Endpoints
+
+#### Create an Entry
+```
+POST /api/entries
+Content-Type: application/json
+
+{
+  "sectionId": 1,
+  "entryTypeId": 1,
+  "title": "My New Blog Post",
+  "slug": "my-new-blog-post",
+  "fields": {
+    "bodyContent": "This is the main content...",
+    "author": "John Doe"
+  },
+  "siteId": 1,
+  "enabled": true,
+  "postDate": "2024-01-15T10:00:00Z"
+}
+```
+
+#### Get an Entry
+```
+GET /api/entries/1?siteId=1
+```
+
+#### Search Entries
+```
+GET /api/entries/search?section=blog&limit=10&search=keyword&status=enabled
+```
+
+**Parameters:**
+- `section` (string, optional): Section handle to filter by
+- `type` (string, optional): Entry type handle to filter by
+- `siteId` (integer, optional): Site ID to filter by
+- `status` (string, optional): Entry status filter
+- `limit` (integer, optional): Maximum results to return
+- `search` (string, optional): Search term
+
+#### Update an Entry
+```
+PUT /api/entries/1
+Content-Type: application/json
+
+{
+  "title": "Updated Title",
+  "fields": {
+    "bodyContent": "Updated content..."
+  },
+  "postDate": "2024-01-16T10:00:00Z"
+}
+```
+
+#### Delete an Entry
+```
+DELETE /api/entries/1
+Content-Type: application/json
+
+{
+  "permanent": false
+}
+```
+
+---
+
+## Draft Management
+
+Manage entry drafts for staged content changes.
+
+### Draft Endpoints
+
+#### Create a Draft
+```
+POST /api/drafts
+Content-Type: application/json
+
+{
+  "entryId": 1,
+  "draftName": "Updated content",
+  "draftNotes": "Updating the body content",
+  "fields": {
+    "bodyContent": "Draft content changes..."
+  },
+  "isProvisionalDraft": false
+}
+```
+
+Create a draft from scratch:
+```
+POST /api/drafts
+Content-Type: application/json
+
+{
+  "sectionId": 1,
+  "entryTypeId": 1,
+  "title": "New Draft Entry",
+  "draftName": "Initial draft",
+  "fields": {
+    "bodyContent": "Draft content..."
+  },
+  "siteId": 1
+}
+```
+
+#### Update a Draft
+```
+PUT /api/drafts/2
+Content-Type: application/json
+
+{
+  "draftName": "Updated draft name",
+  "draftNotes": "More changes",
+  "fields": {
+    "bodyContent": "More draft changes..."
+  }
+}
+```
+
+#### Apply a Draft
+```
+POST /api/drafts/2/apply
+```
+
+Publishes the draft as the canonical entry.
+
+---
+
+## Field Layout Management
+
+Manage field layouts that define how fields are organized for entry types.
+
+### Field Layout Endpoints
+
+#### Create a Field Layout
+```
+POST /api/field-layouts
+Content-Type: application/json
+
+{
+  "type": "craft\\elements\\Entry",
+  "elementId": 1,
+  "tabs": [
+    {
+      "name": "Content",
+      "fields": [
+        {
+          "fieldId": 1,
+          "required": true,
+          "instructions": "Override instructions"
+        },
+        {
+          "fieldId": 2,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "SEO",
+      "fields": [
+        {
+          "fieldId": 3,
+          "required": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Get a Field Layout
+```
+GET /api/field-layouts?entryTypeId=1
+```
+
+**Parameters (one required):**
+- `entryTypeId` (integer, optional): Get layout for an entry type
+- `fieldLayoutId` (integer, optional): Get layout by ID
+- `elementType` (string, optional): Get layout for element type
+- `elementId` (integer, optional): Get layout for specific element
+
+#### Update a Field Layout
+```
+PUT /api/field-layouts/1
+Content-Type: application/json
+
+{
+  "tabs": [
+    {
+      "name": "Updated Content",
+      "fields": [
+        {
+          "fieldId": 1,
+          "required": true
+        },
+        {
+          "fieldId": 2,
+          "required": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## Site Management
+
+Query available sites in multi-site Craft CMS installations.
+
+### Site Endpoints
+
+#### List Sites
+```
+GET /api/sites
+```
+
+Returns all configured sites with their IDs, names, handles, language, and base URLs.
+
+---
+
+## Complete API Documentation
+
+For detailed API documentation including all parameters, response formats, and examples, see:
+- [HTTP API Documentation](docs/http-api.md)
+
+---
+
+## Error Handling
+
+All endpoints return appropriate HTTP status codes:
+- `200 OK`: Successful request
+- `400 Bad Request`: Invalid parameters or validation errors
+- `404 Not Found`: Resource not found
+- `422 Unprocessable Entity`: Business logic validation failed
+- `500 Internal Server Error`: Server-side error
+
+Error responses include detailed error messages to help debug issues

@@ -101,5 +101,32 @@ class Plugin extends BasePlugin
         $event->rules['GET ' . $apiPrefix . '/entry-types'] = 'mcp/entry-types/list';
         $event->rules['PUT ' . $apiPrefix . '/entry-types/<id>'] = 'mcp/entry-types/update';
         $event->rules['DELETE ' . $apiPrefix . '/entry-types/<id>'] = 'mcp/entry-types/delete';
+        
+        // Field routes
+        $event->rules['POST ' . $apiPrefix . '/fields'] = 'mcp/fields/create';
+        $event->rules['GET ' . $apiPrefix . '/fields'] = 'mcp/fields/list';
+        $event->rules['GET ' . $apiPrefix . '/fields/types'] = 'mcp/fields/types';
+        $event->rules['PUT ' . $apiPrefix . '/fields/<id>'] = 'mcp/fields/update';
+        $event->rules['DELETE ' . $apiPrefix . '/fields/<id>'] = 'mcp/fields/delete';
+        
+        // Entry routes
+        $event->rules['POST ' . $apiPrefix . '/entries'] = 'mcp/entries/create';
+        $event->rules['GET ' . $apiPrefix . '/entries/search'] = 'mcp/entries/search';
+        $event->rules['GET ' . $apiPrefix . '/entries/<id>'] = 'mcp/entries/get';
+        $event->rules['PUT ' . $apiPrefix . '/entries/<id>'] = 'mcp/entries/update';
+        $event->rules['DELETE ' . $apiPrefix . '/entries/<id>'] = 'mcp/entries/delete';
+        
+        // Draft routes
+        $event->rules['POST ' . $apiPrefix . '/drafts'] = 'mcp/drafts/create';
+        $event->rules['PUT ' . $apiPrefix . '/drafts/<id>'] = 'mcp/drafts/update';
+        $event->rules['POST ' . $apiPrefix . '/drafts/<id>/apply'] = 'mcp/drafts/apply';
+        
+        // Field Layout routes
+        $event->rules['POST ' . $apiPrefix . '/field-layouts'] = 'mcp/field-layouts/create';
+        $event->rules['GET ' . $apiPrefix . '/field-layouts'] = 'mcp/field-layouts/get';
+        $event->rules['PUT ' . $apiPrefix . '/field-layouts/<id>'] = 'mcp/field-layouts/update';
+        
+        // Site routes
+        $event->rules['GET ' . $apiPrefix . '/sites'] = 'mcp/sites/list';
     }
 }
