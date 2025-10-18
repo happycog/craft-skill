@@ -9,25 +9,21 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class DeleteSection
 {
     /**
+     * Delete a section from Craft CMS. This will remove the section and potentially affect related data.
+     *
+     * **WARNING**: Deleting a section that has existing entries will cause data loss. The tool will
+     * provide usage statistics and require confirmation for sections with existing content.
+     *
+     * You _must_ get the user's approval to use the force parameter to delete sections that have existing
+     * entries. This action cannot be undone.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'delete_section',
-        description: <<<'END'
-        Delete a section from Craft CMS. This will remove the section and potentially affect related data.
-
-        **WARNING**: Deleting a section that has existing entries will cause data loss. The tool will
-        provide usage statistics and require confirmation for sections with existing content.
-
-        You _must_ get the user's approval to use the force parameter to delete sections that have existing
-        entries. This action cannot be undone.
-        END
-    )]
     public function delete(
-        #[Schema(type: 'integer', description: 'The ID of the section to delete')]
+        /** The ID of the section to delete */
         int $sectionId,
 
-        #[Schema(type: 'boolean', description: 'Force deletion even if entries exist (default: false)')]
+        /** Force deletion even if entries exist (default: false) */
         bool $force = false
     ): array
     {

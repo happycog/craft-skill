@@ -10,41 +10,37 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class UpdateDraft
 {
     /**
+     * Update an existing draft's content and metadata by draftId.
+     *
+     * Works with both regular and provisional drafts without distinction.
+     * Supports the same field and attribute updates as UpdateEntry.
+     * Uses PATCH semantics - only updates fields that are provided, preserving existing data.
+     *
+     * You can update:
+     * - Entry content fields (title, body, custom fields, etc.)
+     * - Draft-specific properties (draftName, draftNotes)
+     * - Native entry attributes (title, slug, postDate, etc.)
+     *
+     * The attribute and field data is a JSON object keyed by the field handle.
+     * For example, to update a body field: {"body":"Updated content"}
+     * To update multiple fields: {"title":"New title","body":"Updated body"}
+     *
+     * Returns updated draft information including edit URL for the Craft control panel.
+     *
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'update_draft',
-        description: <<<'END'
-        Update an existing draft's content and metadata by draftId.
-        
-        Works with both regular and provisional drafts without distinction.
-        Supports the same field and attribute updates as UpdateEntry.
-        Uses PATCH semantics - only updates fields that are provided, preserving existing data.
-        
-        You can update:
-        - Entry content fields (title, body, custom fields, etc.)
-        - Draft-specific properties (draftName, draftNotes)
-        - Native entry attributes (title, slug, postDate, etc.)
-        
-        The attribute and field data is a JSON object keyed by the field handle. 
-        For example, to update a body field: {"body":"Updated content"}
-        To update multiple fields: {"title":"New title","body":"Updated body"}
-        
-        Returns updated draft information including edit URL for the Craft control panel.
-        END
-    )]
     public function update(
-        #[Schema(type: 'number', description: 'The draft ID to update')]
+        /** The draft ID to update */
         int $draftId,
-        
-        #[Schema(type: 'object', description: 'The attribute and field data keyed by the handle. For example, to set the body to "foo" you would pass {"body":"foo"}. Uses PATCH semantics - only provided fields are updated, others are preserved.')]
+
+        /** The attribute and field data keyed by the handle. For example, to set the body to "foo" you would pass {"body":"foo"}. Uses PATCH semantics - only provided fields are updated, others are preserved. */
         array $attributeAndFieldData = [],
-        
-        #[Schema(type: 'string', description: 'Update the draft name')]
+
+        /** Update the draft name */
         ?string $draftName = null,
-        
-        #[Schema(type: 'string', description: 'Update the draft notes')]
+
+        /** Update the draft notes */
         ?string $draftNotes = null,
     ): array
     {

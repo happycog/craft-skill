@@ -7,19 +7,15 @@ use Craft;
 class GetFieldTypes
 {
     /**
+     * Get a list of all available field types in the Craft CMS installation. This returns field types
+     * that can be created by users, including those added by plugins. Each field type includes its
+     * class name, display name, and description to help with field creation.
+     *
+     * Use this tool to discover what field types are available before creating fields with the
+     * CreateField tool.
+     *
      * @return array<int, array<string, mixed>>
      */
-    #[McpTool(
-        name: 'get_field_types',
-        description: <<<'END'
-        Get a list of all available field types in the Craft CMS installation. This returns field types
-        that can be created by users, including those added by plugins. Each field type includes its
-        class name, display name, and description to help with field creation.
-        
-        Use this tool to discover what field types are available before creating fields with the
-        CreateField tool.
-        END
-    )]
     public function get(): array
     {
         $fieldTypes = Craft::$app->getFields()->getAllFieldTypes();

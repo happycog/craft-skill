@@ -9,22 +9,18 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class DeleteField
 {
     /**
+     * Delete a field from Craft CMS. Field deletion is permanent and cannot be undone.
+     *
+     * **WARNING**: Deleting a field will remove all content stored in that field across all entries.
+     * This action is permanent and cannot be undone.
+     *
+     * The tool will show which layouts and sections are using the field before deletion
+     * to help you understand the impact.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'delete_field',
-        description: <<<'END'
-        Delete a field from Craft CMS. Field deletion is permanent and cannot be undone.
-        
-        **WARNING**: Deleting a field will remove all content stored in that field across all entries.
-        This action is permanent and cannot be undone.
-        
-        The tool will show which layouts and sections are using the field before deletion
-        to help you understand the impact.
-        END
-    )]
     public function delete(
-        #[Schema(type: 'number', description: 'The ID of the field to delete')]
+        /** The ID of the field to delete */
         int $fieldId
     ): array
     {

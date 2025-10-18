@@ -9,23 +9,19 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class CreateFieldLayout
 {
     /**
+     * Create a new empty field layout in Craft CMS. This creates a basic field layout structure
+     * that can be assigned to entry types, assets, users, or other elements that support field layouts.
+     *
+     * The created field layout will be empty with no tabs or fields initially. Use the update_field_layout
+     * tool to add tabs and fields to the layout after creation.
+     *
+     * After creating the field layout always link the user back to the relevant settings in the Craft
+     * control panel so they can review the changes in the context of the Craft UI.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'create_field_layout',
-        description: <<<'END'
-        Create a new empty field layout in Craft CMS. This creates a basic field layout structure
-        that can be assigned to entry types, assets, users, or other elements that support field layouts.
-
-        The created field layout will be empty with no tabs or fields initially. Use the update_field_layout
-        tool to add tabs and fields to the layout after creation.
-
-        After creating the field layout always link the user back to the relevant settings in the Craft
-        control panel so they can review the changes in the context of the Craft UI.
-        END
-    )]
     public function create(
-        #[Schema(type: 'string', description: 'The type of field layout to create (e.g., "craft\\elements\\Entry", "craft\\elements\\User", etc.)')]
+        /** The type of field layout to create (e.g., "craft\\elements\\Entry", "craft\\elements\\User", etc.) */
         string $type
     ): array {
         $fieldsService = Craft::$app->getFields();
