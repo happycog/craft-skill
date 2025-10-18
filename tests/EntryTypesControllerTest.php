@@ -53,7 +53,7 @@ test('GET /api/entry-types with entryTypeIds filter', function () {
     $entryType2->handle = 'testEntryType2' . time();
     $entriesService->saveEntryType($entryType2);
 
-    $response = $this->get('/api/entry-types?entryTypeIds=' . $entryType1->id);
+    $response = $this->get('/api/entry-types?entryTypeIds[]=' . $entryType1->id);
 
     $response->assertStatus(200);
     $content = $response->content;

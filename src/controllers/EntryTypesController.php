@@ -10,31 +10,27 @@ use yii\web\Response;
 
 class EntryTypesController extends Controller
 {
-    public function actionCreate(CreateEntryType $createEntryType): Response
+    public function actionCreate(): Response
     {
-        return $this->callTool($createEntryType->create(...));
+        $tool = \Craft::$container->get(CreateEntryType::class);
+        return $this->callTool($tool->create(...));
     }
 
-    public function actionList(GetEntryTypes $getEntryTypes): Response
+    public function actionList(): Response
     {
-        return $this->callTool($getEntryTypes->getAll(...), useQueryParams: true);
+        $tool = \Craft::$container->get(GetEntryTypes::class);
+        return $this->callTool($tool->getAll(...), useQueryParams: true);
     }
 
-    public function actionUpdate(int $id, UpdateEntryType $updateEntryType): Response
+    public function actionUpdate(int $id): Response
     {
-        $bodyParams = $this->request->getBodyParams();
-        $bodyParams['entryTypeId'] = $id;
-        
-        $this->request->setBodyParams($bodyParams);
-        return $this->callTool($updateEntryType->update(...));
+        $tool = \Craft::$container->get(UpdateEntryType::class);
+        return $this->callTool($tool->update(...), ['entryTypeId' => $id]);
     }
 
-    public function actionDelete(int $id, DeleteEntryType $deleteEntryType): Response
+    public function actionDelete(int $id): Response
     {
-        $bodyParams = $this->request->getBodyParams();
-        $bodyParams['entryTypeId'] = $id;
-        
-        $this->request->setBodyParams($bodyParams);
-        return $this->callTool($deleteEntryType->delete(...));
+        $tool = \Craft::$container->get(DeleteEntryType::class);
+        return $this->callTool($tool->delete(...), ['entryTypeId' => $id]);
     }
 }

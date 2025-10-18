@@ -10,31 +10,27 @@ use yii\web\Response;
 
 class SectionsController extends Controller
 {
-    public function actionCreate(CreateSection $createSection): Response
+    public function actionCreate(): Response
     {
-        return $this->callTool($createSection->create(...));
+        $tool = \Craft::$container->get(CreateSection::class);
+        return $this->callTool($tool->create(...));
     }
 
-    public function actionList(GetSections $getSections): Response
+    public function actionList(): Response
     {
-        return $this->callTool($getSections->get(...), useQueryParams: true);
+        $tool = \Craft::$container->get(GetSections::class);
+        return $this->callTool($tool->get(...), useQueryParams: true);
     }
 
-    public function actionUpdate(int $id, UpdateSection $updateSection): Response
+    public function actionUpdate(int $id): Response
     {
-        $bodyParams = $this->request->getBodyParams();
-        $bodyParams['sectionId'] = $id;
-        
-        $this->request->setBodyParams($bodyParams);
-        return $this->callTool($updateSection->update(...));
+        $tool = \Craft::$container->get(UpdateSection::class);
+        return $this->callTool($tool->update(...), ['sectionId' => $id]);
     }
 
-    public function actionDelete(int $id, DeleteSection $deleteSection): Response
+    public function actionDelete(int $id): Response
     {
-        $bodyParams = $this->request->getBodyParams();
-        $bodyParams['sectionId'] = $id;
-        
-        $this->request->setBodyParams($bodyParams);
-        return $this->callTool($deleteSection->delete(...));
+        $tool = \Craft::$container->get(DeleteSection::class);
+        return $this->callTool($tool->delete(...), ['sectionId' => $id]);
     }
 }
