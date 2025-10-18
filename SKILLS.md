@@ -1,786 +1,119 @@
 ---
-name: Craft CMS Content Management HTTP API
-description: Complete HTTP API for managing all aspects of Craft CMS content including sections, entry types, fields, entries, drafts, field layouts, and sites.
+name: Craft CMS Content Management MCP Tools
+description: Complete MCP tool suite for managing all aspects of Craft CMS content including sections, entry types, fields, entries, drafts, field layouts, and sites.
 ---
 
-# Craft CMS Content Management HTTP API
+# Craft CMS Content Management MCP Tools
 
-This skill provides a comprehensive RESTful HTTP API for managing all Craft CMS content and configuration.
+This skill provides comprehensive MCP tools for managing Craft CMS content and configuration through the Model Context Protocol.
 
 **Sections** define how content is organized and structured. They support three types: Single (one entry per section), Channel (multiple entries with flexible structure), and Structure (hierarchical entries with parent-child relationships).
 
 **Entry Types** define the content schema with field layouts and can exist independently (for Matrix fields) or be assigned to sections to control entry structure and behavior.
 
----
+## Tool Documentation
 
-## Section Management
-
-### Querying Current Sections
-
-**For LLM Assistant**: When asked about current sections in this Craft instance, query the sections list endpoint first to get the actual state:
-
-```bash
-curl http://craft-mcp.dev.markhuot.com/api/sections
-```
-
-This will return the authoritative list of sections currently configured in the Craft CMS instance. Always perform this query to provide accurate information about existing sections rather than referencing outdated documentation.
-
-### Base URL
-
-All section endpoints are prefixed with the configured API prefix (default: `/api`).
-
-### Section Endpoints
-
-#### Create a Section
-
-Create a new section in Craft CMS.
-
-**Request:**
-```
-POST /api/sections
-Content-Type: application/json
-
-{
-  "name": "Blog Posts",
-  "type": "channel",
-  "entryTypeIds": [1, 2],
-  "handle": "blogPosts",
-  "enableVersioning": true,
-  "propagationMethod": "all",
-  "siteSettings": [
-    {
-      "siteId": 1,
-      "enabledByDefault": true,
-      "hasUrls": true,
-      "uriFormat": "blog/{slug}",
-      "template": "blog/post.html"
-    }
-  ]
-}
-```
-
-**Parameters:**
-- `name` (string, required): Display name for the section
-- `type` (string, required): Section type: `single`, `channel`, or `structure`
-- `entryTypeIds` (array of integers, required): Entry type IDs to assign to this section. Can be an empty array to create a section without entry types (uncommon but possible).
-- `handle` (string, optional): Machine-readable name (auto-generated from name if omitted)
-- `enableVersioning` (boolean, optional): Enable entry versioning. Default: `true`
-- `propagationMethod` (string, optional): How content propagates across sites: `all`, `siteGroup`, `language`, `custom`, or `none`. Default: `all`
-- `maxLevels` (integer, optional): Maximum hierarchy levels for structure sections. `null` or `0` for unlimited. Default: `null` (structure sections only)
-- `defaultPlacement` (string, optional): Where new entries are placed: `beginning` or `end`. Default: `end` (structure sections only)
-- `maxAuthors` (integer, optional): Maximum number of authors per entry. Default: `null`
-- `siteSettings` (array of objects, optional): Site-specific settings for multi-site installations. If not provided, section will be enabled for all sites with default settings. Each object should contain:
-  - `siteId` (integer, required): The site ID
-  - `enabledByDefault` (boolean, optional): Whether entries are enabled by default for this site. Default: `true`
-  - `hasUrls` (boolean, optional): Whether entries have URLs. Default: `true`
-  - `uriFormat` (string, optional): URI format pattern. Default: `{handle}` for single sections, `{handle}/{slug}` for channel/structure sections
-  - `template` (string, optional): Template path for rendering entries. Default: `null`
-
-**Response:**
-```json
-{
-  "sectionId": 1,
-  "name": "Blog Posts",
-  "handle": "blogPosts",
-  "type": "channel",
-  "propagationMethod": "all",
-  "maxLevels": null,
-  "maxAuthors": null,
-  "editUrl": "https://example.com/admin/settings/sections/1"
-}
-```
-
-### List Sections
-
-Retrieve all sections or filter by section IDs.
-
-**Request:**
-```
-GET /api/sections?sectionIds=1,2,3
-```
-
-**Parameters:**
-- `sectionIds` (string, optional): Comma-separated list of section IDs to retrieve. If omitted, returns all sections.
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "handle": "blogPosts",
-    "name": "Blog Posts",
-    "type": "channel",
-    "entryTypes": [
-      {
-        "id": 1,
-        "handle": "post",
-        "name": "Post",
-        "fieldLayoutId": 1,
-        "usedBy": {
-          "sections": [1],
-          "matrixFields": []
-        }
-      }
-    ]
-  }
-]
-```
-
-### Update a Section
-
-Update an existing section's properties and configuration.
-
-**Request:**
-```
-PUT /api/sections/1
-Content-Type: application/json
-
-{
-  "name": "News Articles",
-  "enableVersioning": false,
-  "maxAuthors": 2,
-  "siteSettings": [
-    {
-      "siteId": 1,
-      "enabledByDefault": true,
-      "hasUrls": true,
-      "uriFormat": "news/{slug}",
-      "template": "news/article.html"
-    }
-  ]
-}
-```
-
-**Parameters:**
-- `id` (integer, required, in URL): The section ID to update
-- `name` (string, optional): Updated display name
-- `handle` (string, optional): Updated machine-readable name
-- `type` (string, optional): Section type (single, channel, or structure). Type changes have restrictions based on existing data.
-- `entryTypeIds` (array of integers, optional): Entry type IDs to assign to this section
-- `enableVersioning` (boolean, optional): Enable or disable entry versioning
-- `propagationMethod` (string, optional): How content propagates across sites
-- `maxLevels` (integer, optional): Maximum hierarchy levels (structure sections only)
-- `defaultPlacement` (string, optional): Where new entries are placed (structure sections only)
-- `maxAuthors` (integer, optional): Maximum number of authors per entry
-- `siteSettings` (array, optional): Updated site-specific settings
-
-**Response:**
-```json
-{
-  "sectionId": 1,
-  "name": "News Articles",
-  "handle": "blogPosts",
-  "type": "channel",
-  "propagationMethod": "all",
-  "maxLevels": null,
-  "maxAuthors": 2,
-  "editUrl": "https://example.com/admin/settings/sections/1"
-}
-```
-
-### Delete a Section
-
-Delete a section from Craft CMS. Sections with existing entries require the `force` parameter.
-
-**Request:**
-```
-DELETE /api/sections/1
-Content-Type: application/json
-
-{
-  "force": false
-}
-```
-
-**Parameters:**
-- `id` (integer, required, in URL): The section ID to delete
-- `force` (boolean, optional): Force deletion even if entries exist. Default: `false`
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "Blog Posts",
-  "handle": "blogPosts",
-  "type": "channel",
-  "impact": {
-    "hasContent": false,
-    "entryCount": 0,
-    "draftCount": 0,
-    "revisionCount": 0,
-    "entryTypeCount": 2,
-    "entryTypes": [
-      {
-        "id": 1,
-        "name": "Post",
-        "handle": "post"
-      }
-    ]
-  }
-}
-```
+Each tool has detailed documentation in the `SKILLS/` directory. Click the tool name to view complete parameter details and examples.
 
 ---
 
-## Entry Type Management
+## Content Management Tools
 
-Entry types define the content schema and field layouts for entries in Craft CMS. They can exist independently (useful for Matrix fields) or be assigned to sections to control entry structure and behavior.
+### [create_entry](SKILLS/create_entry.md)
+Create new entries in Craft CMS. Requires section ID and entry type ID, accepts custom field data and native attributes. Returns entry ID and control panel URL for review.
 
-### Querying Current Entry Types
+### [get_entry](SKILLS/get_entry.md)
+Retrieve complete entry details by ID. Returns all entry data including custom fields, attributes, and metadata.
 
-**For LLM Assistant**: When asked about entry types in this Craft instance, query the entry types list endpoint first:
+### [update_entry](SKILLS/update_entry.md)
+Update existing entry content and attributes. Prefers draft workflow for staged changes. Returns updated entry information and control panel URL.
 
-```bash
-curl http://craft-mcp.dev.markhuot.com/api/entry-types
-```
+### [delete_entry](SKILLS/delete_entry.md)
+Delete entries with soft delete (default) or permanent deletion options. Returns deleted entry information and optional restore URL.
 
-This returns the authoritative list of entry types currently configured, including their field layouts and usage information.
-
-### Base URL
-
-All entry type endpoints are prefixed with the configured API prefix (default: `/api`).
-
-### Entry Type Endpoints
-
-#### Create an Entry Type
-
-Create a new entry type with configurable field layout, title field settings, and visual presentation options.
-
-**Request:**
-```
-POST /api/entry-types
-Content-Type: application/json
-
-{
-  "name": "Article",
-  "handle": "article",
-  "hasTitleField": true,
-  "titleTranslationMethod": "site",
-  "titleFormat": null,
-  "icon": "newspaper",
-  "color": "blue",
-  "description": "Standard article entry type",
-  "showSlugField": true,
-  "showStatusField": true
-}
-```
-
-**Parameters:**
-- `name` (string, required): The display name for the entry type
-- `handle` (string, optional): The entry type handle (machine-readable name). Auto-generated from name if not provided
-- `hasTitleField` (boolean, optional): Whether entries of this type have title fields. Default: `true`
-- `titleTranslationMethod` (string, optional): How titles are translated: `none`, `site`, `language`, or `custom`. Default: `site`
-- `titleTranslationKeyFormat` (string, optional): Translation key format for custom title translation. Required when `titleTranslationMethod` is `custom`
-- `titleFormat` (string, optional): Custom title format pattern (e.g., `"{name} - {dateCreated|date}"`) for controlling entry title display. Required when `hasTitleField` is `false`
-- `icon` (string, optional): Icon identifier for the entry type (e.g., `newspaper`, `image`, `calendar`)
-- `color` (string, optional): Color identifier for the entry type (e.g., `red`, `blue`, `green`, `orange`, `pink`, `purple`, `turquoise`, `yellow`)
-- `description` (string, optional): A short string describing the purpose of the entry type
-- `showSlugField` (boolean, optional): Whether entries of this type show the slug field in the admin UI. Default: `true`
-- `showStatusField` (boolean, optional): Whether entries of this type show the status field in the admin UI. Default: `true`
-
-**Response:**
-```json
-{
-  "_notes": "The entry type was successfully created. You can further configure it in the Craft control panel.",
-  "entryTypeId": 1,
-  "name": "Article",
-  "handle": "article",
-  "description": "Standard article entry type",
-  "hasTitleField": true,
-  "titleTranslationMethod": "site",
-  "titleTranslationKeyFormat": null,
-  "titleFormat": null,
-  "icon": "newspaper",
-  "color": "blue",
-  "showSlugField": true,
-  "showStatusField": true,
-  "fieldLayoutId": 1,
-  "editUrl": "https://example.com/admin/settings/entry-types/1"
-}
-```
-
-#### List Entry Types
-
-Retrieve all entry types or filter by entry type IDs. Returns complete field layout information and usage statistics.
-
-**Request:**
-```
-GET /api/entry-types?entryTypeIds=1,2,3
-```
-
-**Parameters:**
-- `entryTypeIds` (array of integers, optional): List of entry type IDs to retrieve. If omitted, returns all entry types
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Article",
-    "handle": "article",
-    "description": "Standard article entry type",
-    "hasTitleField": true,
-    "titleTranslationMethod": "site",
-    "titleFormat": null,
-    "icon": "newspaper",
-    "color": "blue",
-    "showSlugField": true,
-    "showStatusField": true,
-    "fieldLayoutId": 1,
-    "fieldLayout": {
-      "id": 1,
-      "tabs": [
-        {
-          "name": "Content",
-          "fields": [
-            {
-              "id": 1,
-              "name": "Body",
-              "handle": "body",
-              "type": "craft\\fields\\PlainText"
-            }
-          ]
-        }
-      ]
-    },
-    "usedBy": {
-      "sections": [
-        {
-          "id": 1,
-          "name": "Blog",
-          "handle": "blog",
-          "type": "channel"
-        }
-      ],
-      "matrixFields": []
-    },
-    "editUrl": "https://example.com/admin/settings/entry-types/1"
-  }
-]
-```
-
-#### Update an Entry Type
-
-Update an existing entry type's properties, field layout assignment, or visual presentation.
-
-**Request:**
-```
-PUT /api/entry-types/1
-Content-Type: application/json
-
-{
-  "name": "Blog Article",
-  "description": "Updated article entry type",
-  "icon": "document-text",
-  "color": "green",
-  "fieldLayoutId": 2
-}
-```
-
-**Parameters:**
-- `name` (string, optional): The display name for the entry type
-- `handle` (string, optional): The entry type handle (machine-readable name)
-- `titleTranslationMethod` (string, optional): How titles are translated: `none`, `site`, `language`, or `custom`
-- `titleTranslationKeyFormat` (string, optional): Translation key format for custom title translation
-- `titleFormat` (string, optional): Custom title format pattern
-- `icon` (string, optional): Icon identifier for the entry type
-- `color` (string, optional): Color identifier for the entry type
-- `description` (string, optional): A short string describing the purpose of the entry type
-- `showSlugField` (boolean, optional): Whether entries show the slug field in the admin UI
-- `showStatusField` (boolean, optional): Whether entries show the status field in the admin UI
-- `fieldLayoutId` (integer, optional): The ID of the field layout to assign to this entry type
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "Blog Article",
-  "handle": "article",
-  "description": "Updated article entry type",
-  "hasTitleField": true,
-  "titleTranslationMethod": "site",
-  "titleFormat": null,
-  "icon": "document-text",
-  "color": "green",
-  "showSlugField": true,
-  "showStatusField": true,
-  "fieldLayoutId": 2,
-  "editUrl": "https://example.com/admin/settings/entry-types/1"
-}
-```
-
-#### Delete an Entry Type
-
-Delete an entry type from Craft CMS. This will remove the entry type and its associated field layout.
-
-**Request:**
-```
-DELETE /api/entry-types/1
-Content-Type: application/json
-
-{
-  "force": false
-}
-```
-
-**Parameters:**
-- `force` (boolean, optional): Force deletion even if entries exist. Default: `false`. **Warning**: Using `force=true` will cause data loss for existing entries. Always require user approval before forcing deletion.
-
-**Response:**
-```json
-{
-  "_notes": "Entry type 'Article' was successfully deleted. This removed 15 associated items from the system.",
-  "deleted": true,
-  "entryType": {
-    "id": 1,
-    "name": "Article",
-    "handle": "article",
-    "fieldLayoutId": 1
-  },
-  "usageStats": {
-    "entries": 10,
-    "drafts": 3,
-    "revisions": 2,
-    "total": 15
-  },
-  "forced": true
-}
-```
+### [search_content](SKILLS/search_content.md)
+Search for content across Craft CMS. Filter by section, status, or search query. Returns matching entries with IDs, titles, and control panel URLs.
 
 ---
 
-## Error Handling
+## Draft Management Tools
 
-If a request encounters an error, the API returns an appropriate HTTP status code with error details:
+### [create_draft](SKILLS/create_draft.md)
+Create drafts either from scratch or from existing published entries. Supports draft names, notes, and provisional drafts for auto-save functionality.
 
-- `400 Bad Request`: Invalid parameters or missing required fields
-- `404 Not Found`: Section or referenced resource not found
-- `422 Unprocessable Entity`: Validation failed (e.g., duplicate handle)
-- `500 Internal Server Error`: Server-side error
+### [update_draft](SKILLS/update_draft.md)
+Update draft content and metadata using PATCH semantics. Supports updating fields, draft names, and draft notes without affecting other data.
 
-Error responses include an error message explaining the issue.
-
-## Usage Notes
-
-### Section Management
-- **Site Settings**: If not provided, sections are automatically enabled for all sites with default URI formats based on section type
-- **Entry Types**: Must be created separately using the entry type endpoints before being assigned to sections
-- **Type Changes**: Some section type conversions are restricted when entries exist (e.g., cannot convert Structure → Channel with existing hierarchical data)
-- **Force Delete**: Always require user approval before setting `force=true` on delete operations
-- **Control Panel Links**: After creating or updating sections, users can review changes in the Craft control panel using the `editUrl` provided in responses
-
-### Entry Type Management
-- **Field Layouts**: Entry types with `hasTitleField=true` automatically include a title field in their layout. Entry types with `hasTitleField=false` require a `titleFormat` to define how titles are generated
-- **Title Format**: When `hasTitleField` is `false`, use `titleFormat` with Twig syntax like `"{fieldHandle} - {dateCreated|date}"` to define automatic title generation
-- **Standalone Usage**: Entry types can exist independently without being assigned to sections (commonly used for Matrix field block types)
-- **Usage Detection**: The list endpoint shows which sections and Matrix fields reference each entry type via the `usedBy` property
-- **Force Delete**: Deleting entry types with existing entries requires `force=true` and causes permanent data loss. Always get user approval before forcing deletion
-- **Control Panel Links**: After creating or updating entry types, users can review changes in the Craft control panel using the `editUrl` provided in responses
+### [apply_draft](SKILLS/apply_draft.md)
+Apply draft changes to the canonical entry, making content live. Removes the draft after successful application.
 
 ---
 
-## Field Management
+## Section Management Tools
 
-Manage custom fields in Craft CMS. Fields define the content structure and data types for entries.
+### [create_section](SKILLS/create_section.md)
+Create new sections with configurable types (single, channel, structure), entry types, versioning, propagation methods, and site-specific settings.
 
-### Field Endpoints
+### [get_sections](SKILLS/get_sections.md)
+List all sections or filter by section IDs. Returns section details including entry types, handles, names, and types.
 
-#### Create a Field
-```
-POST /api/fields
-Content-Type: application/json
+### [update_section](SKILLS/update_section.md)
+Update section properties including name, type, entry types, versioning settings, and site configurations.
 
-{
-  "name": "Body Content",
-  "handle": "bodyContent",
-  "type": "craft\\fields\\PlainText",
-  "instructions": "Enter the main body content",
-  "translationMethod": "site",
-  "settings": {
-    "columnType": "text",
-    "placeholder": "Enter content here..."
-  }
-}
-```
-
-#### List Fields
-```
-GET /api/fields
-```
-
-#### Get Field Types
-```
-GET /api/fields/types
-```
-
-Returns all available field types in Craft CMS with their class names.
-
-#### Update a Field
-```
-PUT /api/fields/1
-Content-Type: application/json
-
-{
-  "name": "Updated Body Content",
-  "instructions": "Updated instructions",
-  "settings": {
-    "columnType": "mediumtext"
-  }
-}
-```
-
-#### Delete a Field
-```
-DELETE /api/fields/1
-Content-Type: application/json
-
-{
-  "force": false
-}
-```
+### [delete_section](SKILLS/delete_section.md)
+Delete sections permanently. Warning: This removes all associated entries and cannot be undone.
 
 ---
 
-## Entry Management
+## Entry Type Management Tools
 
-Manage content entries in Craft CMS.
+### [create_entry_type](SKILLS/create_entry_type.md)
+Create new entry types with custom handles, names, titles, and field layouts. Can be standalone or assigned to sections.
 
-### Entry Endpoints
+### [get_entry_types](SKILLS/get_entry_types.md)
+List all entry types with complete field information, usage stats (sections and Matrix fields), and edit URLs.
 
-#### Create an Entry
-```
-POST /api/entries
-Content-Type: application/json
+### [update_entry_type](SKILLS/update_entry_type.md)
+Update entry type properties including name, handle, title format, and associated field layout.
 
-{
-  "sectionId": 1,
-  "entryTypeId": 1,
-  "title": "My New Blog Post",
-  "slug": "my-new-blog-post",
-  "fields": {
-    "bodyContent": "This is the main content...",
-    "author": "John Doe"
-  },
-  "siteId": 1,
-  "enabled": true,
-  "postDate": "2024-01-15T10:00:00Z"
-}
-```
-
-#### Get an Entry
-```
-GET /api/entries/1?siteId=1
-```
-
-#### Search Entries
-```
-GET /api/entries/search?section=blog&limit=10&search=keyword&status=enabled
-```
-
-**Parameters:**
-- `section` (string, optional): Section handle to filter by
-- `type` (string, optional): Entry type handle to filter by
-- `siteId` (integer, optional): Site ID to filter by
-- `status` (string, optional): Entry status filter
-- `limit` (integer, optional): Maximum results to return
-- `search` (string, optional): Search term
-
-#### Update an Entry
-```
-PUT /api/entries/1
-Content-Type: application/json
-
-{
-  "title": "Updated Title",
-  "fields": {
-    "bodyContent": "Updated content..."
-  },
-  "postDate": "2024-01-16T10:00:00Z"
-}
-```
-
-#### Delete an Entry
-```
-DELETE /api/entries/1
-Content-Type: application/json
-
-{
-  "permanent": false
-}
-```
+### [delete_entry_type](SKILLS/delete_entry_type.md)
+Delete entry types. Validates that entry type is not in use by sections or Matrix fields before deletion.
 
 ---
 
-## Draft Management
+## Field Management Tools
 
-Manage entry drafts for staged content changes.
+### [create_field](SKILLS/create_field.md)
+Create new custom fields with specified field types and settings. Returns field ID, handle, and configuration details.
 
-### Draft Endpoints
+### [get_fields](SKILLS/get_fields.md)
+List all global fields or fields for a specific field layout. Returns field handles, types, labels, and configuration.
 
-#### Create a Draft
-```
-POST /api/drafts
-Content-Type: application/json
+### [get_field_types](SKILLS/get_field_types.md)
+Discover available field types in the Craft installation including plugin-provided types. Returns class names, display names, and descriptions.
 
-{
-  "entryId": 1,
-  "draftName": "Updated content",
-  "draftNotes": "Updating the body content",
-  "fields": {
-    "bodyContent": "Draft content changes..."
-  },
-  "isProvisionalDraft": false
-}
-```
+### [update_field](SKILLS/update_field.md)
+Update existing field properties including name, handle, instructions, and field-type-specific settings.
 
-Create a draft from scratch:
-```
-POST /api/drafts
-Content-Type: application/json
-
-{
-  "sectionId": 1,
-  "entryTypeId": 1,
-  "title": "New Draft Entry",
-  "draftName": "Initial draft",
-  "fields": {
-    "bodyContent": "Draft content..."
-  },
-  "siteId": 1
-}
-```
-
-#### Update a Draft
-```
-PUT /api/drafts/2
-Content-Type: application/json
-
-{
-  "draftName": "Updated draft name",
-  "draftNotes": "More changes",
-  "fields": {
-    "bodyContent": "More draft changes..."
-  }
-}
-```
-
-#### Apply a Draft
-```
-POST /api/drafts/2/apply
-```
-
-Publishes the draft as the canonical entry.
+### [delete_field](SKILLS/delete_field.md)
+Delete custom fields permanently. Warning: Removes field data from all entries using this field.
 
 ---
 
-## Field Layout Management
+## Field Layout Management Tools
 
-Manage field layouts that define how fields are organized for entry types.
+### [create_field_layout](SKILLS/create_field_layout.md)
+Create field layouts with organized tabs and fields. Define field requirements and custom instructions per layout.
 
-### Field Layout Endpoints
+### [get_field_layout](SKILLS/get_field_layout.md)
+Retrieve field layout details including tabs, fields, and organization. Query by entry type ID, field layout ID, element type, or element ID.
 
-#### Create a Field Layout
-```
-POST /api/field-layouts
-Content-Type: application/json
-
-{
-  "type": "craft\\elements\\Entry",
-  "elementId": 1,
-  "tabs": [
-    {
-      "name": "Content",
-      "fields": [
-        {
-          "fieldId": 1,
-          "required": true,
-          "instructions": "Override instructions"
-        },
-        {
-          "fieldId": 2,
-          "required": false
-        }
-      ]
-    },
-    {
-      "name": "SEO",
-      "fields": [
-        {
-          "fieldId": 3,
-          "required": false
-        }
-      ]
-    }
-  ]
-}
-```
-
-#### Get a Field Layout
-```
-GET /api/field-layouts?entryTypeId=1
-```
-
-**Parameters (one required):**
-- `entryTypeId` (integer, optional): Get layout for an entry type
-- `fieldLayoutId` (integer, optional): Get layout by ID
-- `elementType` (string, optional): Get layout for element type
-- `elementId` (integer, optional): Get layout for specific element
-
-#### Update a Field Layout
-```
-PUT /api/field-layouts/1
-Content-Type: application/json
-
-{
-  "tabs": [
-    {
-      "name": "Updated Content",
-      "fields": [
-        {
-          "fieldId": 1,
-          "required": true
-        },
-        {
-          "fieldId": 2,
-          "required": true
-        }
-      ]
-    }
-  ]
-}
-```
+### [update_field_layout](SKILLS/update_field_layout.md)
+Update field layout structure including tab organization, field assignments, and field requirements.
 
 ---
 
-## Site Management
+## Site Management Tools
 
-Query available sites in multi-site Craft CMS installations.
-
-### Site Endpoints
-
-#### List Sites
-```
-GET /api/sites
-```
-
-Returns all configured sites with their IDs, names, handles, language, and base URLs.
-
----
-
-## Complete API Documentation
-
-For detailed API documentation including all parameters, response formats, and examples, see:
-- [HTTP API Documentation](docs/http-api.md)
-
----
-
-## Error Handling
-
-All endpoints return appropriate HTTP status codes:
-- `200 OK`: Successful request
-- `400 Bad Request`: Invalid parameters or validation errors
-- `404 Not Found`: Resource not found
-- `422 Unprocessable Entity`: Business logic validation failed
-- `500 Internal Server Error`: Server-side error
-
-Error responses include detailed error messages to help debug issues
+### [get_sites](SKILLS/get_sites.md)
+List all available sites in multi-site installations. Returns site IDs, names, handles, URLs, primary site indicator, and language codes.
