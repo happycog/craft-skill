@@ -8,25 +8,21 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class DeleteEntryType
 {
     /**
+     * Delete an entry type from Craft CMS. This will remove the entry type and its associated field layout.
+     *
+     * **WARNING**: Deleting an entry type that has existing entries will cause data loss. The tool will
+     * provide usage statistics and require confirmation for entry types with existing content.
+     *
+     * You _must_  get the user's approval before using the force parameter to delete entry types that have
+     * existing entries. This action cannot be undone.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'delete_entry_type',
-        description: <<<'END'
-        Delete an entry type from Craft CMS. This will remove the entry type and its associated field layout.
-
-        **WARNING**: Deleting an entry type that has existing entries will cause data loss. The tool will
-        provide usage statistics and require confirmation for entry types with existing content.
-
-        You _must_  get the user's approval before using the force parameter to delete entry types that have
-        existing entries. This action cannot be undone.
-        END
-    )]
     public function delete(
-        #[Schema(type: 'integer', description: 'The ID of the entry type to delete')]
+        /** The ID of the entry type to delete */
         int $entryTypeId,
 
-        #[Schema(type: 'boolean', description: 'Force deletion even if entries exist (default: false)')]
+        /** Force deletion even if entries exist (default: false) */
         bool $force = false
     ): array
     {

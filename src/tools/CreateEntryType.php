@@ -13,53 +13,49 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class CreateEntryType
 {
     /**
+     * Create a new entry type in Craft CMS. Entry types define the content schema and can exist
+     * independently of sections (useful for Matrix fields) or be assigned to sections later.
+     *
+     * Entry types control the structure of content with field layouts and determine whether entries
+     * have title fields, icon representation, and other content behaviors.
+     *
+     * After creating the entry type always link the user back to the entry type settings in the Craft
+     * control panel so they can review and further configure the entry type in the context of the Craft UI.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'create_entry_type',
-        description: <<<'END'
-        Create a new entry type in Craft CMS. Entry types define the content schema and can exist
-        independently of sections (useful for Matrix fields) or be assigned to sections later.
-
-        Entry types control the structure of content with field layouts and determine whether entries
-        have title fields, icon representation, and other content behaviors.
-
-        After creating the entry type always link the user back to the entry type settings in the Craft
-        control panel so they can review and further configure the entry type in the context of the Craft UI.
-        END
-    )]
     public function create(
-        #[Schema(type: 'string', description: 'The display name for the entry type')]
+        /** The display name for the entry type */
         string $name,
 
-        #[Schema(type: 'string', description: 'The entry type handle (machine-readable name). Auto-generated from name if not provided.')]
+        /** The entry type handle (machine-readable name). Auto-generated from name if not provided. */
         ?string $handle = null,
 
-        #[Schema(type: 'boolean', description: 'Whether entries of this type have title fields')]
+        /** Whether entries of this type have title fields */
         bool $hasTitleField = true,
 
-        #[Schema(type: 'string', description: 'How titles are translated: none, site, language, or custom')]
+        /** How titles are translated: none, site, language, or custom */
         string $titleTranslationMethod = 'site',
 
-        #[Schema(type: 'string', description: 'Translation key format for custom title translation')]
+        /** Translation key format for custom title translation */
         ?string $titleTranslationKeyFormat = null,
 
-        #[Schema(type: 'string', description: 'Custom title format pattern (e.g., "{name} - {dateCreated|date}") for controlling entry title display')]
+        /** Custom title format pattern (e.g., "{name} - {dateCreated|date}") for controlling entry title display */
         ?string $titleFormat = null,
 
-        #[Schema(type: 'string', description: 'Icon identifier for the entry type (optional)')]
+        /** Icon identifier for the entry type (optional) */
         ?string $icon = null,
 
-        #[Schema(type: 'string', description: 'Color identifier for the entry type (optional)')]
+        /** Color identifier for the entry type (optional) */
         ?string $color = null,
 
-        #[Schema(type: 'string', description: 'A short string describing the purpose of the entry type (optional)')]
+        /** A short string describing the purpose of the entry type (optional) */
         ?string $description = null,
 
-        #[Schema(type: 'boolean', description: 'Whether entries of this type show the slug field in the admin UI')]
+        /** Whether entries of this type show the slug field in the admin UI */
         bool $showSlugField = true,
 
-        #[Schema(type: 'boolean', description: 'Whether entries of this type show the status field in the admin UI')]
+        /** Whether entries of this type show the status field in the admin UI */
         bool $showStatusField = true,
     ): array
     {

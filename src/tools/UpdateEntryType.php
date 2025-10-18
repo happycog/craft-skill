@@ -14,57 +14,53 @@ class UpdateEntryType
     ) {
     }
     /**
+     * Update an existing entry type in Craft CMS. Allows modification of entry type properties
+     * including name, handle, icon, color, title field settings, and field layout assignment while
+     * preserving existing content.
+     *
+     * Entry type updates will preserve field layouts and any existing entries unless structural
+     * changes affect compatibility. Handle changes require uniqueness validation.
+     *
+     * After updating the entry type always link the user back to the entry type settings in the Craft
+     * control panel so they can review the changes in the context of the Craft UI.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'update_entry_type',
-        description: <<<'END'
-        Update an existing entry type in Craft CMS. Allows modification of entry type properties
-        including name, handle, icon, color, title field settings, and field layout assignment while
-        preserving existing content.
-
-        Entry type updates will preserve field layouts and any existing entries unless structural
-        changes affect compatibility. Handle changes require uniqueness validation.
-
-        After updating the entry type always link the user back to the entry type settings in the Craft
-        control panel so they can review the changes in the context of the Craft UI.
-        END
-    )]
     public function update(
-        #[Schema(type: 'integer', description: 'The ID of the entry type to update')]
+        /** The ID of the entry type to update */
         int $entryTypeId,
 
-        #[Schema(type: 'string', description: 'The display name for the entry type')]
+        /** The display name for the entry type */
         ?string $name = null,
 
-        #[Schema(type: 'string', description: 'The entry type handle (machine-readable name)')]
+        /** The entry type handle (machine-readable name) */
         ?string $handle = null,
 
-        #[Schema(type: 'string', description: 'How titles are translated: none, site, language, or custom')]
+        /** How titles are translated: none, site, language, or custom */
         ?string $titleTranslationMethod = null,
 
-        #[Schema(type: 'string', description: 'Translation key format for custom title translation')]
+        /** Translation key format for custom title translation */
         ?string $titleTranslationKeyFormat = null,
 
-        #[Schema(type: 'string', description: 'Custom title format pattern (e.g., "{name} - {dateCreated|date}") for controlling entry title display')]
+        /** Custom title format pattern (e.g., "{name} - {dateCreated|date}") for controlling entry title display */
         ?string $titleFormat = null,
 
-        #[Schema(type: 'string', description: 'Icon identifier for the entry type')]
+        /** Icon identifier for the entry type */
         ?string $icon = null,
 
-        #[Schema(type: 'string', description: 'Color identifier for the entry type')]
+        /** Color identifier for the entry type */
         ?string $color = null,
 
-        #[Schema(type: 'string', description: 'A short string describing the purpose of the entry type (optional)')]
+        /** A short string describing the purpose of the entry type (optional) */
         ?string $description = null,
 
-        #[Schema(type: 'boolean', description: 'Whether entries of this type show the slug field in the admin UI')]
+        /** Whether entries of this type show the slug field in the admin UI */
         ?bool $showSlugField = null,
 
-        #[Schema(type: 'boolean', description: 'Whether entries of this type show the status field in the admin UI')]
+        /** Whether entries of this type show the status field in the admin UI */
         ?bool $showStatusField = null,
 
-        #[Schema(type: 'integer', description: 'The ID of the field layout to assign to this entry type')]
+        /** The ID of the field layout to assign to this entry type */
         ?int $fieldLayoutId = null,
     ): array
     {

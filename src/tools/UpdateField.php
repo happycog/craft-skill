@@ -10,45 +10,41 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class UpdateField
 {
     /**
+     * Update an existing field in Craft CMS. This tool allows you to modify field properties
+     * including name, instructions, settings, and some aspects of field configuration.
+     *
+     * Note: Changing field types is technically possible but may result in data loss. Use with caution
+     * and test in development environments first.
+     *
+     * After updating the field always link the user back to the field settings in the Craft control
+     * panel so they can review the changes in the context of the Craft UI.
+     *
      * @param array<string, mixed>|null $settings
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'update_field',
-        description: <<<'END'
-        Update an existing field in Craft CMS. This tool allows you to modify field properties
-        including name, instructions, settings, and some aspects of field configuration.
-        
-        Note: Changing field types is technically possible but may result in data loss. Use with caution
-        and test in development environments first.
-        
-        After updating the field always link the user back to the field settings in the Craft control 
-        panel so they can review the changes in the context of the Craft UI.
-        END
-    )]
     public function update(
-        #[Schema(type: 'number', description: 'The ID of the field to update')]
+        /** The ID of the field to update */
         int $fieldId,
-        
-        #[Schema(type: 'string', description: 'The new display name for the field')]
+
+        /** The new display name for the field */
         ?string $name = null,
-        
-        #[Schema(type: 'string', description: 'The new field handle (machine-readable name)')]
+
+        /** The new field handle (machine-readable name) */
         ?string $handle = null,
-        
-        #[Schema(type: 'string', description: 'New instructions to help content editors use this field')]
+
+        /** New instructions to help content editors use this field */
         ?string $instructions = null,
-        
-        #[Schema(type: 'boolean', description: 'Whether the field values should be searchable')]
+
+        /** Whether the field values should be searchable */
         ?bool $searchable = null,
-        
-        #[Schema(type: 'string', description: 'Translation method: none, site, language, or custom')]
+
+        /** Translation method: none, site, language, or custom */
         ?string $translationMethod = null,
-        
-        #[Schema(type: 'object', description: 'Field type-specific settings as key-value pairs')]
+
+        /** Field type-specific settings as key-value pairs */
         ?array $settings = null,
-        
-        #[Schema(type: 'string', description: 'New field type class name (use with caution - may cause data loss)')]
+
+        /** New field type class name (use with caution - may cause data loss) */
         ?string $type = null
     ): array
     {

@@ -9,44 +9,40 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class CreateField
 {
     /**
+     * Create a new field in Craft CMS. This tool allows you to create fields of any type available
+     * in the installation, including those added by plugins.
+     *
+     * Use the GetFieldTypes tool first to discover available field types and their class names.
+     *
+     * The field will be created with the specified configuration and you'll receive a control panel
+     * URL to review and further configure the field settings.
+     *
+     * After creating the field always link the user back to the field settings in the Craft control
+     * panel so they can review and further configure the field in the context of the Craft UI.
+     *
      * @param array<string, mixed> $settings
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'create_field',
-        description: <<<'END'
-        Create a new field in Craft CMS. This tool allows you to create fields of any type available
-        in the installation, including those added by plugins.
-        
-        Use the GetFieldTypes tool first to discover available field types and their class names.
-        
-        The field will be created with the specified configuration and you'll receive a control panel
-        URL to review and further configure the field settings.
-        
-        After creating the field always link the user back to the field settings in the Craft control 
-        panel so they can review and further configure the field in the context of the Craft UI.
-        END
-    )]
     public function create(
-        #[Schema(type: 'string', description: 'The field type class name (use GetFieldTypes to discover available types)')]
+        /** The field type class name (use GetFieldTypes to discover available types) */
         string $type,
-        
-        #[Schema(type: 'string', description: 'The display name for the field')]
+
+        /** The display name for the field */
         string $name,
-        
-        #[Schema(type: 'string', description: 'The field handle (machine-readable name). Auto-generated from name if not provided.')]
+
+        /** The field handle (machine-readable name). Auto-generated from name if not provided. */
         ?string $handle = null,
-        
-        #[Schema(type: 'string', description: 'Instructions to help content editors use this field')]
+
+        /** Instructions to help content editors use this field */
         ?string $instructions = null,
-        
-        #[Schema(type: 'boolean', description: 'Whether the field values should be searchable')]
+
+        /** Whether the field values should be searchable */
         bool $searchable = true,
-        
-        #[Schema(type: 'string', description: 'Translation method: none, site, language, or custom')]
+
+        /** Translation method: none, site, language, or custom */
         string $translationMethod = 'none',
-        
-        #[Schema(type: 'object', description: 'Field type-specific settings as key-value pairs')]
+
+        /** Field type-specific settings as key-value pairs */
         array $settings = []
     ): array
     {

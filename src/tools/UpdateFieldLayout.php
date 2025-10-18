@@ -15,63 +15,42 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class UpdateFieldLayout
 {
     /**
+     * **CRITICAL**: This tool REPLACES the entire field layout. You MUST first use get_field_layout
+     * to retrieve the existing structure, then modify it to add/remove/reorder elements, then pass
+     * the complete modified structure back. Failing to include existing elements will DELETE them.
+     *
+     * **Required workflow:**
+     * 1. Call get_field_layout to get current structure with all existing elements
+     * 2. Modify the returned tabs/elements array as needed (add, remove, reorder)
+     * 3. Pass the complete modified structure to this tool
+     *
+     * **Example:** To add a field while keeping existing title field:
+     * - First: get_field_layout returns existing title element with its UID
+     * - Then: Include that title element plus your new field in the elements array
+     * - Finally: Call this tool with the complete structure
+     *
+     * Works with any Craft model that has a field layout (entry types, users, assets, etc.).
+     *
+     * After updating the field layout always link the user back to the relevant settings in the Craft control
+     * panel so they can review the changes in the context of the Craft UI.
+     *
      * @param array<int, array<string, mixed>> $tabs
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'update_field_layout',
-        description: <<<'END'
-        **CRITICAL**: This tool REPLACES the entire field layout. You MUST first use get_field_layout
-        to retrieve the existing structure, then modify it to add/remove/reorder elements, then pass
-        the complete modified structure back. Failing to include existing elements will DELETE them.
-
-        **Required workflow:**
-        1. Call get_field_layout to get current structure with all existing elements
-        2. Modify the returned tabs/elements array as needed (add, remove, reorder)
-        3. Pass the complete modified structure to this tool
-
-        **Example:** To add a field while keeping existing title field:
-        - First: get_field_layout returns existing title element with its UID
-        - Then: Include that title element plus your new field in the elements array
-        - Finally: Call this tool with the complete structure
-
-        Works with any Craft model that has a field layout (entry types, users, assets, etc.).
-
-        After updating the field layout always link the user back to the relevant settings in the Craft control
-        panel so they can review the changes in the context of the Craft UI.
-        END
-    )]
     public function update(
-        #[Schema(type: 'integer', description: 'The ID of the field layout to update')]
+        /** The ID of the field layout to update */
         int $fieldLayoutId,
 
-        #[Schema(
-            type: 'array',
-            description: 'Array of tabs with elements structure from get_field_layout',
-            items: [
-                'type' => 'object',
-                'properties' => [
-                    'name' => [
-                        'type' => 'string',
-                        'description' => 'The display name for the tab'
-                    ],
-                    'elements' => [
-                        'type' => 'array',
-                        'description' => 'Complete element structures from get_field_layout',
-                        'items' => [
-                            'type' => 'object',
-                            'properties' => [
-                                'uid' => ['type' => 'string', 'description' => 'The UID of the element (for preserving existing elements)'],
-                                'type' => ['type' => 'string', 'description' => 'The class name of the element, e.g. craft\fieldlayoutelements\CustomField'],
-                                'width' => ['type' => 'integer', 'default' => 100, 'description' => 'The width of the element in the layout (1-100)'],
-                                'fieldId' => ['type' => 'integer', 'description' => 'Required for new CustomField elements. The ID of the field to add'],
-                            ]
-                        ]
-                    ]
-                ],
-                'required' => ['name', 'elements']
-            ]
-        )]
+        /**
+         * Array of tabs with elements structure from get_field_layout.
+         * Each tab contains:
+         * - name: The display name for the tab
+         * - elements: Complete element structures from get_field_layout
+         *   - uid: The UID of the element (for preserving existing elements)
+         *   - type: The class name of the element, e.g. craft\fieldlayoutelements\CustomField
+         *   - width: The width of the element in the layout (1-100, default: 100)
+         *   - fieldId: Required for new CustomField elements. The ID of the field to add
+         */
         array $tabs
     ): array {
         $fieldsService = Craft::$app->getFields();
