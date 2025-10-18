@@ -24,6 +24,10 @@ class CreateSection
      *
      * After creating the section always link the user back to the section settings in the Craft control panel
      * so they can review and further configure the section in the context of the Craft UI.
+     *
+     * @param array<int> $entryTypeIds
+     * @param array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null $siteSettings
+     * @return array<string, mixed>
      */
     public function create(
          /** The display name for the section */

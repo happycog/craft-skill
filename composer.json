@@ -4,7 +4,8 @@
     "license": "proprietary",
     "type": "craft-plugin",
     "require": {
-        "php-mcp/server": "^3.2"
+        "php-mcp/server": "^3.2",
+        "cuyz/valinor": "^2.2"
     },
     "autoload": {
         "psr-4": {
