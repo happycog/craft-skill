@@ -20,13 +20,21 @@ class SectionsController extends Controller
         return $this->callTool($getSections->get(...), useQueryParams: true);
     }
 
-    public function actionUpdate(UpdateSection $updateSection): Response
+    public function actionUpdate(int $id, UpdateSection $updateSection): Response
     {
+        $bodyParams = $this->request->getBodyParams();
+        $bodyParams['sectionId'] = $id;
+        
+        $this->request->setBodyParams($bodyParams);
         return $this->callTool($updateSection->update(...));
     }
 
-    public function actionDelete(DeleteSection $deleteSection): Response
+    public function actionDelete(int $id, DeleteSection $deleteSection): Response
     {
+        $bodyParams = $this->request->getBodyParams();
+        $bodyParams['sectionId'] = $id;
+        
+        $this->request->setBodyParams($bodyParams);
         return $this->callTool($deleteSection->delete(...));
     }
 }
