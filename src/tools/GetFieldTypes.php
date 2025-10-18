@@ -3,7 +3,6 @@
 namespace happycog\craftmcp\tools;
 
 use Craft;
-use PhpMcp\Server\Attributes\McpTool;
 
 class GetFieldTypes
 {

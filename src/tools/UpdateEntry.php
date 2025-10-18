@@ -8,8 +8,6 @@ use craft\helpers\ElementHelper;
 use craft\models\Section;
 use happycog\craftmcp\actions\normalizers\SectionIdOrHandleToSectionId;
 use happycog\craftmcp\actions\UpsertEntry;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class UpdateEntry
 {

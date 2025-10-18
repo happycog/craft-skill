@@ -5,8 +5,6 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\helpers\ElementHelper;
 use happycog\craftmcp\actions\UpsertEntry;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class CreateEntry
 {

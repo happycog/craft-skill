@@ -6,8 +6,6 @@ use Craft;
 use craft\enums\Color;
 use happycog\craftmcp\actions\EntryTypeFormatter;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class UpdateEntryType
 {

@@ -6,8 +6,6 @@ use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class CreateDraft
 {
@@ -17,57 +15,53 @@ class CreateDraft
     }
 
     /**
+     * Create a draft in Craft CMS either from scratch or from an existing published entry.
+     *
+     * Drafts allow content creators to work on changes without affecting live content and save work in progress.
+     *
+     * **Creating from scratch:**
+     * - Provide sectionId and entryTypeId (similar to CreateEntry)
+     * - Optionally provide initial field data
+     *
+     * **Creating from existing entry:**
+     * - Provide canonicalId (the ID of the published entry to create a draft from)
+     * - The draft inherits the canonical entry's content
+     * - Optionally provide field data to override specific fields
+     *
+     * **Draft options:**
+     * - draftName: Optional name for the draft (defaults to auto-generated name)
+     * - draftNotes: Optional notes about the draft
+     * - provisional: Set to true for provisional drafts (auto-save drafts), defaults to false
+     * - siteId: Optional site ID, defaults to primary site
+     *
+     * Returns draft information including ID and edit URL for the Craft control panel.
+     *
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'create_draft',
-        description: <<<'END'
-        Create a draft in Craft CMS either from scratch or from an existing published entry.
-
-        Drafts allow content creators to work on changes without affecting live content and save work in progress.
-
-        **Creating from scratch:**
-        - Provide sectionId and entryTypeId (similar to CreateEntry)
-        - Optionally provide initial field data
-
-        **Creating from existing entry:**
-        - Provide canonicalId (the ID of the published entry to create a draft from)
-        - The draft inherits the canonical entry's content
-        - Optionally provide field data to override specific fields
-
-        **Draft options:**
-        - draftName: Optional name for the draft (defaults to auto-generated name)
-        - draftNotes: Optional notes about the draft
-        - provisional: Set to true for provisional drafts (auto-save drafts), defaults to false
-        - siteId: Optional site ID, defaults to primary site
-
-        Returns draft information including ID and edit URL for the Craft control panel.
-        END
-    )]
     public function create(
-        #[Schema(type: 'number', description: 'Section ID when creating from scratch')]
+        /** Section ID when creating from scratch */
         ?int $sectionId = null,
 
-        #[Schema(type: 'number', description: 'Entry type ID when creating from scratch')]
+        /** Entry type ID when creating from scratch */
         ?int $entryTypeId = null,
 
-        #[Schema(type: 'number', description: 'Canonical entry ID when creating from existing entry')]
+        /** Canonical entry ID when creating from existing entry */
         ?int $canonicalId = null,
 
-        #[Schema(type: 'string', description: 'Optional draft name')]
+        /** Optional draft name */
         ?string $draftName = null,
 
-        #[Schema(type: 'string', description: 'Optional draft notes')]
+        /** Optional draft notes */
         ?string $draftNotes = null,
 
-        #[Schema(type: 'boolean', description: 'Whether to create a provisional draft (auto-save draft)')]
+        /** Whether to create a provisional draft (auto-save draft) */
         bool $provisional = false,
 
-        #[Schema(type: 'number', description: 'Site ID, defaults to primary site')]
+        /** Site ID, defaults to primary site */
         ?int $siteId = null,
 
-        #[Schema(type: 'object', description: 'Initial field data for the draft')]
+        /** Initial field data for the draft */
         array $attributeAndFieldData = [],
     ): array
     {

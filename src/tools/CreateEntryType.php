@@ -9,8 +9,6 @@ use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\EntryType;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class CreateEntryType
 {

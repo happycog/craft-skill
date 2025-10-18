@@ -619,6 +619,12 @@ test('endpoint returns valid response', function () {
 - Session-based isolation prevents cross-client data leakage
 - Input validation handled at tool level
 
+### File System Safety
+- **CRITICAL**: When working with temporary files or scripts, ONLY create them within the project directory (`/home/ubuntu/sites/craft-mcp/plugins/craft-mcp/`)
+- **NEVER** create temporary files in `/tmp/` or other system directories
+- If temporary files are needed for development tasks, create them in a `temp/` subdirectory within the project
+- Clean up any temporary files created during development tasks before committing
+
 ## Architecture Decisions
 
 ### Why php-mcp/server over Manual Implementation?

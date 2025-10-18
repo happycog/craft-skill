@@ -5,42 +5,36 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class ApplyDraft
 {
     /**
+     * Apply a draft to its canonical entry, making the draft content live.
+     * 
+     * This tool applies the changes from a draft to the canonical entry and removes the draft.
+     * The canonical entry will be updated with all the content from the draft.
+     * 
+     * **Usage:**
+     * - Provide the draftId of the draft to apply
+     * - The draft must exist and be accessible
+     * - Works with both regular and provisional drafts
+     * - The draft will be removed after successful application
+     * 
+     * **Returns:**
+     * - Updated canonical entry information
+     * - Entry details including title, slug, status
+     * - Section and entry type information
+     * - Control panel edit URL for review
+     * 
+     * **Note:** This action cannot be undone. The draft content will replace the canonical entry content.
+     * 
+     * After applying the draft always link the user back to the entry in the Craft control panel so they can review
+     * the changes in the context of the Craft UI.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'apply_draft',
-        description: <<<'END'
-        Apply a draft to its canonical entry, making the draft content live.
-        
-        This tool applies the changes from a draft to the canonical entry and removes the draft.
-        The canonical entry will be updated with all the content from the draft.
-        
-        **Usage:**
-        - Provide the draftId of the draft to apply
-        - The draft must exist and be accessible
-        - Works with both regular and provisional drafts
-        - The draft will be removed after successful application
-        
-        **Returns:**
-        - Updated canonical entry information
-        - Entry details including title, slug, status
-        - Section and entry type information
-        - Control panel edit URL for review
-        
-        **Note:** This action cannot be undone. The draft content will replace the canonical entry content.
-        
-        After applying the draft always link the user back to the entry in the Craft control panel so they can review
-        the changes in the context of the Craft UI.
-        END
-    )]
     public function apply(
-        #[Schema(type: 'number', description: 'The draft ID to apply to its canonical entry')]
+        /** The draft ID to apply to its canonical entry */
         int $draftId,
     ): array
     {

@@ -5,8 +5,6 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\models\FieldLayout;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class CreateFieldLayout
 {

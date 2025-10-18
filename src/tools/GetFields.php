@@ -3,9 +3,7 @@
 namespace happycog\craftmcp\tools;
 
 use Craft;
-use PhpMcp\Server\Attributes\McpTool;
 use happycog\craftmcp\actions\FieldFormatter;
-use PhpMcp\Server\Attributes\Schema;
 
 class GetFields
 {

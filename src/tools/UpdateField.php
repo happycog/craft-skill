@@ -6,8 +6,6 @@ use Craft;
 use craft\base\FieldInterface;
 use craft\helpers\UrlHelper;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class UpdateField
 {

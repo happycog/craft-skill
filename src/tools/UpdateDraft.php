@@ -6,8 +6,6 @@ use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class UpdateDraft
 {

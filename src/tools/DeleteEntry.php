@@ -6,8 +6,6 @@ use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
 use craft\helpers\UrlHelper;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class DeleteEntry
 {

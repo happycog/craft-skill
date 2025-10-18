@@ -4,8 +4,6 @@ namespace happycog\craftmcp\tools;
 
 use Craft;
 use craft\elements\Entry;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class GetEntry
 {

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace happycog\craftmcp\tools;
 
 use Craft;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 use happycog\craftmcp\actions\EntryTypeFormatter;
 
 class GetEntryTypes
