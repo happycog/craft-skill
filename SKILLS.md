@@ -1,13 +1,21 @@
 ---
-name: Craft CMS Section Management
-description: Manage sections in Craft CMS, including creating, reading, updating, and deleting sections that define the structural organization of content.
+name: Craft CMS Section and Entry Type Management
+description: Manage sections and entry types in Craft CMS. Sections define content structure organization, while entry types define content schemas with field layouts.
 ---
 
-# Craft CMS Section Management
+# Craft CMS Section and Entry Type Management
 
-Sections in Craft CMS define how content is organized and structured. This skill provides HTTP endpoints to manage sections including creation, retrieval, updating, and deletion. Sections support three types: Single (one entry per section), Channel (multiple entries with flexible structure), and Structure (hierarchical entries with parent-child relationships).
+This skill provides HTTP endpoints to manage sections and entry types in Craft CMS.
 
-## Querying Current Sections
+**Sections** define how content is organized and structured. They support three types: Single (one entry per section), Channel (multiple entries with flexible structure), and Structure (hierarchical entries with parent-child relationships).
+
+**Entry Types** define the content schema with field layouts and can exist independently (for Matrix fields) or be assigned to sections to control entry structure and behavior.
+
+---
+
+## Section Management
+
+### Querying Current Sections
 
 **For LLM Assistant**: When asked about current sections in this Craft instance, query the sections list endpoint first to get the actual state:
 
@@ -17,13 +25,13 @@ curl http://craft-mcp.dev.markhuot.com/api/sections
 
 This will return the authoritative list of sections currently configured in the Craft CMS instance. Always perform this query to provide accurate information about existing sections rather than referencing outdated documentation.
 
-## Base URL
+### Base URL
 
-All endpoints are prefixed with the configured API prefix (default: `/api`).
+All section endpoints are prefixed with the configured API prefix (default: `/api`).
 
-## Endpoints
+### Section Endpoints
 
-### Create a Section
+#### Create a Section
 
 Create a new section in Craft CMS.
 
@@ -212,6 +220,235 @@ Content-Type: application/json
 }
 ```
 
+---
+
+## Entry Type Management
+
+Entry types define the content schema and field layouts for entries in Craft CMS. They can exist independently (useful for Matrix fields) or be assigned to sections to control entry structure and behavior.
+
+### Querying Current Entry Types
+
+**For LLM Assistant**: When asked about entry types in this Craft instance, query the entry types list endpoint first:
+
+```bash
+curl http://craft-mcp.dev.markhuot.com/api/entry-types
+```
+
+This returns the authoritative list of entry types currently configured, including their field layouts and usage information.
+
+### Base URL
+
+All entry type endpoints are prefixed with the configured API prefix (default: `/api`).
+
+### Entry Type Endpoints
+
+#### Create an Entry Type
+
+Create a new entry type with configurable field layout, title field settings, and visual presentation options.
+
+**Request:**
+```
+POST /api/entry-types
+Content-Type: application/json
+
+{
+  "name": "Article",
+  "handle": "article",
+  "hasTitleField": true,
+  "titleTranslationMethod": "site",
+  "titleFormat": null,
+  "icon": "newspaper",
+  "color": "blue",
+  "description": "Standard article entry type",
+  "showSlugField": true,
+  "showStatusField": true
+}
+```
+
+**Parameters:**
+- `name` (string, required): The display name for the entry type
+- `handle` (string, optional): The entry type handle (machine-readable name). Auto-generated from name if not provided
+- `hasTitleField` (boolean, optional): Whether entries of this type have title fields. Default: `true`
+- `titleTranslationMethod` (string, optional): How titles are translated: `none`, `site`, `language`, or `custom`. Default: `site`
+- `titleTranslationKeyFormat` (string, optional): Translation key format for custom title translation. Required when `titleTranslationMethod` is `custom`
+- `titleFormat` (string, optional): Custom title format pattern (e.g., `"{name} - {dateCreated|date}"`) for controlling entry title display. Required when `hasTitleField` is `false`
+- `icon` (string, optional): Icon identifier for the entry type (e.g., `newspaper`, `image`, `calendar`)
+- `color` (string, optional): Color identifier for the entry type (e.g., `red`, `blue`, `green`, `orange`, `pink`, `purple`, `turquoise`, `yellow`)
+- `description` (string, optional): A short string describing the purpose of the entry type
+- `showSlugField` (boolean, optional): Whether entries of this type show the slug field in the admin UI. Default: `true`
+- `showStatusField` (boolean, optional): Whether entries of this type show the status field in the admin UI. Default: `true`
+
+**Response:**
+```json
+{
+  "_notes": "The entry type was successfully created. You can further configure it in the Craft control panel.",
+  "entryTypeId": 1,
+  "name": "Article",
+  "handle": "article",
+  "description": "Standard article entry type",
+  "hasTitleField": true,
+  "titleTranslationMethod": "site",
+  "titleTranslationKeyFormat": null,
+  "titleFormat": null,
+  "icon": "newspaper",
+  "color": "blue",
+  "showSlugField": true,
+  "showStatusField": true,
+  "fieldLayoutId": 1,
+  "editUrl": "https://example.com/admin/settings/entry-types/1"
+}
+```
+
+#### List Entry Types
+
+Retrieve all entry types or filter by entry type IDs. Returns complete field layout information and usage statistics.
+
+**Request:**
+```
+GET /api/entry-types?entryTypeIds=1,2,3
+```
+
+**Parameters:**
+- `entryTypeIds` (array of integers, optional): List of entry type IDs to retrieve. If omitted, returns all entry types
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "Article",
+    "handle": "article",
+    "description": "Standard article entry type",
+    "hasTitleField": true,
+    "titleTranslationMethod": "site",
+    "titleFormat": null,
+    "icon": "newspaper",
+    "color": "blue",
+    "showSlugField": true,
+    "showStatusField": true,
+    "fieldLayoutId": 1,
+    "fieldLayout": {
+      "id": 1,
+      "tabs": [
+        {
+          "name": "Content",
+          "fields": [
+            {
+              "id": 1,
+              "name": "Body",
+              "handle": "body",
+              "type": "craft\\fields\\PlainText"
+            }
+          ]
+        }
+      ]
+    },
+    "usedBy": {
+      "sections": [
+        {
+          "id": 1,
+          "name": "Blog",
+          "handle": "blog",
+          "type": "channel"
+        }
+      ],
+      "matrixFields": []
+    },
+    "editUrl": "https://example.com/admin/settings/entry-types/1"
+  }
+]
+```
+
+#### Update an Entry Type
+
+Update an existing entry type's properties, field layout assignment, or visual presentation.
+
+**Request:**
+```
+PUT /api/entry-types/1
+Content-Type: application/json
+
+{
+  "name": "Blog Article",
+  "description": "Updated article entry type",
+  "icon": "document-text",
+  "color": "green",
+  "fieldLayoutId": 2
+}
+```
+
+**Parameters:**
+- `name` (string, optional): The display name for the entry type
+- `handle` (string, optional): The entry type handle (machine-readable name)
+- `titleTranslationMethod` (string, optional): How titles are translated: `none`, `site`, `language`, or `custom`
+- `titleTranslationKeyFormat` (string, optional): Translation key format for custom title translation
+- `titleFormat` (string, optional): Custom title format pattern
+- `icon` (string, optional): Icon identifier for the entry type
+- `color` (string, optional): Color identifier for the entry type
+- `description` (string, optional): A short string describing the purpose of the entry type
+- `showSlugField` (boolean, optional): Whether entries show the slug field in the admin UI
+- `showStatusField` (boolean, optional): Whether entries show the status field in the admin UI
+- `fieldLayoutId` (integer, optional): The ID of the field layout to assign to this entry type
+
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "Blog Article",
+  "handle": "article",
+  "description": "Updated article entry type",
+  "hasTitleField": true,
+  "titleTranslationMethod": "site",
+  "titleFormat": null,
+  "icon": "document-text",
+  "color": "green",
+  "showSlugField": true,
+  "showStatusField": true,
+  "fieldLayoutId": 2,
+  "editUrl": "https://example.com/admin/settings/entry-types/1"
+}
+```
+
+#### Delete an Entry Type
+
+Delete an entry type from Craft CMS. This will remove the entry type and its associated field layout.
+
+**Request:**
+```
+DELETE /api/entry-types/1
+Content-Type: application/json
+
+{
+  "force": false
+}
+```
+
+**Parameters:**
+- `force` (boolean, optional): Force deletion even if entries exist. Default: `false`. **Warning**: Using `force=true` will cause data loss for existing entries. Always require user approval before forcing deletion.
+
+**Response:**
+```json
+{
+  "_notes": "Entry type 'Article' was successfully deleted. This removed 15 associated items from the system.",
+  "deleted": true,
+  "entryType": {
+    "id": 1,
+    "name": "Article",
+    "handle": "article",
+    "fieldLayoutId": 1
+  },
+  "usageStats": {
+    "entries": 10,
+    "drafts": 3,
+    "revisions": 2,
+    "total": 15
+  },
+  "forced": true
+}
+```
+
+---
+
 ## Error Handling
 
 If a request encounters an error, the API returns an appropriate HTTP status code with error details:
@@ -225,8 +462,17 @@ Error responses include an error message explaining the issue.
 
 ## Usage Notes
 
+### Section Management
 - **Site Settings**: If not provided, sections are automatically enabled for all sites with default URI formats based on section type
-- **Entry Types**: Must be created separately using the Craft CMS entry type tools before being assigned to sections
+- **Entry Types**: Must be created separately using the entry type endpoints before being assigned to sections
 - **Type Changes**: Some section type conversions are restricted when entries exist (e.g., cannot convert Structure → Channel with existing hierarchical data)
 - **Force Delete**: Always require user approval before setting `force=true` on delete operations
 - **Control Panel Links**: After creating or updating sections, users can review changes in the Craft control panel using the `editUrl` provided in responses
+
+### Entry Type Management
+- **Field Layouts**: Entry types with `hasTitleField=true` automatically include a title field in their layout. Entry types with `hasTitleField=false` require a `titleFormat` to define how titles are generated
+- **Title Format**: When `hasTitleField` is `false`, use `titleFormat` with Twig syntax like `"{fieldHandle} - {dateCreated|date}"` to define automatic title generation
+- **Standalone Usage**: Entry types can exist independently without being assigned to sections (commonly used for Matrix field block types)
+- **Usage Detection**: The list endpoint shows which sections and Matrix fields reference each entry type via the `usedBy` property
+- **Force Delete**: Deleting entry types with existing entries requires `force=true` and causes permanent data loss. Always get user approval before forcing deletion
+- **Control Panel Links**: After creating or updating entry types, users can review changes in the Craft control panel using the `editUrl` provided in responses

@@ -89,9 +89,17 @@ class Plugin extends BasePlugin
 
         // API routes for Skills
         $apiPrefix = $this->getSettings()->apiPrefix ?? 'api';
+        
+        // Section routes
         $event->rules['POST ' . $apiPrefix . '/sections'] = 'mcp/sections/create';
         $event->rules['GET ' . $apiPrefix . '/sections'] = 'mcp/sections/list';
         $event->rules['PUT ' . $apiPrefix . '/sections/<id>'] = 'mcp/sections/update';
         $event->rules['DELETE ' . $apiPrefix . '/sections/<id>'] = 'mcp/sections/delete';
+        
+        // Entry Type routes
+        $event->rules['POST ' . $apiPrefix . '/entry-types'] = 'mcp/entry-types/create';
+        $event->rules['GET ' . $apiPrefix . '/entry-types'] = 'mcp/entry-types/list';
+        $event->rules['PUT ' . $apiPrefix . '/entry-types/<id>'] = 'mcp/entry-types/update';
+        $event->rules['DELETE ' . $apiPrefix . '/entry-types/<id>'] = 'mcp/entry-types/delete';
     }
 }
