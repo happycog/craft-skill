@@ -546,6 +546,27 @@ test('endpoint returns valid response', function () {
 
 ### Type Safety and PHPStan Patterns
 - **PHPStan Level**: Project runs at `level: max` (strictest analysis) with official Craft CMS integration
+- **MCP Tool Type Documentation**: Tools use PHPStan docblock types instead of MCP Schema attributes:
+  ```php
+  /**
+   * Tool description goes in method docblock.
+   *
+   * Multi-line descriptions are supported and preferred for clarity.
+   *
+   * @param 'single'|'channel'|'structure' $type PHPStan union types for enums
+   * @param array<int> $arrayParam PHPStan array shape for complex types
+   * @param array<string, mixed> $data
+   * @return array<string, mixed>
+   */
+  public function toolMethod(
+      /** Simple inline description for basic parameters */
+      string $name,
+      
+      /** Multi-line inline descriptions
+       * for complex parameters */
+      ?array $data = null,
+  ): array
+  ```
 - **Array Return Types**: All methods returning arrays must have PHPDoc annotations:
   ```php
   /**
