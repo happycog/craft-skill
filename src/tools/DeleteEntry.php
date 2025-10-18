@@ -10,26 +10,21 @@ use craft\helpers\UrlHelper;
 class DeleteEntry
 {
     /**
+     * Delete an entry in Craft.
+     *
+     * - By default, this performs a soft delete (Craft's standard behavior) where the entry is marked as
+     * deleted but remains in the database and can be restored.
+     * - Set permanentlyDelete to true to permanently remove the entry from the database.
+     * - Permanently deleted entries cannot be restored.
+     *
+     * Returns the deleted entry's basic information for confirmation.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'delete_entry',
-        description: <<<'END'
-        Delete an entry in Craft.
-
-        - By default, this performs a soft delete (Craft's standard behavior) where the entry is marked as
-        deleted but remains in the database and can be restored.
-        - Set permanentlyDelete to true to permanently remove the entry from the database.
-        - Permanently deleted entries cannot be restored.
-
-        Returns the deleted entry's basic information for confirmation.
-        END
-    )]
     public function delete(
-        #[Schema(type: 'number')]
         int $entryId,
 
-        #[Schema(type: 'boolean', description: 'Set to true to permanently delete the entry. Default is false (soft delete).')]
+        /** Set to true to permanently delete the entry. Default is false (soft delete). */
         bool $permanentlyDelete = false,
     ): array
     {

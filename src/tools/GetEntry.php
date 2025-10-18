@@ -8,16 +8,11 @@ use craft\elements\Entry;
 class GetEntry
 {
     /**
+     * Get entry details.
+     *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'get_entry',
-        description: <<<'END'
-        Get entry details.
-        END
-    )]
     public function get(
-        #[Schema(type: 'number')]
         int $entryId,
     ): array
     {
