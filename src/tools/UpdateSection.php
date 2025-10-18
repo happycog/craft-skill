@@ -8,74 +8,68 @@ use craft\helpers\UrlHelper;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
 use happycog\craftmcp\exceptions\ModelSaveException;
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class UpdateSection
 {
-
     /**
+     * Update an existing section in Craft CMS. Allows modification of section properties
+     * including name, handle, site settings, and entry type associations while preserving
+     * existing entry data where possible.
+     *
+     * Section type changes have restrictions: Single ↔ Channel is possible, but Structure
+     * changes require careful consideration due to hierarchical data. Entry type associations
+     * can be updated to add or remove entry types from the section.
+     *
+     * After updating the section always link the user back to the section settings in the Craft
+     * control panel so they can review the changes in the context of the Craft UI.
+     *
+     * @param 'single'|'channel'|'structure'|null $type
      * @param array<int>|null $entryTypeIds
-     * @param array<string, mixed>|null $siteSettingsData
+     * @param 'all'|'siteGroup'|'language'|'custom'|'none'|null $propagationMethod
+     * @param 'beginning'|'end'|null $defaultPlacement
+     * @param array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null $siteSettingsData
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'update_section',
-        description: <<<'END'
-        Update an existing section in Craft CMS. Allows modification of section properties
-        including name, handle, site settings, and entry type associations while preserving
-        existing entry data where possible.
-
-        Section type changes have restrictions: Single ↔ Channel is possible, but Structure
-        changes require careful consideration due to hierarchical data. Entry type associations
-        can be updated to add or remove entry types from the section.
-
-        After updating the section always link the user back to the section settings in the Craft
-        control panel so they can review the changes in the context of the Craft UI.
-        END
-    )]
     public function update(
-        #[Schema(type: 'integer', description: 'The ID of the section to update')]
+        /** The ID of the section to update */
         int $sectionId,
-        
-        #[Schema(type: 'string', description: 'The display name for the section')]
+
+        /** The display name for the section */
         ?string $name = null,
-        
-        #[Schema(type: 'string', description: 'The section handle (machine-readable name)')]
+
+        /** The section handle (machine-readable name) */
         ?string $handle = null,
-        
-        #[Schema(type: 'string', description: 'Section type: single, channel, or structure. Type changes have restrictions based on existing data.', enum: ['single', 'channel', 'structure'])]
+
+        /** Section type: single, channel, or structure. Type changes have restrictions based on existing data. */
         ?string $type = null,
-        
-        #[Schema(type: 'array', description: 'Array of entry type IDs to assign to this section. Replaces existing associations.', items: ['type' => 'integer'])]
+
+        /** Array of entry type IDs to assign to this section. Replaces existing associations. */
         ?array $entryTypeIds = null,
-        
-        #[Schema(type: 'boolean', description: 'Whether to enable entry versioning for this section')]
+
+        /** Whether to enable entry versioning for this section */
         ?bool $enableVersioning = null,
-        
-        #[Schema(type: 'string', description: 'How content propagates across sites', enum: ['all', 'siteGroup', 'language', 'custom', 'none'])]
+
+        /** How content propagates across sites */
         ?string $propagationMethod = null,
-        
-        #[Schema(type: 'integer', description: 'Maximum hierarchy levels (only for structure sections). Null/0 for unlimited.')]
+
+        /** Maximum hierarchy levels (only for structure sections). Null/0 for unlimited. */
         ?int $maxLevels = null,
-        
-        #[Schema(type: 'string', description: 'Where new entries are placed by default (only for structure sections)', enum: ['beginning', 'end'])]
+
+        /** Where new entries are placed by default (only for structure sections) */
         ?string $defaultPlacement = null,
-        
-        #[Schema(type: 'integer', description: 'Maximum number of authors that can be assigned to entries in this section')]
+
+        /** Maximum number of authors that can be assigned to entries in this section */
         ?int $maxAuthors = null,
-        
-        #[Schema(type: 'array', description: 'Site-specific settings for multi-site installations', items: [
-            'type' => 'object',
-            'properties' => [
-                'siteId' => ['type' => 'integer', 'description' => 'Site ID'],
-                'enabledByDefault' => ['type' => 'boolean', 'description' => 'Enable entries by default'],
-                'hasUrls' => ['type' => 'boolean', 'description' => 'Whether entries have URLs'],
-                'uriFormat' => ['type' => 'string', 'description' => 'URI format pattern'],
-                'template' => ['type' => 'string', 'description' => 'Template path for rendering']
-            ],
-            'required' => ['siteId']
-        ])]
+
+        /**
+         * Site-specific settings for multi-site installations.
+         * Each array entry contains:
+         * - siteId: Site ID (required)
+         * - enabledByDefault: Enable entries by default for this site (optional)
+         * - hasUrls: Whether entries have URLs on this site (optional)
+         * - uriFormat: URI format pattern, e.g., "blog/{slug}" or "{slug}" (optional)
+         * - template: Template path for rendering entries, e.g., "_blog/entry" (optional)
+         */
         ?array $siteSettingsData = null
     ): array {
         $sectionsService = Craft::$app->getEntries();

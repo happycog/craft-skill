@@ -25,40 +25,51 @@ class CreateSection
      * After creating the section always link the user back to the section settings in the Craft control panel
      * so they can review and further configure the section in the context of the Craft UI.
      *
+     * @param 'single'|'channel'|'structure' $type
      * @param array<int> $entryTypeIds
+     * @param 'all'|'siteGroup'|'language'|'custom'|'none' $propagationMethod
+     * @param 'beginning'|'end' $defaultPlacement
      * @param array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null $siteSettings
      * @return array<string, mixed>
      */
     public function create(
-         /** The display name for the section */
-         string $name,
+        /** The display name for the section */
+        string $name,
 
-	 /** @var string<'single'|'channel'|'structure'> $type Section type: single (one entry), channel (multiple entries), or structure (hierarchical entries). One of: single, channel, structure */
-         string $type,
+        /** Section type: single (one entry), channel (multiple entries), or structure (hierarchical entries) */
+        string $type,
 
-         /** @var array<int> $entryTypeIds Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first. This can also be empty to create a section without any entry types. Although not common this is possible. */
-         array $entryTypeIds,
+        /** Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first. This can also be empty to create a section without any entry types. Although not common this is possible. */
+        array $entryTypeIds,
 
-         /** The section handle (machine-readable name). Auto-generated from name if not provided. */
-         ?string $handle = null,
+        /** The section handle (machine-readable name). Auto-generated from name if not provided. */
+        ?string $handle = null,
 
-         /** Whether to enable entry versioning for this section */
-         bool $enableVersioning = true,
+        /** Whether to enable entry versioning for this section */
+        bool $enableVersioning = true,
 
-         /** @var string<'all'|'siteGroup'|'language'|'custom'|'none'> How content propagates across sites */
-         string $propagationMethod = Section::PROPAGATION_METHOD_ALL,
+        /** How content propagates across sites */
+        string $propagationMethod = Section::PROPAGATION_METHOD_ALL,
 
-         /** Maximum hierarchy levels (only for structure sections). Null/0 for unlimited. */
-         ?int $maxLevels = null,
+        /** Maximum hierarchy levels (only for structure sections). Null/0 for unlimited. */
+        ?int $maxLevels = null,
 
-         /** @var string<'beginning'|'end'> Where new entries are placed by default (only for structure sections). One of: beginning, end */
-         string $defaultPlacement = 'end',
+        /** Where new entries are placed by default (only for structure sections) */
+        string $defaultPlacement = 'end',
 
-         /** Maximum number of authors that can be assigned to entries in this section */
-         ?int $maxAuthors = null,
+        /** Maximum number of authors that can be assigned to entries in this section */
+        ?int $maxAuthors = null,
 
-         /** @var array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null Site-specific settings. If not provided, section will be enabled for all sites with default settings. */
-         ?array $siteSettings = null
+        /**
+         * Site-specific settings. If not provided, section will be enabled for all sites with default settings.
+         * Each array entry contains:
+         * - siteId: Site ID (required)
+         * - enabledByDefault: Enable entries by default for this site (optional)
+         * - hasUrls: Whether entries have URLs on this site (optional)
+         * - uriFormat: URI format pattern, e.g., "blog/{slug}" or "{slug}" (optional)
+         * - template: Template path for rendering entries, e.g., "_blog/entry" (optional)
+         */
+        ?array $siteSettings = null
      ): array {
         throw_unless(in_array($type, [Section::TYPE_SINGLE, Section::TYPE_CHANNEL, Section::TYPE_STRUCTURE]),
                     'Section type must be single, channel, or structure');
