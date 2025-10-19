@@ -2,14 +2,13 @@
 
 ## Project Overview
 
-This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server, providing AI assistants with structured access to Craft CMS content management capabilities. The plugin exposes Craft CMS functionality through MCP tools including content creation, modification, search, and management operations.
+This is a Craft CMS plugin that provides a RESTful HTTP API with structured access to Craft CMS content management capabilities. The plugin exposes Craft CMS functionality through HTTP endpoints including content creation, modification, search, and management operations.
 
 ## Tech Stack
 
 - **Backend**: PHP 8.1+ with Craft CMS 5.x framework
-- **MCP Protocol**: php-mcp/server ^3.2 package for MCP specification implementation
-- **Transport Layer**: Custom HTTP transport integrated with Yii2 routing (Craft's underlying framework)
-- **Session Management**: Custom session handler using Craft's caching system
+- **Validation**: CuyZ/Valinor ^2.2 for request parameter validation and mapping
+- **Transport Layer**: HTTP endpoints integrated with Yii2 routing (Craft's underlying framework)
 - **Testing**: Pest PHP testing framework with craft-pest-core
 - **Package Management**:
   - PHP: Composer
@@ -21,7 +20,9 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 /
 ├── src/
 │   ├── actions/
-│   │   └── UpsertEntry.php          # Entry creation/update action
+│   │   ├── UpsertEntry.php          # Entry creation/update action
+│   │   ├── EntryTypeFormatter.php   # Entry type formatting
+│   │   └── FieldFormatter.php       # Field formatting
 │   ├── attributes/
 │   │   ├── BindToContainer.php      # DI container binding attribute
 │   │   ├── Init.php                 # Initialization attribute
@@ -29,24 +30,27 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 │   ├── base/
 │   │   └── Plugin.php               # Base plugin class with DI
 │   ├── controllers/
-│   │   ├── SseTransportController.php      # Legacy SSE transport
-│   │   └── StreamableTransportController.php # Modern HTTP transport
-│   ├── session/
-│   │   └── CraftSessionHandler.php  # MCP session management
-│   ├── tools/                       # MCP tool implementations
-│   │   ├── CreateDraft.php          # Draft creation tool
-│   │   ├── CreateEntry.php          # Content creation tool
-│   │   ├── DeleteEntry.php          # Content deletion tool
-│   │   ├── GetEntry.php             # Content retrieval tool
-│   │   ├── GetFields.php            # Field schema tool
-│   │   ├── GetSections.php          # Section structure tool
-│   │   ├── GetSites.php             # Site information tool
-│   │   ├── SearchContent.php        # Content search tool
-│   │   ├── UpdateDraft.php          # Draft modification tool
-│   │   └── UpdateEntry.php          # Content modification tool
-│   ├── transports/
-│   │   ├── HttpServerTransport.php          # Legacy HTTP transport
-│   │   └── StreamableHttpServerTransport.php # Modern streaming transport
+│   │   ├── Controller.php           # Base controller with Valinor validation
+│   │   ├── EntriesController.php    # Entry CRUD endpoints
+│   │   ├── SectionsController.php   # Section management endpoints
+│   │   ├── EntryTypesController.php # Entry type management endpoints
+│   │   ├── FieldsController.php     # Field management endpoints
+│   │   ├── FieldLayoutsController.php # Field layout endpoints
+│   │   ├── DraftsController.php     # Draft management endpoints
+│   │   └── SitesController.php      # Site information endpoints
+│   ├── tools/                       # Business logic implementations
+│   │   ├── CreateEntry.php          # Content creation logic
+│   │   ├── UpdateEntry.php          # Content modification logic
+│   │   ├── DeleteEntry.php          # Content deletion logic
+│   │   ├── GetEntry.php             # Content retrieval logic
+│   │   ├── SearchContent.php        # Content search logic
+│   │   ├── CreateDraft.php          # Draft creation logic
+│   │   ├── UpdateDraft.php          # Draft modification logic
+│   │   └── ...                      # Additional tool implementations
+│   ├── exceptions/
+│   │   └── ModelSaveException.php   # Craft model save error handling
+│   ├── helpers/
+│   │   └── functions.php            # Laravel-style helper functions
 │   └── Plugin.php                   # Main plugin class
 ├── tests/                           # Pest test suite
 ├── stubs/project/                   # Craft project configuration
@@ -60,15 +64,14 @@ This is a Craft CMS plugin that implements a Model Context Protocol (MCP) server
 
 ### 1. `composer.json`
 - Craft CMS plugin type with proper autoloading
-- php-mcp/server dependency for MCP protocol implementation
+- cuyz/valinor dependency for request validation
 - craft-pest-core for testing framework
 - PHPStan for static analysis
 
 ### 2. `src/Plugin.php`
 - Main plugin entry point with dependency injection setup
-- MCP server configuration with tool discovery
-- HTTP transport registration and route binding
-- Session handler integration
+- HTTP route registration for all API endpoints
+- Controller mapping and URL rules configuration
 
 ### 3. `phpunit.xml`
 - Pest testing framework configuration
@@ -117,15 +120,18 @@ composer install
 ./vendor/bin/phpstan analyse --generate-baseline
 ```
 
-### MCP Testing
+### API Testing
 ```bash
-# Test with MCP inspector (requires bun)
-bunx @modelcontextprotocol/inspector --cli http://craft-mcp.dev.markhuot.com/mcp --transport http --method initialize
-
-# Manual curl testing
-curl -X POST http://craft-mcp.dev.markhuot.com/mcp \
+# Test with curl
+curl -X POST http://craft-mcp.dev.markhuot.com/api/entries \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0.0"}}}'
+  -d '{"sectionId": 1, "entryTypeId": 1, "attributeAndFieldData": {"title": "Test Entry"}}'
+
+# Search entries
+curl -X GET "http://craft-mcp.dev.markhuot.com/api/entries/search?query=test"
+
+# Get specific entry
+curl -X GET http://craft-mcp.dev.markhuot.com/api/entries/123
 ```
 
 ### PHPStan Configuration
@@ -151,24 +157,45 @@ parameters:
 
 ## Development Patterns
 
-### 1. Creating New MCP Tools
-Create tool classes in `src/tools/`. Tools use modern PHP8 attributes for schema definition:
+### 1. Creating New HTTP Endpoints
+Create controller classes in `src/controllers/` and tool classes in `src/tools/`:
 
-**IMPORTANT**: All tools that create, update, or modify content MUST include an explicit instruction in their description to link the user back to the Craft control panel for review. Follow the CreateEntry pattern:
+**Controller Pattern with Valinor Validation:**
 
+```php
+// src/controllers/ExampleController.php
+namespace happycog\craftmcp\controllers;
+
+use happycog\craftmcp\tools\ExampleTool;
+use yii\web\Response;
+
+class ExampleController extends Controller
+{
+    public function actionCreate(): Response
+    {
+        $tool = \Craft::$container->get(ExampleTool::class);
+        return $this->callTool($tool->create(...));
+    }
+
+    public function actionGet(int $id): Response
+    {
+        $tool = \Craft::$container->get(ExampleTool::class);
+        return $this->callTool($tool->get(...), ['id' => $id], useQueryParams: true);
+    }
+
+    public function actionUpdate(int $id): Response
+    {
+        $tool = \Craft::$container->get(ExampleTool::class);
+        return $this->callTool($tool->update(...), ['id' => $id]);
+    }
+}
 ```
-After [action] always link the user back to the entry in the Craft control panel so they can review
-the changes in the context of the Craft UI.
-```
 
-**PREFERRED: Modern PHP8 Attribute Approach with Dependency Injection (use this for all new tools):**
+**Tool Implementation with Dependency Injection:**
 
 ```php
 // src/tools/ExampleTool.php
 namespace happycog\craftmcp\tools;
-
-use PhpMcp\Server\Attributes\McpTool;
-use PhpMcp\Server\Attributes\Schema;
 
 class ExampleTool
 {
@@ -180,26 +207,21 @@ class ExampleTool
     }
 
     /**
+     * Example tool description that supports multiple lines.
+     *
+     * After performing action always link the user back to the relevant page in the Craft
+     * control panel so they can review the changes in the context of the Craft UI.
+     *
+     * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'example_tool', // Use snake_case, NO craft_ prefix
-        description: <<<'END'
-        Example tool description that supports multiple lines.
-
-        After performing action always link the user back to the relevant page in the Craft
-        control panel so they can review the changes in the context of the Craft UI.
-        END
-    )]
-    public function performAction(
-        #[Schema(type: 'string', description: 'Parameter description')]
+    public function create(
         string $parameter,
-
-        #[Schema(type: 'integer', description: 'Optional number parameter')]
-        ?int $optionalNumber = null
+        ?int $optionalNumber = null,
+        array $data = [],
     ): array {
         // Use injected dependencies instead of manual container access
-        $result = ($this->exampleService)($parameter);
+        $result = ($this->exampleService)($parameter, $data);
 
         return [
             'success' => true,
@@ -210,143 +232,125 @@ class ExampleTool
 }
 ```
 
-**LEGACY: Manual Schema Approach (avoid for new tools):**
+**Route Registration in Plugin.php:**
 
 ```php
-// DEPRECATED - Only shown for reference, do not use for new tools
-namespace happycog\craftmcp\tools;
-
-use PhpMcp\Schema\Tool;
-use PhpMcp\Schema\CallToolRequest;
-use PhpMcp\Schema\CallToolResult;
-
-class LegacyExampleTool
+// src/Plugin.php
+#[RegisterListener(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES)]
+protected function registerSiteUrlRules(RegisterUrlRulesEvent $event): void
 {
-    public function getSchema(): Tool
-    {
-        return Tool::make(
-            name: 'legacy_example_tool',
-            description: 'Example tool description',
-            inputSchema: [
-                'type' => 'object',
-                'properties' => [
-                    'parameter' => ['type' => 'string', 'description' => 'Parameter description']
-                ],
-                'required' => ['parameter']
-            ]
-        );
-    }
-
-    public function execute(CallToolRequest $request): CallToolResult
-    {
-        $args = $request->params->arguments;
-
-        // Tool implementation logic
-
-        return CallToolResult::make(
-            content: [['type' => 'text', 'text' => 'Tool result']]
-        );
-    }
+    $apiPrefix = $this->getSettings()->apiPrefix ?? 'api';
+    
+    // Example routes
+    $event->rules['POST ' . $apiPrefix . '/examples'] = 'mcp/example/create';
+    $event->rules['GET ' . $apiPrefix . '/examples/<id>'] = 'mcp/example/get';
+    $event->rules['PUT ' . $apiPrefix . '/examples/<id>'] = 'mcp/example/update';
 }
 ```
 
-### 2. Adding Controller Actions
-Controllers use dependency injection and single-action pattern:
+### 2. Base Controller Features
+Controllers extend the base `Controller` class which provides automatic Valinor validation:
 
 ```php
-// src/controllers/ExampleController.php
-namespace happycog\craftmcp\controllers;
-
-use craft\web\Controller;
-use craft\web\Response;
-
-class ExampleController extends Controller
-{
-    protected array|bool|int $allowAnonymous = true;
-    public $enableCsrfValidation = false;
-
-    public function actionIndex(ExampleService $service): Response
-    {
-        $result = $service->performAction();
-        return $this->asJson($result);
-    }
+// Base controller method that handles validation automatically
+protected function callTool(
+    callable $tool,
+    array $params = [],
+    bool $useQueryParams = false
+): Response {
+    // Automatically maps request body/query params to tool method parameters
+    // Validates types and throws 400 errors for invalid input
+    // Returns JSON response with tool result
 }
 ```
 
-### 3. Session Management
-Use CraftSessionHandler for MCP session persistence:
-
-```php
-$sessionHandler = $container->get(CraftSessionHandler::class);
-$sessionId = $sessionHandler->createSession($clientInfo);
-$session = $sessionHandler->getSession($sessionId);
-```
-
-### 4. Testing
-Use Pest with Craft-specific patterns:
+### 3. Testing
+Use Pest with HTTP endpoint testing patterns:
 
 ```php
 // tests/ExampleTest.php
-test('tool executes successfully', function () {
-    $tool = new ExampleTool();
-    $request = CallToolRequest::make(/* ... */);
-
-    $result = $tool->execute($request);
-
-    expect($result)->toBeInstanceOf(CallToolResult::class);
-});
-
-// For HTTP endpoint testing
-test('endpoint returns valid response', function () {
-    $response = $this->post('/mcp', [
-        'jsonrpc' => '2.0',
-        'id' => 1,
-        'method' => 'tools/call',
-        'params' => [/* ... */]
+test('endpoint creates resource successfully', function () {
+    $response = $this->post('/api/examples', [
+        'parameter' => 'test value',
+        'data' => ['key' => 'value']
     ]);
 
     $response->assertStatus(200);
     $data = $response->json();
-    expect($data['jsonrpc'])->toBe('2.0');
+    expect($data['success'])->toBeTrue();
+    expect($data['parameter'])->toBe('test value');
+});
+
+// For GET requests with query parameters
+test('endpoint retrieves resource', function () {
+    $response = $this->get('/api/examples/123?filter=active');
+
+    $response->assertStatus(200);
+    $data = $response->json();
+    expect($data)->toHaveKey('id');
 });
 ```
 
 ## Current State
 
 ### ✅ Completed Setup
-- [x] MCP server integration with php-mcp/server package
-- [x] HTTP transport with SSE streaming support
-- [x] Session management using Craft's caching system
-- [x] Tool auto-discovery and registration
+- [x] RESTful HTTP API with Valinor validation
+- [x] Controller-based architecture with automatic request mapping
 - [x] Complete CRUD operations for Craft entries
-- [x] Field and section introspection tools
+- [x] Section, entry type, and field management endpoints
+- [x] Field layout configuration endpoints
 - [x] Content search capabilities
+- [x] Draft support with create, update, and apply operations
+- [x] Site information endpoints
 - [x] Comprehensive test suite with Pest
-- [x] Complete draft support with CreateDraft, UpdateDraft, and GetSites tools
 
 ### 🔄 Ready for Development
 - [ ] Enhanced error handling and validation
 - [ ] Performance optimization for large content sets
-- [ ] Additional MCP capabilities (resources, prompts)
 - [ ] Extended field type support
-- [ ] Asset management tools
+- [ ] Asset management endpoints
+- [ ] User and permission management endpoints
 
 ## Important Notes for Future Agents
 
-### MCP Tool Development Guidelines
-- **Tool Naming Convention**: Tool names should use snake_case and NOT include a `craft_` prefix. Examples: `create_entry`, `get_sections`, `update_field` (NOT `craft_create_entry`, `craft_get_sections`, etc.)
-- **Control Panel Links**: All tools that create, update, or modify Craft content MUST include explicit instructions in their descriptions to link users back to the control panel for review
-- **Pattern**: "After [action] always link the user back to the entry in the Craft control panel so they can review the changes in the context of the Craft UI."
-- **Implementation**: Use `ElementHelper::elementEditorUrl($entry)` to generate control panel URLs consistently across all tools
-- **Examples**: See CreateEntry.php, UpdateEntry.php, and ApplyDraft.php for proper implementation patterns
+### HTTP API Development Guidelines
+- **Endpoint Naming Convention**: Use RESTful conventions with plural nouns (e.g., `/api/entries`, `/api/sections`, `/api/fields`)
+- **HTTP Methods**: Use appropriate methods - POST for creation, GET for retrieval, PUT for updates, DELETE for deletion
+- **Control Panel Links**: All endpoints that create, update, or modify Craft content should include control panel URLs in responses for user review
+- **Pattern**: Include a `url` field in response objects with `ElementHelper::elementEditorUrl($element)` for entries
+- **Examples**: See EntriesController.php, SectionsController.php for proper implementation patterns
 
-### MCP Protocol Implementation
-- This plugin implements the Model Context Protocol (MCP) specification
-- Uses php-mcp/server package for protocol handling - do NOT reimplement MCP manually
-- Server capabilities are configured in Plugin.php with tools=true, resources=false, prompts=false
-- Tool discovery happens automatically by scanning src/tools/ directory
-- **Modern Tools**: Use PHP8 attributes (`#[McpTool]` and `#[Schema]`) with single public method implementation
-- **Legacy Tools**: Some tools still use `getSchema()` and `execute()` methods (should be modernized to attributes)
+### HTTP API Architecture
+- **Request Validation**: Uses Valinor library for automatic type checking and parameter mapping
+- **Controller Pattern**: Controllers extend base Controller class with `callTool()` method for validation
+- **Tool Layer**: Business logic separated into tool classes in `src/tools/` directory
+- **Dependency Injection**: Tools use constructor injection for clean architecture
+- **Routes Available**:
+  - `POST /api/entries` - Create entry
+  - `GET /api/entries/<id>` - Get entry
+  - `PUT /api/entries/<id>` - Update entry
+  - `DELETE /api/entries/<id>` - Delete entry
+  - `GET /api/entries/search` - Search entries
+  - `POST /api/sections` - Create section
+  - `GET /api/sections` - List sections
+  - `PUT /api/sections/<id>` - Update section
+  - `DELETE /api/sections/<id>` - Delete section
+  - `POST /api/entry-types` - Create entry type
+  - `GET /api/entry-types` - List entry types
+  - `PUT /api/entry-types/<id>` - Update entry type
+  - `DELETE /api/entry-types/<id>` - Delete entry type
+  - `POST /api/fields` - Create field
+  - `GET /api/fields` - List fields
+  - `GET /api/fields/types` - List field types
+  - `PUT /api/fields/<id>` - Update field
+  - `DELETE /api/fields/<id>` - Delete field
+  - `POST /api/drafts` - Create draft
+  - `PUT /api/drafts/<id>` - Update draft
+  - `POST /api/drafts/<id>/apply` - Apply draft
+  - `POST /api/field-layouts` - Create field layout
+  - `GET /api/field-layouts` - Get field layout
+  - `PUT /api/field-layouts/<id>` - Update field layout
+  - `GET /api/sites` - List sites
 
 ### Craft 5.x Specific Considerations
 - **Draft Properties**: Always use `draftName`, `draftNotes`, `isProvisionalDraft` - these are the correct Craft 5.x property names
@@ -358,27 +362,23 @@ test('endpoint returns valid response', function () {
 - **EntryType-Section Relationship**: To find which section contains an entry type, iterate through all sections and check their `getEntryTypes()` method
 - **Standalone Entry Types**: Entry types can exist independently without being associated with a section (useful for Matrix fields)
 
-### Transport Architecture
-- **Primary Transport**: StreamableHttpServerTransport for modern MCP clients
-- **Legacy Transport**: HttpServerTransport for older SSE-based clients
-- **Routes Available**:
-  - `POST /mcp` - JSON-RPC message processing
-  - `GET /mcp` - SSE streaming for real-time communication
-  - `DELETE /mcp` - Session cleanup
-  - `GET /sse` - Legacy SSE endpoint
-  - `POST /message` - Legacy message endpoint
-
-### Session Management
-- Uses CraftSessionHandler with Craft's cache system for persistence
-- Sessions are keyed by unique IDs and contain client info and message queues
-- Automatic garbage collection removes stale sessions
-- Session integration with MCP server's SessionManager for proper protocol handling
+### Valinor Integration
+- **Automatic Validation**: Request parameters are automatically validated and type-cast using Valinor
+- **Type Safety**: Parameter types from tool methods are enforced at runtime
+- **Error Handling**: Invalid requests return 400 status with detailed error messages
+- **Permissive Types**: Builder configured with `allowPermissiveTypes()` and `allowScalarValueCasting()`
+- **Parameter Sources**:
+  - POST/PUT: Body parameters via `$this->request->getBodyParams()`
+  - GET: Query parameters via `$this->request->getQueryParams()`
+  - Path: Merged into parameters via controller action arguments
 
 ### Craft CMS Integration
 - Plugin extends craft\base\Plugin with custom DI container
 - Uses #[BindToContainer] and #[RegisterListener] attributes for clean architecture
 - Tool implementations work directly with Craft's element system
 - Respects Craft's permissions and user context when available
+- Controllers use `allowAnonymous = self::ALLOW_ANONYMOUS_LIVE` for API access
+- CSRF validation disabled for JSON API compatibility
 
 ### Dependency Injection Pattern (Added after entry-types branch migration)
 - **CRITICAL**: All tools in `src/tools/` directory MUST use constructor injection instead of manual container access
@@ -474,7 +474,7 @@ test('endpoint returns valid response', function () {
 
 ### Testing Framework
 - Uses Pest PHP with craft-pest-core for Craft-specific testing
-- Complete test suite covering all MCP tools and transport functionality
+- Complete test suite covering all HTTP endpoints and business logic
 - RefreshesDatabase trait ensures clean test isolation
 - Tests cover both unit functionality and HTTP endpoint behavior
 - **Note**: Some tests may emit warnings due to Craft/Pest framework incompatibilities - this is expected and does not indicate test failure
@@ -483,9 +483,9 @@ test('endpoint returns valid response', function () {
 - **Property Access**: Use correct Craft 5.x property names in tests (`draftName`, `draftNotes`, `isProvisionalDraft`)
 
 ### Error Handling
-- Tools should return proper CallToolResult with error content on failures
-- HTTP transport handles JSON-RPC error responses automatically
-- Session errors are logged and cleaned up gracefully
+- Tools should return arrays with error information on failures
+- Controllers automatically handle validation errors with 400 status codes
+- Use ModelSaveException for Craft model save/delete failures
 
 ### ModelSaveException Pattern
 - **PREFERRED**: Use `throw_unless` helper with ModelSaveException for all Craft model save/delete operations:
@@ -504,7 +504,7 @@ test('endpoint returns valid response', function () {
   }
   ```
 - **Automatic Context Generation**: ModelSaveException automatically generates context messages from model class names (e.g., "Failed to save entry type", "Failed to save field")
-- **Consistent Error Handling**: All save/delete operations should use this pattern for consistent error messages across the MCP tools
+- **Consistent Error Handling**: All save/delete operations should use this pattern for consistent error messages across the API endpoints
 - **Type Safety**: Pattern maintains PHPStan level max compliance with proper type checking
 
 ### Helper Functions
@@ -546,7 +546,7 @@ test('endpoint returns valid response', function () {
 
 ### Type Safety and PHPStan Patterns
 - **PHPStan Level**: Project runs at `level: max` (strictest analysis) with official Craft CMS integration
-- **MCP Tool Type Documentation**: Tools use PHPStan docblock types instead of MCP Schema attributes:
+- **Tool Method Type Documentation**: Tool methods use PHPStan docblock types for precise type definitions:
   ```php
   /**
    * Tool description goes in method docblock.
@@ -599,23 +599,21 @@ test('endpoint returns valid response', function () {
    */
   public function methodName(array $attributeAndFieldData): void
   ```
-- **PHPDoc Positioning**: Place PHPDoc immediately before method declarations (before attributes):
+- **PHPDoc Positioning**: Place PHPDoc immediately before method declarations:
   ```php
   /**
    * @return array<string, mixed>
    */
-  #[McpTool(name: 'tool_name')]
   public function methodName(): array
   ```
 
 ### PHPStan Integration Achievements
 - **Zero Errors at Max Level**: Project successfully passes PHPStan analysis at `level: max` with official Craft CMS integration
 - **Comprehensive Type Safety**: All 55+ original errors resolved through systematic type improvements including:
-  - Session structure typing with detailed array shape definitions (`array<string, array{id: string, created_at: int, messages: array<...>}>`)
+  - Valinor mapper typing with proper error handling
   - Mixed type access fixes replacing defensive checks with proper type assertions
   - Callable handling via PHPStan ignore comments for reflection-based patterns
   - Helper function typing for Laravel-style `throw_if`/`throw_unless` patterns
-  - Promise template type resolution for React Promise library integration
   - Array type annotations throughout (`@return array<string, mixed>`)
 - **Development Workflow**: Established foundation for ongoing static analysis with composer scripts:
   ```bash
@@ -630,15 +628,15 @@ test('endpoint returns valid response', function () {
   - Laravel-style helper integration with proper type guards
 
 ### Performance Considerations
-- Tool discovery is cached in production mode (devMode=false)
-- Session cleanup prevents memory leaks from abandoned connections
+- Valinor validation is cached in production for performance
 - Large content operations should use pagination where appropriate
+- Query parameter filtering available on list endpoints
 
 ### Security
-- Anonymous access enabled for MCP endpoints (required for AI assistant access)
-- CSRF validation disabled for JSON-RPC compatibility
-- Session-based isolation prevents cross-client data leakage
-- Input validation handled at tool level
+- Anonymous access enabled for API endpoints (required for external integrations)
+- CSRF validation disabled for JSON API compatibility
+- Input validation handled automatically by Valinor
+- Authentication can be added via Craft's native auth system if needed
 
 ### File System Safety
 - **CRITICAL**: When working with temporary files or scripts, ONLY create them within the project directory (`/home/ubuntu/sites/craft-mcp/plugins/craft-mcp/`)
@@ -648,28 +646,28 @@ test('endpoint returns valid response', function () {
 
 ## Architecture Decisions
 
-### Why php-mcp/server over Manual Implementation?
-- Provides complete MCP protocol compliance
-- Handles JSON-RPC 2.0 specification automatically
-- Built-in session management and message routing
-- Extensible architecture for future MCP capabilities
+### Why HTTP REST API over Other Protocols?
+- Simple, well-understood RESTful patterns
+- Easy integration with any HTTP client
+- No protocol-specific dependencies required
+- Standard JSON request/response format
 
-### Why Custom HTTP Transport?
-- Integrates with Craft's native Yii2 routing system
-- Supports both streaming (SSE) and traditional request/response patterns
-- Avoids ReactPHP dependency for better Craft compatibility
-- Enables proper session persistence across requests
+### Why Valinor for Validation?
+- Automatic type mapping from request data to method parameters
+- Runtime type safety without manual validation code
+- Excellent error messages for invalid input
+- Permissive mode allows flexible type coercion
 
-### Why Tool Auto-Discovery?
-- Simplifies adding new tools without manual registration
-- Follows convention-over-configuration principle
-- Enables hot-reloading in development mode
-- Maintains clean separation of concerns
+### Why Controller + Tool Pattern?
+- Clean separation of HTTP concerns from business logic
+- Controllers handle request/response, tools handle Craft logic
+- Tools are reusable across different endpoints
+- Easier to test business logic independently
 
-### Why Craft-Specific Session Handler?
-- Leverages Craft's robust caching system
-- Provides automatic cleanup and garbage collection
-- Integrates with Craft's configuration and environment system
-- Ensures session data persists across PHP requests
+### Why Dependency Injection in Tools?
+- Better testability with mock dependencies
+- Type-safe dependency resolution via container
+- Cleaner code without manual service location
+- Follows SOLID principles and best practices
 
-This plugin provides a robust foundation for AI assistants to interact with Craft CMS through the standardized MCP protocol.
+This plugin provides a robust foundation for external systems to interact with Craft CMS through a clean RESTful HTTP API.
