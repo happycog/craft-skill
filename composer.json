@@ -1,6 +1,6 @@
 {
-    "name": "happycog/craft-mcp",
-    "description": "A MCP server for Craft CMS",
+    "name": "happycog/craft-skill",
+    "description": "Skill definition for interacting with Craft CMS",
     "license": "proprietary",
     "type": "craft-plugin",
     "require": {
@@ -22,15 +22,15 @@
         }
     ],
     "extra": {
-        "name": "MCP",
-        "description": "A MCP server for Craft CMS",
-        "handle": "mcp",
+        "name": "AI Skill",
+        "description": "An AI skill for interacting with Craft CMS",
+        "handle": "skills",
         "version": "1.0.0",
         "class": "happycog\\craftmcp\\Plugin"
     },
     "require-dev": {
         "markhuot/craft-pest-core": "dev-phpunit-db-overrides",
-    "phpstan/phpstan": "*",
+        "phpstan/phpstan": "*",
         "craftcms/phpstan": "dev-main"
     },
     "minimum-stability": "dev",
