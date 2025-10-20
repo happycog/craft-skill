@@ -2,6 +2,10 @@
 
 Create new sections with configurable types, entry types, and site settings.
 
+## Route
+
+`POST /api/sections`
+
 ## Description
 
 Creates a new section in Craft CMS. Sections define the structural organization of content with three types:

@@ -2,6 +2,10 @@
 
 Create new entries in Craft CMS with custom field data and native attributes.
 
+## Route
+
+`POST /api/entries`
+
 ## Description
 
 Creates a new entry in Craft CMS. An "Entry" in Craft is a generic term that could hold categories, media, and various other data types. Always query sections first to understand what types of entries can be created and use the section definition to determine if the user is requesting an "Entry".

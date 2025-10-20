@@ -122,16 +122,28 @@ composer install
 
 ### API Testing
 ```bash
-# Test with curl
-curl -X POST http://craft-mcp.dev.markhuot.com/api/entries \
+# IMPORTANT: Base URL and API Prefix Configuration
+# The API requires a base URL from PRIMARY_SITE_URL environment variable.
+# Check .env file or ENV for PRIMARY_SITE_URL value.
+# If not set, ask the user for the base URL to use.
+#
+# The API prefix is configurable (defaults to 'api').
+# Check config/skills.php for 'apiPrefix' in the PHP array first.
+# If not found, try the default '/api'.
+# If requests fail, ask the user for the configured prefix.
+# Example: PRIMARY_SITE_URL=http://craft-mcp.dev.markhuot.com
+
+# Test with curl (replace {BASE_URL} and {API_PREFIX} with actual values)
+# Default API prefix is 'api'
+curl -X POST {BASE_URL}/{API_PREFIX}/entries \
   -H "Content-Type: application/json" \
   -d '{"sectionId": 1, "entryTypeId": 1, "attributeAndFieldData": {"title": "Test Entry"}}'
 
 # Search entries
-curl -X GET "http://craft-mcp.dev.markhuot.com/api/entries/search?query=test"
+curl -X GET "{BASE_URL}/{API_PREFIX}/entries/search?query=test"
 
 # Get specific entry
-curl -X GET http://craft-mcp.dev.markhuot.com/api/entries/123
+curl -X GET {BASE_URL}/{API_PREFIX}/entries/123
 ```
 
 ### PHPStan Configuration
@@ -312,6 +324,26 @@ test('endpoint retrieves resource', function () {
 - [ ] User and permission management endpoints
 
 ## Important Notes for Future Agents
+
+### Base URL Configuration for HTTP API
+- **PRIMARY_SITE_URL Environment Variable**: The standard Craft CMS way to configure the base URL is via the `PRIMARY_SITE_URL` environment variable
+- **Configuration Sources**: Check for `PRIMARY_SITE_URL` in:
+  1. System environment variables (ENV)
+  2. `.env` file in project root
+  3. Craft configuration files
+- **If Not Set**: If `PRIMARY_SITE_URL` is not defined, ask the user for the base URL to use for API requests
+- **API Prefix Configuration**: The API prefix is configurable in multiple locations (defaults to `api`)
+  - **Configuration Sources** (check in this order):
+    1. `config/skills.php` - PHP array with `apiPrefix` key (e.g., `return ['apiPrefix' => 'custom-api'];`)
+    2. Plugin settings via `$this->getSettings()->apiPrefix` in `src/Plugin.php`
+    3. Default value: `api`
+  - **Usage**: Try the default `/api` first, but check `config/skills.php` if available
+  - **If Requests Fail**: Ask the user for the configured API prefix
+- **Route Format**: All API routes follow the pattern: `{PRIMARY_SITE_URL}/{apiPrefix}/{endpoint}`
+- **Examples**:
+  - Default: `https://craft-site.com/api/sections` - List sections
+  - Custom prefix: `https://craft-site.com/custom-api/entries` - Create entry
+  - With ID: `https://craft-site.com/api/entries/123` - Get entry by ID
 
 ### HTTP API Development Guidelines
 - **Endpoint Naming Convention**: Use RESTful conventions with plural nouns (e.g., `/api/entries`, `/api/sections`, `/api/fields`)

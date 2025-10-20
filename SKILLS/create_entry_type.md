@@ -2,6 +2,10 @@
 
 Create new entry types with custom handles, names, and field layouts.
 
+## Route
+
+`POST /api/entry-types`
+
 ## Description
 
 Creates a new entry type in Craft CMS. Entry types define the content schema and field layouts for entries. They can be standalone (useful for Matrix fields) or assigned to sections to control entry structure and behavior.

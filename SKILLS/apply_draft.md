@@ -2,6 +2,10 @@
 
 Apply draft changes to the canonical entry, making content live.
 
+## Route
+
+`POST /api/drafts/<id>/apply`
+
 ## Description
 
 Applies a draft to its canonical entry, making the draft content live. This tool applies all changes from the draft to the canonical entry and removes the draft. The canonical entry will be updated with all content from the draft. This action cannot be undone.

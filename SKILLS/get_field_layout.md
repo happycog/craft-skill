@@ -2,6 +2,10 @@
 
 Retrieve field layout details including tabs and fields.
 
+## Route
+
+`GET /api/field-layouts`
+
 ## Description
 
 Gets field layout information including tab organization and field configuration. Can query by entry type ID, field layout ID, element type, or element ID.

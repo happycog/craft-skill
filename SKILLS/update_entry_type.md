@@ -2,6 +2,10 @@
 
 Update entry type properties and field layout assignments.
 
+## Route
+
+`PUT /api/entry-types/<id>`
+
 ## Description
 
 Updates an existing entry type's properties including name, handle, title format, and associated field layout.

@@ -2,6 +2,10 @@
 
 Delete custom fields permanently.
 
+## Route
+
+`DELETE /api/fields/<id>`
+
 ## Description
 
 Deletes a custom field from Craft CMS. **WARNING**: Removes field data from all entries using this field. Requires `force=true` if field is in use.

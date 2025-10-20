@@ -2,6 +2,10 @@
 
 Delete entries with soft delete or permanent deletion options.
 
+## Route
+
+`DELETE /api/entries/<id>`
+
 ## Description
 
 Deletes an entry in Craft CMS. By default, performs a soft delete (Craft's standard behavior) where the entry is marked as deleted but remains in the database and can be restored. Set `permanentlyDelete` to true to permanently remove the entry from the database.

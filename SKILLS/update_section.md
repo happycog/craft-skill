@@ -2,6 +2,10 @@
 
 Update section properties including name, type, and site configurations.
 
+## Route
+
+`PUT /api/sections/<id>`
+
 ## Description
 
 Updates an existing section in Craft CMS. Allows modification of section properties while preserving existing entry data where possible. Section type changes have restrictions - Single ↔ Channel is possible, but Structure changes require careful consideration due to hierarchical data.

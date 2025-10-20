@@ -2,6 +2,10 @@
 
 Delete entry types with usage validation.
 
+## Route
+
+`DELETE /api/entry-types/<id>`
+
 ## Description
 
 Deletes an entry type from Craft CMS. Validates that the entry type is not in use by sections or Matrix fields before deletion. Requires `force=true` for entry types with existing entries.

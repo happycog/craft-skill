@@ -2,6 +2,10 @@
 
 Update existing field properties and settings.
 
+## Route
+
+`PUT /api/fields/<id>`
+
 ## Description
 
 Updates existing field properties including name, handle, instructions, and field-type-specific settings.

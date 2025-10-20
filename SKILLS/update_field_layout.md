@@ -2,6 +2,10 @@
 
 Update field layout structure and organization.
 
+## Route
+
+`PUT /api/field-layouts/<id>`
+
 ## Description
 
 Updates field layout structure including tab organization, field assignments, and field requirements.

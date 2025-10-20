@@ -2,6 +2,10 @@
 
 List all available sites in multi-site installations.
 
+## Route
+
+`GET /api/sites`
+
 ## Description
 
 Gets a list of all available sites in the Craft installation. Useful for understanding multi-site structure and discovering valid siteId values for creating and updating content.

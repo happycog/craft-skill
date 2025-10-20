@@ -2,6 +2,10 @@
 
 Discover available field types in the Craft installation.
 
+## Route
+
+`GET /api/fields/types`
+
 ## Description
 
 Gets a list of all available field types including those added by plugins. Returns field type classes, display names, icons, and descriptions to help with field creation.

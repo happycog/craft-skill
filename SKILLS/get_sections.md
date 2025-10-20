@@ -2,6 +2,10 @@
 
 List all sections or filter by section IDs.
 
+## Route
+
+`GET /api/sections`
+
 ## Description
 
 Gets a list of sections and entry types in Craft CMS. This is essential for creating new entries because you must provide section ID and entry type ID when creating entries. Also useful for understanding the site structure.

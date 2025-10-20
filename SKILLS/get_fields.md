@@ -2,6 +2,10 @@
 
 List all global fields or fields for a specific field layout.
 
+## Route
+
+`GET /api/fields`
+
 ## Description
 
 Gets a list of all fields in Craft CMS with their configurations and handles. Essential for understanding available fields and their handles when creating or updating entries.

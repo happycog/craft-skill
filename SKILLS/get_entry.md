@@ -2,6 +2,10 @@
 
 Retrieve complete entry details by ID.
 
+## Route
+
+`GET /api/entries/<id>`
+
 ## Description
 
 Gets detailed information about a specific entry in Craft CMS, including all custom fields, native attributes, and metadata.

@@ -2,6 +2,10 @@
 
 Create new custom fields with specified field types and settings.
 
+## Route
+
+`POST /api/fields`
+
 ## Description
 
 Creates a new custom field in Craft CMS. Fields define content structure and data types for entries. Use `get_field_types` to discover available field types before creating.

@@ -2,6 +2,10 @@
 
 Update existing entry content and attributes.
 
+## Route
+
+`PUT /api/entries/<id>`
+
 ## Description
 
 Updates an entry in Craft CMS with new field data and attributes. This tool performs direct updates to published entries. For staged changes, prefer using the `create_draft` and `update_draft` tools instead, which allow users to review changes in the Craft UI before accepting them.

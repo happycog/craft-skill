@@ -2,6 +2,10 @@
 
 Delete sections permanently with impact analysis and data protection.
 
+## Route
+
+`DELETE /api/sections/<id>`
+
 ## Description
 
 Deletes a section from Craft CMS. This will remove the section and potentially affect related data. The tool analyzes impact and provides usage statistics before deletion.

@@ -2,6 +2,10 @@
 
 Search for content across Craft CMS with flexible filtering options.
 
+## Route
+
+`GET /api/entries/search`
+
 ## Description
 
 Searches for entries in the Craft CMS system. Returns matching entries with their IDs, titles, and control panel edit URLs. Supports filtering by section, status, search query, and result limits.

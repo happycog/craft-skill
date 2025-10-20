@@ -2,6 +2,10 @@
 
 List all entry types with complete field information and usage stats.
 
+## Route
+
+`GET /api/entry-types`
+
 ## Description
 
 Gets a list of entry types with complete field layouts, usage statistics, and edit URLs. Shows which sections and Matrix fields reference each entry type.

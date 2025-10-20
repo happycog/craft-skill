@@ -2,6 +2,10 @@
 
 Update draft content and metadata using PATCH semantics.
 
+## Route
+
+`PUT /api/drafts/<id>`
+
 ## Description
 
 Updates an existing draft's content and metadata by draft ID. Works with both regular and provisional drafts without distinction. Uses PATCH semantics - only updates fields that are provided, preserving existing data.

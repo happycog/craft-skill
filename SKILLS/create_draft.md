@@ -2,6 +2,10 @@
 
 Create drafts either from scratch or from existing published entries.
 
+## Route
+
+`POST /api/drafts`
+
 ## Description
 
 Creates a draft in Craft CMS for staged content changes. Drafts allow content creators to work on changes without affecting live content and save work in progress. Can create drafts from scratch (like creating a new entry) or from existing published entries (to modify existing content).

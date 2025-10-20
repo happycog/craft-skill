@@ -2,6 +2,10 @@
 
 Create field layouts with organized tabs and fields.
 
+## Route
+
+`POST /api/field-layouts`
+
 ## Description
 
 Creates field layouts that define how fields are organized for entry types. Field layouts organize fields into tabs and control field requirements and custom instructions.
