@@ -79,54 +79,54 @@ class Plugin extends BasePlugin
     protected function registerSiteUrlRules(RegisterUrlRulesEvent $event): void
     {
         // The older SSE transport routes
-        $event->rules['GET sse'] = 'mcp/sse-transport/sse';
-        $event->rules['POST message'] = 'mcp/sse-transport/message';
+        $event->rules['GET sse'] = 'skills/sse-transport/sse';
+        $event->rules['POST message'] = 'skills/sse-transport/message';
 
         // The newer streamable streaming HTTP transport
-        $event->rules['GET mcp'] = 'mcp/streamable-transport/listen';
-        $event->rules['POST mcp'] = 'mcp/streamable-transport/message';
-        $event->rules['DELETE mcp'] = 'mcp/streamable-transport/disconnect';
+        $event->rules['GET mcp'] = 'skills/streamable-transport/listen';
+        $event->rules['POST mcp'] = 'skills/streamable-transport/message';
+        $event->rules['DELETE mcp'] = 'skills/streamable-transport/disconnect';
 
         // API routes for Skills
         $apiPrefix = $this->getSettings()->apiPrefix ?? 'api';
         
         // Section routes
-        $event->rules['POST ' . $apiPrefix . '/sections'] = 'mcp/sections/create';
-        $event->rules['GET ' . $apiPrefix . '/sections'] = 'mcp/sections/list';
-        $event->rules['PUT ' . $apiPrefix . '/sections/<id>'] = 'mcp/sections/update';
-        $event->rules['DELETE ' . $apiPrefix . '/sections/<id>'] = 'mcp/sections/delete';
+        $event->rules['POST ' . $apiPrefix . '/sections'] = 'skills/sections/create';
+        $event->rules['GET ' . $apiPrefix . '/sections'] = 'skills/sections/list';
+        $event->rules['PUT ' . $apiPrefix . '/sections/<id>'] = 'skills/sections/update';
+        $event->rules['DELETE ' . $apiPrefix . '/sections/<id>'] = 'skills/sections/delete';
         
         // Entry Type routes
-        $event->rules['POST ' . $apiPrefix . '/entry-types'] = 'mcp/entry-types/create';
-        $event->rules['GET ' . $apiPrefix . '/entry-types'] = 'mcp/entry-types/list';
-        $event->rules['PUT ' . $apiPrefix . '/entry-types/<id>'] = 'mcp/entry-types/update';
-        $event->rules['DELETE ' . $apiPrefix . '/entry-types/<id>'] = 'mcp/entry-types/delete';
+        $event->rules['POST ' . $apiPrefix . '/entry-types'] = 'skills/entry-types/create';
+        $event->rules['GET ' . $apiPrefix . '/entry-types'] = 'skills/entry-types/list';
+        $event->rules['PUT ' . $apiPrefix . '/entry-types/<id>'] = 'skills/entry-types/update';
+        $event->rules['DELETE ' . $apiPrefix . '/entry-types/<id>'] = 'skills/entry-types/delete';
         
         // Field routes
-        $event->rules['POST ' . $apiPrefix . '/fields'] = 'mcp/fields/create';
-        $event->rules['GET ' . $apiPrefix . '/fields'] = 'mcp/fields/list';
-        $event->rules['GET ' . $apiPrefix . '/fields/types'] = 'mcp/fields/types';
-        $event->rules['PUT ' . $apiPrefix . '/fields/<id>'] = 'mcp/fields/update';
-        $event->rules['DELETE ' . $apiPrefix . '/fields/<id>'] = 'mcp/fields/delete';
+        $event->rules['POST ' . $apiPrefix . '/fields'] = 'skills/fields/create';
+        $event->rules['GET ' . $apiPrefix . '/fields'] = 'skills/fields/list';
+        $event->rules['GET ' . $apiPrefix . '/fields/types'] = 'skills/fields/types';
+        $event->rules['PUT ' . $apiPrefix . '/fields/<id>'] = 'skills/fields/update';
+        $event->rules['DELETE ' . $apiPrefix . '/fields/<id>'] = 'skills/fields/delete';
         
         // Entry routes
-        $event->rules['POST ' . $apiPrefix . '/entries'] = 'mcp/entries/create';
-        $event->rules['GET ' . $apiPrefix . '/entries/search'] = 'mcp/entries/search';
-        $event->rules['GET ' . $apiPrefix . '/entries/<id>'] = 'mcp/entries/get';
-        $event->rules['PUT ' . $apiPrefix . '/entries/<id>'] = 'mcp/entries/update';
-        $event->rules['DELETE ' . $apiPrefix . '/entries/<id>'] = 'mcp/entries/delete';
+        $event->rules['POST ' . $apiPrefix . '/entries'] = 'skills/entries/create';
+        $event->rules['GET ' . $apiPrefix . '/entries/search'] = 'skills/entries/search';
+        $event->rules['GET ' . $apiPrefix . '/entries/<id>'] = 'skills/entries/get';
+        $event->rules['PUT ' . $apiPrefix . '/entries/<id>'] = 'skills/entries/update';
+        $event->rules['DELETE ' . $apiPrefix . '/entries/<id>'] = 'skills/entries/delete';
         
         // Draft routes
-        $event->rules['POST ' . $apiPrefix . '/drafts'] = 'mcp/drafts/create';
-        $event->rules['PUT ' . $apiPrefix . '/drafts/<id>'] = 'mcp/drafts/update';
-        $event->rules['POST ' . $apiPrefix . '/drafts/<id>/apply'] = 'mcp/drafts/apply';
+        $event->rules['POST ' . $apiPrefix . '/drafts'] = 'skills/drafts/create';
+        $event->rules['PUT ' . $apiPrefix . '/drafts/<id>'] = 'skills/drafts/update';
+        $event->rules['POST ' . $apiPrefix . '/drafts/<id>/apply'] = 'skills/drafts/apply';
         
         // Field Layout routes
-        $event->rules['POST ' . $apiPrefix . '/field-layouts'] = 'mcp/field-layouts/create';
-        $event->rules['GET ' . $apiPrefix . '/field-layouts'] = 'mcp/field-layouts/get';
-        $event->rules['PUT ' . $apiPrefix . '/field-layouts/<id>'] = 'mcp/field-layouts/update';
+        $event->rules['POST ' . $apiPrefix . '/field-layouts'] = 'skills/field-layouts/create';
+        $event->rules['GET ' . $apiPrefix . '/field-layouts'] = 'skills/field-layouts/get';
+        $event->rules['PUT ' . $apiPrefix . '/field-layouts/<id>'] = 'skills/field-layouts/update';
         
         // Site routes
-        $event->rules['GET ' . $apiPrefix . '/sites'] = 'mcp/sites/list';
+        $event->rules['GET ' . $apiPrefix . '/sites'] = 'skills/sites/list';
     }
 }
