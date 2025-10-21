@@ -1,51 +1,77 @@
-# update_field_layout
+# update_field_layout [DEPRECATED]
 
-Update field layout structure and organization.
+> **⚠️ DEPRECATED**: This monolithic update approach has been replaced with granular field layout tools.
 
-## Route
+## Migration Guide
 
-`PUT /api/field-layouts/<id>`
+The `update_field_layout` tool has been replaced with five specialized tools for more precise field layout management:
 
-## Description
+### New Tools
 
-Updates field layout structure including tab organization, field assignments, and field requirements.
+1. **add_tab_to_field_layout** - Add tabs with flexible positioning
+2. **add_field_to_field_layout** - Add fields to tabs with positioning and configuration
+3. **add_ui_element_to_field_layout** - Add UI elements (headings, tips, rules, etc.)
+4. **move_element_in_field_layout** - Move elements within or between tabs
+5. **remove_element_from_field_layout** - Remove elements from layouts
 
-## Parameters
+### Why the Change?
 
-### Required Parameters
+The new granular approach provides:
+- **Better control**: Make incremental changes without replacing entire layouts
+- **Safer operations**: Avoid accidentally removing elements
+- **More flexible**: Position elements precisely with before/after/prepend/append
+- **Clearer intent**: Each operation has a specific purpose
+- **Better error handling**: Validation at the operation level
 
-- **fieldLayoutId** (integer): Field layout ID to update
-- **tabs** (array): Updated tab configuration with same structure as `create_field_layout`
+### Migration Examples
 
-## Return Value
-
-Returns updated field layout information.
-
-## Example Usage
-
+#### Old Approach (Deprecated)
 ```json
 {
   "fieldLayoutId": 1,
   "tabs": [
     {
-      "name": "Updated Content",
+      "name": "Content",
       "fields": [
-        {
-          "fieldId": 1,
-          "required": true
-        },
-        {
-          "fieldId": 2,
-          "required": true
-        }
+        {"fieldId": 1, "required": true},
+        {"fieldId": 2, "required": false}
       ]
     }
   ]
 }
 ```
 
-## Notes
+#### New Approach (Recommended)
+```bash
+# 1. Add a tab
+add_tab_to_field_layout {
+  "fieldLayoutId": 1,
+  "name": "Content",
+  "position": {"type": "append"}
+}
 
-- Replaces existing tab configuration
-- Can reorder fields and tabs
-- Updates field requirements per layout
+# 2. Add fields one by one
+add_field_to_field_layout {
+  "fieldLayoutId": 1,
+  "fieldId": 1,
+  "tabName": "Content",
+  "position": {"type": "append"},
+  "required": true
+}
+
+add_field_to_field_layout {
+  "fieldLayoutId": 1,
+  "fieldId": 2,
+  "tabName": "Content",
+  "position": {"type": "append"},
+  "required": false
+}
+```
+
+## See Also
+
+- [add_tab_to_field_layout](add_tab_to_field_layout.md)
+- [add_field_to_field_layout](add_field_to_field_layout.md)
+- [add_ui_element_to_field_layout](add_ui_element_to_field_layout.md)
+- [move_element_in_field_layout](move_element_in_field_layout.md)
+- [remove_element_from_field_layout](remove_element_from_field_layout.md)
