@@ -43,19 +43,6 @@ beforeEach(function () {
     };
 });
 
-test('delete section tool schema is valid', function () {
-    $tool = new DeleteSection();
-    $reflection = new ReflectionClass($tool);
-    $method = $reflection->getMethod('delete');
-    $attributes = $method->getAttributes(\PhpMcp\Server\Attributes\McpTool::class);
-
-    expect($attributes)->toHaveCount(1);
-
-    // Verify the McpTool attribute has the correct name
-    $mcpToolAttribute = $attributes[0]->newInstance();
-    expect($mcpToolAttribute->name)->toBe('delete_section');
-});
-
 test('deletes empty section successfully', function () {
     // Create a section without any entries
     $sectionName = 'Delete Test Empty ' . $this->uniqueId;

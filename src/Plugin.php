@@ -124,7 +124,11 @@ class Plugin extends BasePlugin
         // Field Layout routes
         $event->rules['POST ' . $apiPrefix . '/field-layouts'] = 'skills/field-layouts/create';
         $event->rules['GET ' . $apiPrefix . '/field-layouts'] = 'skills/field-layouts/get';
-        $event->rules['PUT ' . $apiPrefix . '/field-layouts/<id>'] = 'skills/field-layouts/update';
+        $event->rules['POST ' . $apiPrefix . '/field-layouts/<id>/tabs'] = 'skills/field-layouts/add-tab';
+        $event->rules['POST ' . $apiPrefix . '/field-layouts/<id>/fields'] = 'skills/field-layouts/add-field';
+        $event->rules['POST ' . $apiPrefix . '/field-layouts/<id>/ui-elements'] = 'skills/field-layouts/add-ui-element';
+        $event->rules['DELETE ' . $apiPrefix . '/field-layouts/<id>/elements'] = 'skills/field-layouts/remove-element';
+        $event->rules['PUT ' . $apiPrefix . '/field-layouts/<id>/elements'] = 'skills/field-layouts/move-element';
         
         // Site routes
         $event->rules['GET ' . $apiPrefix . '/sites'] = 'skills/sites/list';

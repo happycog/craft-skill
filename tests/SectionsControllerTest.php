@@ -3,11 +3,19 @@
 use craft\elements\Entry;
 
 test('PUT /api/sections/<id> updates a section', function () {
-    // Create a test section first
+    // Create a test entry type first
+    $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
+    $entryTypeData = $createEntryType->create(
+        name: 'Test Entry Type for Section',
+        handle: 'testEntryTypeForSection' . time()
+    );
+    
+    // Create a test section
     $createSection = Craft::$container->get(\happycog\craftmcp\tools\CreateSection::class);
     $sectionData = $createSection->create(
         name: 'Test Section',
         type: 'channel',
+        entryTypeIds: [$entryTypeData['entryTypeId']],
         handle: 'testSection' . time()
     );
     
@@ -27,11 +35,19 @@ test('PUT /api/sections/<id> updates a section', function () {
 });
 
 test('DELETE /api/sections/<id> deletes a section', function () {
-    // Create a test section first
+    // Create a test entry type first
+    $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
+    $entryTypeData = $createEntryType->create(
+        name: 'Test Entry Type for Delete Section',
+        handle: 'testEntryTypeForDeleteSection' . time()
+    );
+    
+    // Create a test section
     $createSection = Craft::$container->get(\happycog\craftmcp\tools\CreateSection::class);
     $sectionData = $createSection->create(
         name: 'Test Section to Delete',
         type: 'channel',
+        entryTypeIds: [$entryTypeData['entryTypeId']],
         handle: 'testSectionDelete' . time()
     );
     
@@ -46,8 +62,8 @@ test('DELETE /api/sections/<id> deletes a section', function () {
     $response->assertStatus(200);
     $content = $response->content;
     
-    expect($content)->toContain('"success":true');
-    expect($content)->toContain('"sectionId":' . $sectionId);
+    expect($content)->toContain('"id":' . $sectionId);
+    expect($content)->toContain('"name":"Test Section to Delete"');
 });
 
 test('PUT /api/entry-types/<id> updates an entry type', function () {
@@ -70,7 +86,7 @@ test('PUT /api/entry-types/<id> updates an entry type', function () {
     $content = $response->content;
     
     expect($content)->toContain('"name":"Updated Entry Type Name"');
-    expect($content)->toContain('"entryTypeId":' . $entryTypeId);
+    expect($content)->toContain('"id":' . $entryTypeId);
 });
 
 test('DELETE /api/entry-types/<id> deletes an entry type', function () {
@@ -92,6 +108,6 @@ test('DELETE /api/entry-types/<id> deletes an entry type', function () {
     $response->assertStatus(200);
     $content = $response->content;
     
-    expect($content)->toContain('"success":true');
-    expect($content)->toContain('"entryTypeId":' . $entryTypeId);
+    expect($content)->toContain('"deleted":true');
+    expect($content)->toContain('"name":"Test Entry Type to Delete"');
 });

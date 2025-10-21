@@ -26,7 +26,7 @@ meta:
     c719c9ad-801a-4271-99c8-b44760c4e5f6: News # News
     df0b8488-6354-4289-8d3d-ba10a9650e2e: Body # Body
 plugins:
-  mcp:
+  skills:
     edition: standard
     enabled: true
     schemaVersion: 1.0.0

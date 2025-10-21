@@ -33,6 +33,21 @@ class GetFieldLayout
         $fieldLayout = $fieldsService->getLayoutById($fieldLayoutId);
         \throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
 
+        return [
+            '_notes' => 'Field layout retrieved with all elements including custom fields, native fields, and UI elements.',
+            'fieldLayout' => $this->formatFieldLayout($fieldLayout),
+        ];
+    }
+
+    /**
+     * Format a FieldLayout object into an array representation.
+     * This method can be used by other tools to format in-memory layouts
+     * without re-fetching from the database.
+     *
+     * @return array<string, mixed>
+     */
+    public function formatFieldLayout(FieldLayout $fieldLayout): array
+    {
         $fieldLayoutInfo = [
             'id' => $fieldLayout->id,
             'type' => $fieldLayout->type,
@@ -41,6 +56,7 @@ class GetFieldLayout
 
         foreach ($fieldLayout->getTabs() as $tab) {
             $tabInfo = [
+                'uid' => $tab->uid,
                 'name' => $tab->name,
                 'elements' => [],
             ];
@@ -95,9 +111,6 @@ class GetFieldLayout
             $fieldLayoutInfo['tabs'][] = $tabInfo;
         }
 
-        return [
-            '_notes' => 'Field layout retrieved with all elements including custom fields, native fields, and UI elements.',
-            'fieldLayout' => $fieldLayoutInfo,
-        ];
+        return $fieldLayoutInfo;
     }
 }
