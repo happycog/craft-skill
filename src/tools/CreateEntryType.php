@@ -110,6 +110,7 @@ class CreateEntryType
                 ! $hasTitleField ? ' Because the entry was created without a title field it will not have a field layout. To add fields to this entry type you must first call CreateFieldLayout and then UpdateEntryType with the associated `fieldLayoutId`.' : ''
             ),
             'entryTypeId' => $savedEntryType->id,
+            'uid' => $savedEntryType->uid,
             'name' => $savedEntryType->name,
             'handle' => $savedEntryType->handle,
             'description' => $savedEntryType->description,

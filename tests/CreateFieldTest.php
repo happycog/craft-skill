@@ -1,6 +1,7 @@
 <?php
 
 use happycog\craftmcp\tools\CreateField;
+use happycog\craftmcp\tools\CreateEntryType;
 
 beforeEach(function () {
     // Clean up any existing test fields before each test
@@ -8,7 +9,7 @@ beforeEach(function () {
     $testHandles = [
         'testField', 'customHandle', 'instructionalField', 'settingsField', 
         'duplicateHandle', 'complexFieldNameWithCharacters', 'field123NumericField',
-        'urlTestField', 'translationField'
+        'urlTestField', 'translationField', 'matrixField', 'advancedMatrixField'
     ];
     
     foreach ($testHandles as $handle) {
@@ -171,4 +172,108 @@ it('can create field with different translation methods', function () {
     
     $field = Craft::$app->getFields()->getFieldById($result['fieldId']);
     expect($field->translationMethod)->toBe(\craft\base\Field::TRANSLATION_METHOD_SITE);
+});
+
+it('can create a matrix field with entry types', function () {
+    // First, create entry types that will be used as block types
+    $createEntryType = Craft::$container->get(CreateEntryType::class);
+    
+    // Create text block entry type
+    $textBlockResult = $createEntryType->create(
+        name: 'Text Block',
+        handle: 'textBlock'
+    );
+    
+    // Create image block entry type
+    $imageBlockResult = $createEntryType->create(
+        name: 'Image Block',
+        handle: 'imageBlock'
+    );
+    
+    // Create matrix field with the entry types
+    $result = ($this->createField)(
+        'craft\fields\Matrix',
+        'Matrix Field',
+        [
+            'settings' => [
+                'minEntries' => 1,
+                'maxEntries' => 10,
+                'viewMode' => 'cards',
+                'entryTypes' => [
+                    ['uid' => $textBlockResult['uid']],
+                    ['uid' => $imageBlockResult['uid']],
+                ],
+            ],
+        ]
+    );
+    
+    expect($result)->toHaveKeys(['fieldId', 'name', 'handle', 'type', 'editUrl']);
+    expect($result['name'])->toBe('Matrix Field');
+    expect($result['handle'])->toBe('matrixField');
+    expect($result['type'])->toBe('craft\fields\Matrix');
+    
+    // Verify the field was created
+    $field = Craft::$app->getFields()->getFieldById($result['fieldId']);
+    expect($field)->not->toBeNull();
+    expect($field)->toBeInstanceOf(\craft\fields\Matrix::class);
+    expect($field->name)->toBe('Matrix Field');
+    expect($field->handle)->toBe('matrixField');
+    expect($field->minEntries)->toBe(1);
+    expect($field->maxEntries)->toBe(10);
+    expect($field->viewMode)->toBe('cards');
+    
+    // Verify entry types are attached
+    $entryTypes = $field->getEntryTypes();
+    expect($entryTypes)->toHaveCount(2);
+    expect($entryTypes[0]->handle)->toBe('textBlock');
+    expect($entryTypes[1]->handle)->toBe('imageBlock');
+});
+
+it('can create a matrix field with advanced settings', function () {
+    // Create an entry type for the block
+    $createEntryType = Craft::$container->get(CreateEntryType::class);
+    $blockResult = $createEntryType->create(
+        name: 'Content Block',
+        handle: 'contentBlock'
+    );
+    
+    // Create matrix field with advanced settings
+    $result = ($this->createField)(
+        'craft\fields\Matrix',
+        'Advanced Matrix Field',
+        [
+            'instructions' => 'Add flexible content blocks',
+            'searchable' => false,
+            'settings' => [
+                'minEntries' => 2,
+                'maxEntries' => 20,
+                'viewMode' => 'blocks',
+                'showCardsInGrid' => true,
+                'createButtonLabel' => 'Add New Block',
+                'entryTypes' => [
+                    ['uid' => $blockResult['uid']],
+                ],
+            ],
+        ]
+    );
+    
+    expect($result)->toHaveKeys(['fieldId', 'name', 'handle', 'type', 'editUrl']);
+    expect($result['name'])->toBe('Advanced Matrix Field');
+    expect($result['handle'])->toBe('advancedMatrixField');
+    expect($result['instructions'])->toBe('Add flexible content blocks');
+    expect($result['searchable'])->toBeFalse();
+    
+    // Verify the field settings
+    $field = Craft::$app->getFields()->getFieldById($result['fieldId']);
+    expect($field)->toBeInstanceOf(\craft\fields\Matrix::class);
+    expect($field->minEntries)->toBe(2);
+    expect($field->maxEntries)->toBe(20);
+    expect($field->viewMode)->toBe('blocks');
+    expect($field->showCardsInGrid)->toBeTrue();
+    expect($field->createButtonLabel)->toBe('Add New Block');
+    
+    // Verify entry type is attached
+    $entryTypes = $field->getEntryTypes();
+    expect($entryTypes)->toHaveCount(1);
+    expect($entryTypes[0]->handle)->toBe('contentBlock');
 });
