@@ -24,10 +24,10 @@ After creating the section, always link the user back to the section settings in
   - `single`: One entry per section
   - `channel`: Multiple entries
   - `structure`: Hierarchical entries
-- **entryTypeIds** (array of integers): Entry type IDs to assign to this section. Use `create_entry_type` to create entry types first. Can be empty array (uncommon but possible).
 
 ### Optional Parameters
 
+- **entryTypeIds** (array of integers, optional): Entry type IDs to assign to this section. Use `create_entry_type` to create entry types first. Can be null or empty array (sections can be created without entry types initially).
 - **handle** (string, optional): Machine-readable name. Auto-generated from name if not provided.
 - **enableVersioning** (boolean, optional): Enable entry versioning. Default: `true`
 - **propagationMethod** (string, optional): How content propagates across sites. Options:
@@ -109,9 +109,19 @@ Returns an object containing:
 }
 ```
 
+### Section Without Entry Types (Initial Creation)
+```json
+{
+  "name": "News",
+  "type": "channel",
+  "handle": "news"
+}
+```
+
 ## Notes
 
-- Entry types must be created before assigning to sections
+- Entry types can be created separately and assigned to sections later using `update_section`
+- Sections can be created without entry types initially (though entries cannot be created until entry types are assigned)
 - Site settings default to all sites if not provided
 - Structure sections support hierarchy with `maxLevels` setting
 - After creation, configure further in the Craft control panel
