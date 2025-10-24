@@ -10,7 +10,7 @@ beforeEach(function () {
     $entriesService = Craft::$app->getEntries();
     $testHandles = [
         'testNews', 'home', 'sitePages', 'multiSiteContent', 'customSiteSection',
-        'controlPanelTest', 'unlimitedStructure', 'duplicateTest', 'emptySection'
+        'controlPanelTest', 'unlimitedStructure', 'duplicateTest'
     ];
 
     foreach ($testHandles as $handle) {
@@ -38,7 +38,7 @@ beforeEach(function () {
         return $result;
     };
 
-    $this->createSection = function (string $name, string $type, ?array $entryTypeIds = null, array $options = []) {
+    $this->createSection = function (string $name, string $type, array $entryTypeIds, array $options = []) {
         $createSection = Craft::$container->get(CreateSection::class);
 
         $result = $createSection->create(
@@ -158,7 +158,7 @@ test('fails when section name is missing', function () {
     $tool = new CreateSection();
 
     expect(fn() => $tool->create('', 'channel', [1]))
-        ->toThrow(ModelSaveException::class);
+        ->toThrow(\RuntimeException::class);
 });
 
 test('fails when section type is invalid', function () {
@@ -274,14 +274,4 @@ test('creates section with maxAuthors set to 1', function () {
     expect($result['name'])->toBe('Single Author Section')
         ->and($result['type'])->toBe('channel')
         ->and($result['maxAuthors'])->toBe(1);
-});
-
-test('creates section without entry types', function () {
-    $result = ($this->createSection)('Empty Section', 'channel', null);
-
-    expect($result['name'])->toBe('Empty Section')
-        ->and($result['handle'])->toBe('emptySection')
-        ->and($result['type'])->toBe('channel')
-        ->and($result['sectionId'])->toBeInt()
-        ->and($result['editUrl'])->toContain('/settings/sections/');
 });
