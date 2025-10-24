@@ -56,6 +56,12 @@ class AddTabToFieldLayout
         }
 
         $existingTabs = $fieldLayout->getTabs();
+
+        // Check if tab name already exists
+        foreach ($existingTabs as $tab) {
+            throw_if($tab->name === $name, "Tab with name '{$name}' already exists in this field layout");
+        }
+
         $newTab = new FieldLayoutTab([
             'layout' => $fieldLayout,
             'name' => $name,
