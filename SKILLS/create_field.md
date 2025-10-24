@@ -160,12 +160,42 @@ POST /api/fields
 }
 ```
 
+#### Entries Field (Relations)
+
+```json
+{
+  "name": "Related Articles",
+  "handle": "relatedArticles",
+  "type": "craft\\fields\\Entries",
+  "instructions": "Select related articles",
+  "settings": {
+    "sources": ["section:abc123-4567-89ab-cdef-123456789abc"],
+    "limit": 5,
+    "viewMode": "list",
+    "selectionLabel": "Add an article"
+  }
+}
+```
+
+##### Entries Field Settings
+
+- **sources** (array, required): Array of section UIDs that entries can be selected from. Format: `["section:UID"]`
+  - Use section UIDs (not IDs) in the format `"section:{uid}"`
+  - Get section UIDs from `get_sections` endpoint
+  - Multiple sections can be specified: `["section:uid1", "section:uid2"]`
+  - Empty array `[]` allows selection from all sections
+- **limit** (integer, optional): Maximum number of entries that can be selected
+- **viewMode** (string, optional): Display mode - `"list"` or `"cards"`
+- **selectionLabel** (string, optional): Label for the selection button
+- **localizeRelations** (boolean, optional): Whether relations are per-site. Default: `false`
+
 ## Notes
 
 - Always use `get_field_types` to discover available field types and their class names
 - Field settings vary significantly by field type - consult Craft CMS documentation for specific field type settings
 - For Matrix fields, entry types must be created first using `create_entry_type`
 - Matrix field entry types are referenced by their `uid` property
+- **For Entries fields**: The `sources` array must contain section UIDs (not IDs) in the format `"section:{uid}"`. Use `get_sections` to retrieve section UIDs.
 - After creation, fields must be added to field layouts to appear in entry forms (use `add_field_to_field_layout`)
 - The response includes an `editUrl` pointing to the field settings in the Craft control panel for further configuration
 
