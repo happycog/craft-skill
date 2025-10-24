@@ -10,6 +10,10 @@ description: Complete skill suite for managing Craft CMS content including secti
 
 Full documentation: `SKILLS/` directory
 
+## Important: Use the API, Not YAML Files
+
+**CRITICAL**: Always use this HTTP API to manage Craft CMS content. Never directly modify YAML configuration files in the `config/project/` directory. The API ensures proper validation, maintains data integrity, and handles all necessary relationships automatically. Direct YAML edits can corrupt your Craft installation.
+
 ## Base URL Configuration
 
 All API routes require a base URL and API prefix. The standard Craft CMS configuration uses the `PRIMARY_SITE_URL` environment variable and a configurable API prefix:
