@@ -81,7 +81,8 @@ Returns the updated field layout with the new field included.
 
 ## Notes
 
-- The target tab must already exist - use `add_tab_to_field_layout` first
+- **IMPORTANT**: Always use `get_field_layout` first to check which tabs already exist in the field layout
+- The target tab must already exist - if it doesn't, use `add_tab_to_field_layout` to create it
 - To get element UIDs for positioning, use `get_field_layout` to see existing elements
 - Width values are percentages allowing responsive field sizing
 - Label and instruction overrides only apply to this specific field layout

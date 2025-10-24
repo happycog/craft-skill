@@ -122,6 +122,8 @@ Returns the updated field layout with the new UI element included.
 
 ## Notes
 
+- **IMPORTANT**: Always use `get_field_layout` first to check which tabs already exist in the field layout
+- The target tab must already exist - if it doesn't, use `add_tab_to_field_layout` to create it
 - UI elements help organize and document field layouts for content editors
 - Tip styles provide visual hierarchy:
   - `tip` (blue): General information

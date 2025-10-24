@@ -61,8 +61,9 @@ Returns the updated field layout with the new tab included.
 
 ## Notes
 
+- **IMPORTANT**: Always use `get_field_layout` first to check which tabs already exist to avoid creating duplicates
+- Tab names must be unique within the field layout - attempting to create a duplicate will fail
 - Tabs are created empty - use `add_field_to_field_layout` or `add_ui_element_to_field_layout` to populate them
-- Tab names must be unique within the field layout
 - Position types:
   - `prepend`: Add as first tab
   - `append`: Add as last tab
