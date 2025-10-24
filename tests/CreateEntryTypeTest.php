@@ -87,16 +87,28 @@ it('can create an entry type with custom handle', function () {
     expect($entryType->handle)->toBe('customHandle');
 });
 
-it('can create an entry type without title field', function () {
+it('can create an entry type without title field when titleFormat is provided', function () {
     $result = ($this->createEntryType)(
         'No Title Entry Type',
-        ['hasTitleField' => false]
+        [
+            'hasTitleField' => false,
+            'titleFormat' => '{dateCreated|date}'
+        ]
     );
 
     expect($result['hasTitleField'])->toBeFalse();
+    expect($result['titleFormat'])->toBe('{dateCreated|date}');
 
     $entryType = Craft::$app->getEntries()->getEntryTypeById($result['entryTypeId']);
     expect($entryType->hasTitleField)->toBeFalse();
+    expect($entryType->titleFormat)->toBe('{dateCreated|date}');
+});
+
+it('throws exception when hasTitleField is false but titleFormat is not provided', function () {
+    expect(fn() => ($this->createEntryType)(
+        'Invalid No Title Entry Type',
+        ['hasTitleField' => false]
+    ))->toThrow(InvalidArgumentException::class, "If 'hasTitleField' is false, 'titleFormat' must be set");
 });
 
 it('can create an entry type with custom translation method', function () {
@@ -214,6 +226,7 @@ it('returns all expected response fields', function () {
         [
             'handle' => 'completeTest',
             'hasTitleField' => false,
+            'titleFormat' => '{dateCreated|date}',
             'titleTranslationMethod' => 'language',
             'titleTranslationKeyFormat' => '{site}_{id}',
             'icon' => 'article',
