@@ -66,11 +66,11 @@ All API endpoints:
 ## Field Layouts
 - **create_field_layout** - `POST /api/field-layouts` - Create empty field layout for entry types
 - **get_field_layout** - `GET /api/field-layouts` - Get field layout structure by entry type/layout/element ID
-- **add_tab_to_field_layout** - Add tab to field layout with flexible positioning (prepend/append/before/after)
-- **add_field_to_field_layout** - Add custom field to tab with positioning, width, required, and display options
-- **add_ui_element_to_field_layout** - Add UI elements (heading, tip, horizontal rule, markdown, template) to layouts
-- **move_element_in_field_layout** - Move fields/UI elements within or between tabs with precise positioning
-- **remove_element_from_field_layout** - Remove fields or UI elements from field layout
+- **add_tab_to_field_layout** - `POST /api/field-layouts/<id>/tabs` - Add tab to field layout with flexible positioning (prepend/append/before/after)
+- **add_field_to_field_layout** - `POST /api/field-layouts/<id>/fields` - Add custom field to tab with positioning, width, required, and display options
+- **add_ui_element_to_field_layout** - `POST /api/field-layouts/<id>/ui-elements` - Add UI elements (heading, tip, horizontal rule, markdown, template) to layouts
+- **move_element_in_field_layout** - `PUT /api/field-layouts/<id>/elements` - Move fields/UI elements within or between tabs with precise positioning
+- **remove_element_from_field_layout** - `DELETE /api/field-layouts/<id>/elements` - Remove fields or UI elements from field layout
 
 ## Sites
 - **get_sites** - `GET /api/sites` - List all sites with IDs/handles/URLs
