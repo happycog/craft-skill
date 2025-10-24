@@ -25,6 +25,13 @@ All API routes require a base URL and API prefix. The standard Craft CMS configu
 - **Default Example**: `https://craft-site.com/api/sections`
 - **Custom Prefix Example**: `https://craft-site.com/custom-api/sections`
 
+## Request/Response Format
+
+All API endpoints:
+- **Return JSON**: All responses are in JSON format with structured data
+- **Accept Header**: Include `Accept: application/json` header in requests to ensure errors are also formatted as JSON for better error handling and debugging
+- **Content-Type**: Use `Content-Type: application/json` for POST/PUT requests with JSON body data
+
 ## Content
 - **create_entry** - `POST /api/entries` - Create entries with section/entry type IDs and field data
 - **get_entry** - `GET /api/entries/<id>` - Retrieve entry by ID with all fields and metadata
