@@ -41,6 +41,9 @@ Returns field layout structure with tabs and fields organized as configured.
 
 ## Notes
 
-- Shows complete field organization
+- **IMPORTANT**: Always call this tool BEFORE adding tabs, fields, or UI elements to check what already exists
+- Shows complete field organization including all existing tabs and their contents
+- Use to discover existing tab names before calling `add_field_to_field_layout` or `add_ui_element_to_field_layout`
+- Use to check if a tab already exists before calling `add_tab_to_field_layout` to avoid duplicates
 - Includes field requirements and instructions
-- Use to understand entry type schemas
+- Use to understand entry type schemas and get element UIDs for positioning

@@ -90,7 +90,7 @@ class CreateEntryType
         }
 
         // If hasTitleField is false, make sure the titleFormat is set, otherwise throw an error
-        throw_if(! $hasTitleField && ! empty($titleFormat), \InvalidArgumentException::class, "If 'hasTitleField' is false, 'titleFormat' must be set to define how titles are automatically generated.");
+        throw_if(! $hasTitleField && empty($titleFormat), \InvalidArgumentException::class, "If 'hasTitleField' is false, 'titleFormat' must be set to define how titles are automatically generated.");
 
         // Save the entry type
         throw_unless($entriesService->saveEntryType($entryType), ModelSaveException::class, $entryType);
@@ -110,6 +110,7 @@ class CreateEntryType
                 ! $hasTitleField ? ' Because the entry was created without a title field it will not have a field layout. To add fields to this entry type you must first call CreateFieldLayout and then UpdateEntryType with the associated `fieldLayoutId`.' : ''
             ),
             'entryTypeId' => $savedEntryType->id,
+            'uid' => $savedEntryType->uid,
             'name' => $savedEntryType->name,
             'handle' => $savedEntryType->handle,
             'description' => $savedEntryType->description,

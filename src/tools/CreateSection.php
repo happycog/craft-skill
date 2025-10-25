@@ -39,7 +39,7 @@ class CreateSection
         /** Section type: single (one entry), channel (multiple entries), or structure (hierarchical entries) */
         string $type,
 
-        /** Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first. This can also be empty to create a section without any entry types. Although not common this is possible. */
+        /** Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first. */
         array $entryTypeIds,
 
         /** The section handle (machine-readable name). Auto-generated from name if not provided. */
@@ -73,8 +73,6 @@ class CreateSection
      ): array {
         throw_unless(in_array($type, [Section::TYPE_SINGLE, Section::TYPE_CHANNEL, Section::TYPE_STRUCTURE]),
                     'Section type must be single, channel, or structure');
-
-        throw_unless(!empty($entryTypeIds), 'At least one entry type ID is required');
 
         // Validate entry types exist
         $entriesService = Craft::$app->getEntries();

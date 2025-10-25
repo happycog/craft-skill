@@ -10,6 +10,10 @@ description: Complete skill suite for managing Craft CMS content including secti
 
 Full documentation: `SKILLS/` directory
 
+## Important: Use the API, Not YAML Files
+
+**CRITICAL**: Always use this HTTP API to manage Craft CMS content. Never directly modify YAML configuration files in the `config/project/` directory. The API ensures proper validation, maintains data integrity, and handles all necessary relationships automatically. Direct YAML edits can corrupt your Craft installation.
+
 ## Base URL Configuration
 
 All API routes require a base URL and API prefix. The standard Craft CMS configuration uses the `PRIMARY_SITE_URL` environment variable and a configurable API prefix:
@@ -24,6 +28,13 @@ All API routes require a base URL and API prefix. The standard Craft CMS configu
 - **Route Format**: `{PRIMARY_SITE_URL}/{apiPrefix}/{endpoint}`
 - **Default Example**: `https://craft-site.com/api/sections`
 - **Custom Prefix Example**: `https://craft-site.com/custom-api/sections`
+
+## Request/Response Format
+
+All API endpoints:
+- **Return JSON**: All responses are in JSON format with structured data
+- **Accept Header**: Include `Accept: application/json` header in requests to ensure errors are also formatted as JSON for better error handling and debugging
+- **Content-Type**: Use `Content-Type: application/json` for POST/PUT requests with JSON body data
 
 ## Content
 - **create_entry** - `POST /api/entries` - Create entries with section/entry type IDs and field data
@@ -57,9 +68,13 @@ All API routes require a base URL and API prefix. The standard Craft CMS configu
 - **delete_field** - `DELETE /api/fields/<id>` - Permanently delete (removes data)
 
 ## Field Layouts
-- **create_field_layout** - `POST /api/field-layouts` - Create with tabs/fields/requirements
-- **get_field_layout** - `GET /api/field-layouts` - Get by entry type/layout/element ID
-- **update_field_layout** - `PUT /api/field-layouts/<id>` - Update structure/organization
+- **create_field_layout** - `POST /api/field-layouts` - Create empty field layout for entry types
+- **get_field_layout** - `GET /api/field-layouts` - Get field layout structure by entry type/layout/element ID
+- **add_tab_to_field_layout** - `POST /api/field-layouts/<id>/tabs` - Add tab to field layout with flexible positioning (prepend/append/before/after)
+- **add_field_to_field_layout** - `POST /api/field-layouts/<id>/fields` - Add custom field to tab with positioning, width, required, and display options
+- **add_ui_element_to_field_layout** - `POST /api/field-layouts/<id>/ui-elements` - Add UI elements (heading, tip, horizontal rule, markdown, template) to layouts
+- **move_element_in_field_layout** - `PUT /api/field-layouts/<id>/elements` - Move fields/UI elements within or between tabs with precise positioning
+- **remove_element_from_field_layout** - `DELETE /api/field-layouts/<id>/elements` - Remove fields or UI elements from field layout
 
 ## Sites
 - **get_sites** - `GET /api/sites` - List all sites with IDs/handles/URLs

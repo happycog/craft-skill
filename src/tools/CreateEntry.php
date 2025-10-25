@@ -60,7 +60,9 @@ class CreateEntry
             entryTypeId: $entryTypeId,
             siteId: $siteId,
             attributeAndFieldData: $attributeAndFieldData,
-        );        return [
+        );
+
+        return [
             '_notes' => 'The entry was successfully created.',
             'entryId' => $entry->id,
             'title' => $entry->title,

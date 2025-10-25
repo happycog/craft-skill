@@ -24,7 +24,7 @@ After creating the section, always link the user back to the section settings in
   - `single`: One entry per section
   - `channel`: Multiple entries
   - `structure`: Hierarchical entries
-- **entryTypeIds** (array of integers): Entry type IDs to assign to this section. Use `create_entry_type` to create entry types first. Can be empty array (uncommon but possible).
+- **entryTypeIds** (array of integers): Entry type IDs to assign to this section. Use `create_entry_type` to create entry types first. Cannot be empty.
 
 ### Optional Parameters
 
@@ -112,6 +112,7 @@ Returns an object containing:
 ## Notes
 
 - Entry types must be created before assigning to sections
+- At least one entry type is required to create a section
 - Site settings default to all sites if not provided
 - Structure sections support hierarchy with `maxLevels` setting
 - After creation, configure further in the Craft control panel

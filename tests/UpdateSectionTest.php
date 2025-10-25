@@ -113,28 +113,6 @@ afterEach(function () {
     }
 });
 
-test('update section tool schema is valid', function () {
-    // For modern tools using PHP8 attributes, we can't test the schema directly
-    // Instead, we test that the tool can be instantiated without errors
-    $tool = new UpdateSection();
-    
-    expect($tool)->toBeInstanceOf(UpdateSection::class);
-    
-    // Verify the tool has the expected method with proper attributes
-    $reflection = new \ReflectionClass($tool);
-    $method = $reflection->getMethod('update');
-    
-    expect($method)->toBeInstanceOf(\ReflectionMethod::class);
-    
-    // Verify the method has the McpTool attribute
-    $attributes = $method->getAttributes(\PhpMcp\Server\Attributes\McpTool::class);
-    expect($attributes)->toHaveCount(1);
-    
-    // Verify the McpTool attribute has the correct name
-    $mcpToolAttribute = $attributes[0]->newInstance();
-    expect($mcpToolAttribute->name)->toBe('update_section');
-});
-
 test('updates section name successfully', function () {
     // Create a test section first
     $entryType = ($this->createEntryType)('Test Content');

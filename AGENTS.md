@@ -325,6 +325,54 @@ test('endpoint retrieves resource', function () {
 
 ## Important Notes for Future Agents
 
+### Skills Documentation Maintenance
+
+**CRITICAL**: The `SKILLS.md` and `SKILLS/*.md` files must be kept in sync with the actual tool implementations in `src/tools/`.
+
+#### When Adding New Tools:
+1. **Create the tool file** in `src/tools/ToolName.php`
+2. **Create matching documentation** in `SKILLS/tool_name.md` (use snake_case filename)
+3. **Update SKILLS.md** to list the new tool in the appropriate section
+4. **Follow the documentation template**:
+   - Tool name as heading
+   - Brief description
+   - API route (if applicable)
+   - Parameters (required and optional, with types)
+   - Return value description
+   - Example usage with JSON
+   - Notes section with important considerations
+
+#### When Modifying Tools:
+1. **Update the tool file** in `src/tools/`
+2. **Update corresponding documentation** in `SKILLS/tool_name.md`
+3. **Update SKILLS.md** if the tool's purpose or API changes
+4. **Test the tool** to ensure examples in documentation are accurate
+
+#### When Deprecating/Removing Tools:
+1. **Mark as deprecated** in `SKILLS/tool_name.md` with migration guide
+2. **Update SKILLS.md** to remove or mark as deprecated
+3. **Keep deprecated docs** for 1-2 releases to help users migrate
+4. **Eventually remove** both tool file and documentation when fully obsolete
+
+#### Documentation Standards:
+- **Filenames**: Use snake_case (e.g., `add_field_to_field_layout.md`)
+- **Consistency**: Match parameter names and types exactly with tool implementation
+- **Examples**: Provide realistic, copy-pasteable JSON examples
+- **Cross-references**: Link related tools in "See Also" sections
+- **Clarity**: Write for users who may not be Craft CMS experts
+
+#### Verification Commands:
+```bash
+# List all tools
+ls -1 src/tools/*.php | xargs -n1 basename | sed 's/.php$//' | sort
+
+# List all documented skills
+ls -1 SKILLS/*.md | xargs -n1 basename | sed 's/.md$//' | sort
+
+# Find undocumented tools (tools without matching .md files)
+# Compare the two lists above - each tool should have a corresponding doc
+```
+
 ### Base URL Configuration for HTTP API
 - **PRIMARY_SITE_URL Environment Variable**: The standard Craft CMS way to configure the base URL is via the `PRIMARY_SITE_URL` environment variable
 - **Configuration Sources**: Check for `PRIMARY_SITE_URL` in:

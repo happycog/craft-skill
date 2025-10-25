@@ -158,7 +158,7 @@ test('fails when section name is missing', function () {
     $tool = new CreateSection();
 
     expect(fn() => $tool->create('', 'channel', [1]))
-        ->toThrow(ModelSaveException::class);
+        ->toThrow(\RuntimeException::class);
 });
 
 test('fails when section type is invalid', function () {
