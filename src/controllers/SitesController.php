@@ -3,6 +3,7 @@
 namespace happycog\craftmcp\controllers;
 
 use happycog\craftmcp\tools\CreateSite;
+use happycog\craftmcp\tools\DeleteSite;
 use happycog\craftmcp\tools\GetSites;
 use happycog\craftmcp\tools\UpdateSite;
 use yii\web\Response;
@@ -25,5 +26,11 @@ class SitesController extends Controller
     {
         $tool = \Craft::$container->get(UpdateSite::class);
         return $this->callTool($tool->update(...), ['siteId' => $id]);
+    }
+
+    public function actionDelete(int $id): Response
+    {
+        $tool = \Craft::$container->get(DeleteSite::class);
+        return $this->callTool($tool->delete(...), ['siteId' => $id]);
     }
 }

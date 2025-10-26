@@ -134,5 +134,6 @@ class Plugin extends BasePlugin
         $event->rules['POST ' . $apiPrefix . '/sites'] = 'skills/sites/create';
         $event->rules['GET ' . $apiPrefix . '/sites'] = 'skills/sites/list';
         $event->rules['PUT ' . $apiPrefix . '/sites/<id>'] = 'skills/sites/update';
+        $event->rules['DELETE ' . $apiPrefix . '/sites/<id>'] = 'skills/sites/delete';
     }
 }

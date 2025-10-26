@@ -80,3 +80,4 @@ All API endpoints:
 - **create_site** - `POST /api/sites` - Create site with name/URL/language/handle
 - **get_sites** - `GET /api/sites` - List all sites with IDs/handles/URLs
 - **update_site** - `PUT /api/sites/<id>` - Update site properties/settings
+- **delete_site** - `DELETE /api/sites/<id>` - Permanently delete site with impact analysis
