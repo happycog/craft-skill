@@ -131,6 +131,8 @@ class Plugin extends BasePlugin
         $event->rules['PUT ' . $apiPrefix . '/field-layouts/<id>/elements'] = 'skills/field-layouts/move-element';
         
         // Site routes
+        $event->rules['POST ' . $apiPrefix . '/sites'] = 'skills/sites/create';
         $event->rules['GET ' . $apiPrefix . '/sites'] = 'skills/sites/list';
+        $event->rules['PUT ' . $apiPrefix . '/sites/<id>'] = 'skills/sites/update';
     }
 }
