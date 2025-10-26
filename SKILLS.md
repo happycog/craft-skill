@@ -77,4 +77,6 @@ All API endpoints:
 - **remove_element_from_field_layout** - `DELETE /api/field-layouts/<id>/elements` - Remove fields or UI elements from field layout
 
 ## Sites
+- **create_site** - `POST /api/sites` - Create site with name/URL/language/handle
 - **get_sites** - `GET /api/sites` - List all sites with IDs/handles/URLs
+- **update_site** - `PUT /api/sites/<id>` - Update site properties/settings
