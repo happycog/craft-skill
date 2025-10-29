@@ -73,3 +73,6 @@ All API endpoints:
 
 ## Sites
 - [get_sites](get_sites.md) - `GET /api/sites` - List all sites with IDs/handles/URLs
+
+## System
+- [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability
