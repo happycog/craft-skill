@@ -132,5 +132,8 @@ class Plugin extends BasePlugin
         
         // Site routes
         $event->rules['GET ' . $apiPrefix . '/sites'] = 'skills/sites/list';
+        
+        // Health check route
+        $event->rules['GET ' . $apiPrefix . '/health'] = 'skills/health/index';
     }
 }

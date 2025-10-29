@@ -92,7 +92,6 @@ class UpdateSection
                 'single' => Section::TYPE_SINGLE,
                 'channel' => Section::TYPE_CHANNEL,
                 'structure' => Section::TYPE_STRUCTURE,
-                default => throw new \InvalidArgumentException("Invalid section type: {$type}")
             };
 
             // Check for type change restrictions
@@ -115,7 +114,6 @@ class UpdateSection
                 'language' => PropagationMethod::Language,
                 'custom' => PropagationMethod::Custom,
                 'none' => PropagationMethod::None,
-                default => throw new \InvalidArgumentException("Invalid propagation method: {$propagationMethod}")
             };
         }
 
@@ -129,7 +127,6 @@ class UpdateSection
                 $section->defaultPlacement = match ($defaultPlacement) {
                     'beginning' => Section::DEFAULT_PLACEMENT_BEGINNING,
                     'end' => Section::DEFAULT_PLACEMENT_END,
-                    default => throw new \InvalidArgumentException("Invalid default placement: {$defaultPlacement}")
                 };
             }
         }

@@ -31,23 +31,59 @@ abstract class Controller extends CraftController
                 ->allowPermissiveTypes()
                 ->allowScalarValueCasting()
                 ->argumentsMapper();
-            $sourceArray = $useQueryParams 
+            $sourceArray = $useQueryParams
                 ? $this->request->getQueryParams()
                 : $this->request->getBodyParams();
-            
+
             // Merge additional params (e.g., path params) into source array
             $sourceArray = array_merge($sourceArray, $params);
-            
-            $source = Source::array($sourceArray);
-            
+
+            // Validate no extra keys before mapping
+            $this->validateNoExtraKeys($tool, $sourceArray);
+
+            $source = Source::array($sourceArray)->camelCaseKeys();
+
             // Map arguments and call the tool
             $arguments = $mapper->mapArguments($tool, $source);
             $result = $tool(...$arguments);
-            
+
             return $this->asJson($result);
         } catch (MappingError $error) {
             $this->response->setStatusCode(400);
             return $this->asJson(['error' => (string) $error]);
+        } catch (\InvalidArgumentException $error) {
+            $this->response->setStatusCode(400);
+            return $this->asJson(['error' => $error->getMessage()]);
+        }
+    }
+
+    /**
+     * Validate that the source array only contains keys that match the tool's parameters.
+     *
+     * @param callable $tool
+     * @param array<string, mixed> $sourceArray
+     * @throws \InvalidArgumentException if extra keys are found
+     */
+    private function validateNoExtraKeys(callable $tool, array $sourceArray): void
+    {
+        $reflection = new \ReflectionFunction(\Closure::fromCallable($tool));
+        $validKeys = [];
+
+        foreach ($reflection->getParameters() as $param) {
+            $validKeys[] = $param->getName();
+        }
+
+        // Filter out Craft-specific keys that are added automatically
+        $ignoredKeys = ['CRAFT_CSRF_TOKEN'];
+        $sourceKeys = array_diff(array_keys($sourceArray), $ignoredKeys);
+
+        $extraKeys = array_diff($sourceKeys, $validKeys);
+
+        if (!empty($extraKeys)) {
+            throw new \InvalidArgumentException(
+                'Invalid parameters: ' . implode(', ', $extraKeys) . '. ' .
+                'Valid parameters are: ' . implode(', ', $validKeys)
+            );
         }
     }
 }

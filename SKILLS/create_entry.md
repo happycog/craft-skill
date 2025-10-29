@@ -40,6 +40,58 @@ The `attributeAndFieldData` parameter accepts both native Craft attributes and c
 **Custom Fields:**
 Use the field handle as the key. For example, if you have a "body" field, pass `{"body": "Content"}`. Use `get_fields` with the entry type's field layout ID to discover available custom fields and their handles.
 
+**Matrix Fields:**
+Matrix fields contain repeating blocks of content. The format is `fieldHandle: []` where `fieldHandle` is the matrix field's handle and the value is an array of block objects.
+
+Each block object must have:
+- `type`: The entry type handle for the block (e.g., "callToAction", "imageBlock")
+- `fields`: An object containing the block's field data keyed by field handle
+
+Example with a single block:
+```json
+{
+  "callToActions": [
+    {
+      "type": "callToAction",
+      "fields": {
+        "heading": "My Call To Action",
+        "buttonText": "Click Here",
+        "buttonUrl": "https://example.com"
+      }
+    }
+  ]
+}
+```
+
+Example with multiple blocks of different types:
+```json
+{
+  "contentBlocks": [
+    {
+      "type": "textBlock",
+      "fields": {
+        "heading": "Introduction",
+        "body": "Welcome to our site"
+      }
+    },
+    {
+      "type": "imageBlock",
+      "fields": {
+        "image": [123],
+        "caption": "A beautiful sunset"
+      }
+    },
+    {
+      "type": "textBlock",
+      "fields": {
+        "heading": "Conclusion",
+        "body": "Thank you for reading"
+      }
+    }
+  ]
+}
+```
+
 ## Return Value
 
 Returns an object containing:

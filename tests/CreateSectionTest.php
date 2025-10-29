@@ -155,10 +155,10 @@ test('creates section with site-specific settings', function () {
 });
 
 test('fails when section name is missing', function () {
-    $tool = new CreateSection();
+    $tool = Craft::$container->get(CreateSection::class);
 
     expect(fn() => $tool->create('', 'channel', [1]))
-        ->toThrow(\RuntimeException::class);
+        ->toThrow(\happycog\craftmcp\exceptions\ModelSaveException::class);
 });
 
 test('fails when section type is invalid', function () {
