@@ -45,6 +45,7 @@ beforeEach(function () {
             hasTitleField: $options['hasTitleField'] ?? false, // Default to false for these tests
             titleTranslationMethod: $options['titleTranslationMethod'] ?? 'site',
             titleTranslationKeyFormat: $options['titleTranslationKeyFormat'] ?? null,
+            titleFormat: $options['titleFormat'] ?? '{dateCreated|date}', // Required when hasTitleField is false
             icon: $options['icon'] ?? null,
             color: $options['color'] ?? null
         );
