@@ -74,5 +74,11 @@ All API endpoints:
 ## Sites
 - [get_sites](get_sites.md) - `GET /api/sites` - List all sites with IDs/handles/URLs
 
+## Assets
+- [create_asset](create_asset.md) - `POST /api/assets` - Upload file from local/remote URL to volume
+- [update_asset](update_asset.md) - `PUT /api/assets/<id>` - Update metadata or replace file
+- [delete_asset](delete_asset.md) - `DELETE /api/assets/<id>` - Delete asset and file
+- [get_volumes](get_volumes.md) - `GET /api/volumes` - List asset volumes with IDs/URLs
+
 ## System
 - [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability
