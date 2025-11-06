@@ -107,7 +107,7 @@ class UpdateAsset
         );
 
         // Clean up temp file after successful save
-        if ($newFileUrl !== null && isset($tempFilePath) && $tempFilePath && file_exists($tempFilePath)) {
+        if ($newFileUrl !== null && $tempFilePath && file_exists($tempFilePath)) {
             FileHelper::unlink($tempFilePath);
         }
 

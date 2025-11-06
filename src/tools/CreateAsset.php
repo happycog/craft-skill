@@ -73,7 +73,8 @@ class CreateAsset
 
         try {
             // Extract filename from URL or path
-            $originalFilename = basename(parse_url($fileUrl, PHP_URL_PATH) ?? 'upload');
+            $urlPath = parse_url($fileUrl, PHP_URL_PATH);
+            $originalFilename = basename($urlPath ?: 'upload');
             $filename = AssetsHelper::prepareAssetName($originalFilename);
 
             // Create the asset element
@@ -112,7 +113,6 @@ class CreateAsset
             ];
         } finally {
             // Clean up temp file
-            /** @phpstan-ignore-next-line Variable is defined before try block */
             if (file_exists($tempFilePath)) {
                 FileHelper::unlink($tempFilePath);
             }
