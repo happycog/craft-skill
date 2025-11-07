@@ -161,7 +161,7 @@ abstract class Controller extends CraftController
             // Handle array<int> or array<int>|null - check if all values are numeric strings
             if (preg_match('/array<int>/i', $typeString)) {
                 foreach ($value as $item) {
-                    if (!is_numeric($item) && !is_int($item)) {
+                    if (!is_numeric($item)) {
                         return false;
                     }
                 }
