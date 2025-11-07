@@ -96,18 +96,43 @@ test('DELETE /api/entry-types/<id> deletes an entry type', function () {
         name: 'Test Entry Type to Delete',
         handle: 'testEntryTypeDelete' . time()
     );
-    
+
     $entryTypeId = $entryTypeData['entryTypeId'];
-    
+
     // Delete the entry type using the API route with path param (POST with _method=DELETE)
     $response = $this->postJson('/api/entry-types/' . $entryTypeId, [
         '_method' => 'DELETE',
         'force' => false,
     ]);
-    
+
     $response->assertStatus(200);
     $content = $response->content;
-    
+
     expect($content)->toContain('"deleted":true');
     expect($content)->toContain('"name":"Test Entry Type to Delete"');
+});
+
+test('POST /api/sections with invalid type returns validation error', function () {
+    // Create a test entry type first (needed for section creation)
+    $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
+    $entryTypeData = $createEntryType->create(
+        name: 'Test Entry Type for Invalid Section',
+        handle: 'testEntryTypeForInvalidSection' . time()
+    );
+
+    // Attempt to create a section with an invalid type
+    $response = $this->post('/api/sections', [
+        'name' => 'Test Section with Invalid Type',
+        'type' => 'invalid', // This should fail validation - only 'single'|'channel'|'structure' allowed
+        'entryTypeIds' => [$entryTypeData['entryTypeId']],
+        'handle' => 'testInvalidSection' . time()
+    ]);
+
+    // Should return 400 Bad Request
+    $response->assertStatus(400);
+    $data = json_decode($response->json()->json, true);
+
+    // Verify error message indicates the problem with the type parameter
+    expect($data)->toHaveKey('error');
+    expect($data['error'])->toContain('type');
 });

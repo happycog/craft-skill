@@ -269,19 +269,12 @@ test('error when adding field to non-existent tab', function () {
 })->throws(RuntimeException::class, "Tab with name 'NonExistent' not found");
 
 test('error when positioning field relative to non-existent element UID', function () {
-    $addTab = Craft::$container->get(AddTabToFieldLayout::class);
     $addField = Craft::$container->get(AddFieldToFieldLayout::class);
 
     $field = ($this->createField)('Test Field', ['handle' => 'testFieldLayoutSimp1']);
     $layoutResult = ($this->createFieldLayout)([
         ['name' => 'Content', 'elements' => []]
     ]);
-
-    $addTab->add(
-        fieldLayoutId: $layoutResult['fieldLayoutId'],
-        name: 'Content',
-        position: ['type' => 'prepend']
-    );
 
     $addField->add(
         fieldLayoutId: $layoutResult['fieldLayoutId'],
@@ -292,18 +285,11 @@ test('error when positioning field relative to non-existent element UID', functi
 })->throws(RuntimeException::class, "Element with UID 'non-existent-uid' not found");
 
 test('add heading UI element', function () {
-    $addTab = Craft::$container->get(AddTabToFieldLayout::class);
     $addUiElement = Craft::$container->get(AddUiElementToFieldLayout::class);
 
     $layoutResult = ($this->createFieldLayout)([
         ['name' => 'Content', 'elements' => []]
     ]);
-
-    $addTab->add(
-        fieldLayoutId: $layoutResult['fieldLayoutId'],
-        name: 'Content',
-        position: ['type' => 'prepend']
-    );
 
     $result = $addUiElement->add(
         fieldLayoutId: $layoutResult['fieldLayoutId'],
@@ -317,22 +303,15 @@ test('add heading UI element', function () {
     expect($result['addedElement']['type'])->toBe(Heading::class);
     
     $contentTab = collect($result['fieldLayout']['tabs'])->firstWhere('name', 'Content');
-    expect($contentTab['elements'])->toHaveCount(1);
+    expect($contentTab['elements'])->toHaveCount(2); // 1 heading + 1 title field
 });
 
 test('add tip UI element with all config', function () {
-    $addTab = Craft::$container->get(AddTabToFieldLayout::class);
     $addUiElement = Craft::$container->get(AddUiElementToFieldLayout::class);
 
     $layoutResult = ($this->createFieldLayout)([
         ['name' => 'Content', 'elements' => []]
     ]);
-
-    $addTab->add(
-        fieldLayoutId: $layoutResult['fieldLayoutId'],
-        name: 'Content',
-        position: ['type' => 'prepend']
-    );
 
     $result = $addUiElement->add(
         fieldLayoutId: $layoutResult['fieldLayoutId'],
@@ -380,18 +359,11 @@ test('add all UI element types', function () {
 });
 
 test('error when UI element missing required config', function () {
-    $addTab = Craft::$container->get(AddTabToFieldLayout::class);
     $addUiElement = Craft::$container->get(AddUiElementToFieldLayout::class);
 
     $layoutResult = ($this->createFieldLayout)([
         ['name' => 'Content', 'elements' => []]
     ]);
-
-    $addTab->add(
-        fieldLayoutId: $layoutResult['fieldLayoutId'],
-        name: 'Content',
-        position: ['type' => 'prepend']
-    );
 
     $addUiElement->add(
         fieldLayoutId: $layoutResult['fieldLayoutId'],

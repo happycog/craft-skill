@@ -252,7 +252,7 @@ class ExampleTool
 protected function registerSiteUrlRules(RegisterUrlRulesEvent $event): void
 {
     $apiPrefix = $this->getSettings()->apiPrefix ?? 'api';
-    
+
     // Example routes
     $event->rules['POST ' . $apiPrefix . '/examples'] = 'mcp/example/create';
     $event->rules['GET ' . $apiPrefix . '/examples/<id>'] = 'mcp/example/get';
@@ -314,13 +314,13 @@ test('endpoint retrieves resource', function () {
 - [x] Content search capabilities
 - [x] Draft support with create, update, and apply operations
 - [x] Site information endpoints
+- [x] Asset management with upload, update, and delete operations
 - [x] Comprehensive test suite with Pest
 
 ### 🔄 Ready for Development
 - [ ] Enhanced error handling and validation
 - [ ] Performance optimization for large content sets
 - [ ] Extended field type support
-- [ ] Asset management endpoints
 - [ ] User and permission management endpoints
 
 ## Important Notes for Future Agents
@@ -431,6 +431,10 @@ ls -1 SKILLS/*.md | xargs -n1 basename | sed 's/.md$//' | sort
   - `GET /api/field-layouts` - Get field layout
   - `PUT /api/field-layouts/<id>` - Update field layout
   - `GET /api/sites` - List sites
+  - `POST /api/assets` - Create asset
+  - `PUT /api/assets/<id>` - Update asset
+  - `DELETE /api/assets/<id>` - Delete asset
+  - `GET /api/volumes` - List volumes
 
 ### Craft 5.x Specific Considerations
 - **Draft Properties**: Always use `draftName`, `draftNotes`, `isProvisionalDraft` - these are the correct Craft 5.x property names
@@ -641,7 +645,7 @@ ls -1 SKILLS/*.md | xargs -n1 basename | sed 's/.md$//' | sort
   public function toolMethod(
       /** Simple inline description for basic parameters */
       string $name,
-      
+
       /** Multi-line inline descriptions
        * for complex parameters */
       ?array $data = null,
