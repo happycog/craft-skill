@@ -81,6 +81,7 @@ class RemoveElementFromFieldLayout
         $notes = ['Element removed successfully'];
         if ($entryTypeUpdated) {
             $notes[] = 'Entry type updated: hasTitleField set to false';
+            $notes[] = 'IMPORTANT: You must now set a titleFormat on this entry type using update_entry_type to define how titles are automatically generated. Example: titleFormat: "{dateCreated|date}" or titleFormat: "{fieldHandle}"';
         }
         $notes[] = 'Review the field layout in the control panel';
 
