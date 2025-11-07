@@ -357,12 +357,19 @@ test('fails when invalid section type provided', function () {
     $entryType = ($this->createEntryType)('Validation Test Content');
     $section = ($this->createSection)('Validation Test', 'channel', [$entryType['entryTypeId']], ['handle' => 'validationTest']);
 
-    $tool = new UpdateSection();
+    // Try to update with invalid type through API
+    $response = $this->post('/api/sections/' . $section['sectionId'], [
+        '_method' => 'PUT',
+        'type' => 'invalid'
+    ]);
 
-    expect(fn() => $tool->update(
-        sectionId: $section['sectionId'],
-        type: 'invalid'
-    ))->toThrow(InvalidArgumentException::class, 'Invalid section type: invalid');
+    $response->assertStatus(400);
+    $data = json_decode($response->json()->json, true);
+
+    expect($data)->toHaveKey('error');
+    expect($data)->toHaveKey('errors');
+    expect($data['errors'])->toHaveKey('type');
+    expect($data['errors']['type'][0])->toContain("'single'|'channel'|'structure'");
 });
 
 test('fails when invalid propagation method provided', function () {
@@ -370,12 +377,19 @@ test('fails when invalid propagation method provided', function () {
     $entryType = ($this->createEntryType)('Propagation Validation Content');
     $section = ($this->createSection)('Propagation Validation', 'channel', [$entryType['entryTypeId']]);
 
-    $tool = new UpdateSection();
+    // Try to update with invalid propagation method through API
+    $response = $this->post('/api/sections/' . $section['sectionId'], [
+        '_method' => 'PUT',
+        'propagationMethod' => 'invalid'
+    ]);
 
-    expect(fn() => $tool->update(
-        sectionId: $section['sectionId'],
-        propagationMethod: 'invalid'
-    ))->toThrow(InvalidArgumentException::class, 'Invalid propagation method: invalid');
+    $response->assertStatus(400);
+    $data = json_decode($response->json()->json, true);
+
+    expect($data)->toHaveKey('error');
+    expect($data)->toHaveKey('errors');
+    expect($data['errors'])->toHaveKey('propagationMethod');
+    expect($data['errors']['propagationMethod'][0])->toContain("'all'|'siteGroup'|'language'|'custom'|'none'");
 });
 
 test('fails when invalid default placement provided', function () {
@@ -383,12 +397,19 @@ test('fails when invalid default placement provided', function () {
     $entryType = ($this->createEntryType)('Placement Validation Content');
     $section = ($this->createSection)('Placement Validation', 'structure', [$entryType['entryTypeId']]);
 
-    $tool = new UpdateSection();
+    // Try to update with invalid default placement through API
+    $response = $this->post('/api/sections/' . $section['sectionId'], [
+        '_method' => 'PUT',
+        'defaultPlacement' => 'invalid'
+    ]);
 
-    expect(fn() => $tool->update(
-        sectionId: $section['sectionId'],
-        defaultPlacement: 'invalid'
-    ))->toThrow(InvalidArgumentException::class, 'Invalid default placement: invalid');
+    $response->assertStatus(400);
+    $data = json_decode($response->json()->json, true);
+
+    expect($data)->toHaveKey('error');
+    expect($data)->toHaveKey('errors');
+    expect($data['errors'])->toHaveKey('defaultPlacement');
+    expect($data['errors']['defaultPlacement'][0])->toContain("'beginning'|'end'");
 });
 
 test('fails when non-existent entry type ID provided', function () {
