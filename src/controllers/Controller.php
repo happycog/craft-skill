@@ -118,7 +118,8 @@ abstract class Controller extends CraftController
                 $value = $sourceArray[$paramName];
 
                 // Validate the value against the resolved type (includes PHPDoc types)
-                if (!$parameterDefinition->type->accepts($value)) {
+                // Try to accept the value with scalar casting enabled for query params
+                if (!$this->typeAcceptsWithCasting($parameterDefinition->type, $value)) {
                     $paramErrors[] = sprintf(
                         'Does not accept value of type %s. Expected: %s',
                         get_debug_type($value),
@@ -136,6 +137,69 @@ abstract class Controller extends CraftController
         if (!empty($errors)) {
             throw new ValidationException($errors);
         }
+    }
+
+    /**
+     * Check if a type accepts a value, considering scalar casting.
+     * This handles cases like array<string> being acceptable for array<int> when scalar casting is enabled.
+     *
+     * @param \CuyZ\Valinor\Type\Type $type
+     * @param mixed $value
+     * @return bool
+     */
+    private function typeAcceptsWithCasting($type, $value): bool
+    {
+        // First try direct acceptance
+        if ($type->accepts($value)) {
+            return true;
+        }
+
+        // If it's an array and the parameter expects an array, check if we can cast the elements
+        if (is_array($value)) {
+            $typeString = $type->toString();
+
+            // Handle array<int> or array<int>|null - check if all values are numeric strings
+            if (preg_match('/array<int>/i', $typeString)) {
+                foreach ($value as $item) {
+                    if (!is_numeric($item) && !is_int($item)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            // Handle array<string> - all scalars can be cast to string
+            if (preg_match('/array<string>/i', $typeString)) {
+                foreach ($value as $item) {
+                    if (!is_scalar($item)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        // For scalar values, check if casting would work
+        if (is_scalar($value)) {
+            $typeString = $type->toString();
+
+            // String to int casting
+            if ((str_contains($typeString, 'int') || $typeString === 'int') && is_numeric($value)) {
+                return true;
+            }
+
+            // String to float casting
+            if ((str_contains($typeString, 'float') || $typeString === 'float') && is_numeric($value)) {
+                return true;
+            }
+
+            // String to bool casting
+            if ((str_contains($typeString, 'bool') || $typeString === 'bool') && in_array($value, ['1', '0', 'true', 'false', 1, 0, true, false], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
