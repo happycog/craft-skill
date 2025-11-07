@@ -46,3 +46,8 @@ Returns the updated field layout with the element removed.
 - UI elements (headings, tips, etc.) are permanently removed from the layout
 - Changes are immediately saved to the field layout
 - Other elements in the layout are preserved and maintain their positions
+- **IMPORTANT**: When removing an `EntryTitleField` from an entry type's field layout:
+  - The entry type's `hasTitleField` will be automatically set to `false`
+  - You **must** then call `update_entry_type` with a `titleFormat` parameter to define how entry titles should be automatically generated
+  - Example: `titleFormat: "{dateCreated|date}"` or `titleFormat: "{fieldHandle}"`
+  - This is required because entries without title fields need an automatic way to generate titles

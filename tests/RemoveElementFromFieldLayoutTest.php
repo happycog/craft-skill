@@ -88,6 +88,16 @@ test('removing entry title field updates entry type hasTitleField to false', fun
         ->toBeArray()
         ->toContain('Entry type updated: hasTitleField set to false');
 
+    // Verify the note includes instructions about setting titleFormat
+    $hasInstructionNote = false;
+    foreach ($removeResult['_notes'] as $note) {
+        if (str_contains($note, 'titleFormat') && str_contains($note, 'update_entry_type')) {
+            $hasInstructionNote = true;
+            break;
+        }
+    }
+    expect($hasInstructionNote)->toBeTrue();
+
     // Step 4: Verify entry type hasTitleField is now false
     // Note: Due to RefreshesDatabase trait rolling back transactions in tests,
     // we verify the property was set by checking the notes returned from the tool
