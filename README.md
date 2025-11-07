@@ -73,7 +73,7 @@ To enable Claude to access the skill documentation, symlink the `SKILLS/` direct
 mkdir -p ~/.claude/skills
 
 # Symlink this project's SKILLS directory
-ln -s vendor/happycog/craft-skills/SKILLS ~/.claude/skills/craft
+ln -s ../../vendor/happycog/craft-skill/SKILLS .claude/skills/craft
 ```
 
-Replace `/path/to/craft-skill` with the actual path to your plugin installation. Once linked, Claude will be able to discover and use the Craft CMS management capabilities.
+Once linked, Claude will be able to discover and use the Craft CMS management capabilities.
