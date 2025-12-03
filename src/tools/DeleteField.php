@@ -83,8 +83,8 @@ class DeleteField
                     foreach ($tab->getElements() as $element) {
                         // Keep element only if it's not a CustomField referencing the deleted field
                         if ($element instanceof \craft\fieldlayoutelements\CustomField) {
-                            $elementField = $element->getField();
-                            if ($elementField === null || $elementField->id === $fieldId) {
+                            // @phpstan-ignore booleanNot.alwaysFalse (getField() returns null after field is deleted)
+                            if (!$element->getField()) {
                                 $modified = true;
                                 continue; // Skip this element
                             }
@@ -101,6 +101,7 @@ class DeleteField
                     $newTabs[] = $newTab;
                 }
                 
+                // @phpstan-ignore if.alwaysFalse (cascading from runtime null check above)
                 if ($modified) {
                     $layout->setTabs($newTabs);
                     $fieldsService->saveLayout($layout);
@@ -116,6 +117,7 @@ class DeleteField
             $warningMessage .= " This field was used in {$fieldInfo['usageCount']} layout(s) and all associated content has been removed.";
         }
         
+        // @phpstan-ignore greater.alwaysFalse (cascading from runtime null check above)
         if ($cleanedLayoutCount > 0) {
             $warningMessage .= " Cleaned up {$cleanedLayoutCount} field layout(s) to remove broken references.";
         }
