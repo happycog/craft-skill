@@ -5,12 +5,14 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\enums\Color;
 use happycog\craftmcp\actions\EntryTypeFormatter;
+use happycog\craftmcp\actions\ManageEntryTitleField;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class UpdateEntryType
 {
     public function __construct(
         private EntryTypeFormatter $entryTypeFormatter,
+        private ManageEntryTitleField $manageEntryTitleField,
     ) {
     }
     /**
@@ -35,6 +37,9 @@ class UpdateEntryType
 
         /** The entry type handle (machine-readable name) */
         ?string $handle = null,
+
+        /** Whether entries of this type have title fields. When changed, adds or removes the title field from the field layout. */
+        ?bool $hasTitleField = null,
 
         /** How titles are translated: none, site, language, or custom */
         ?string $titleTranslationMethod = null,
@@ -116,6 +121,25 @@ class UpdateEntryType
             $fieldLayout = $fieldsService->getLayoutById($fieldLayoutId);
             throw_unless($fieldLayout instanceof \craft\models\FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
             $entryType->fieldLayoutId = $fieldLayoutId;
+        }
+
+        // Handle hasTitleField changes by adding/removing the title field from the field layout
+        if ($hasTitleField !== null && $hasTitleField !== $entryType->hasTitleField) {
+            $fieldLayout = $entryType->getFieldLayout();
+            
+            if ($hasTitleField === true) {
+                // Add title field to the layout
+                $this->manageEntryTitleField->addTitleField($fieldLayout);
+                $entryType->hasTitleField = true;
+            } else {
+                // Remove title field from the layout
+                $this->manageEntryTitleField->removeTitleField($fieldLayout);
+                
+                // Require titleFormat when removing title field
+                throw_if(empty($entryType->titleFormat) && empty($titleFormat), \InvalidArgumentException::class, "When setting hasTitleField to false, titleFormat must be set to define how titles are automatically generated.");
+                
+                $entryType->hasTitleField = false;
+            }
         }
 
         // Save the updated entry type

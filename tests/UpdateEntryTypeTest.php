@@ -45,6 +45,7 @@ beforeEach(function () {
             entryTypeId: $entryTypeId,
             name: $updates['name'] ?? null,
             handle: $updates['handle'] ?? null,
+            hasTitleField: $updates['hasTitleField'] ?? null,
             titleTranslationMethod: $updates['titleTranslationMethod'] ?? null,
             titleTranslationKeyFormat: $updates['titleTranslationKeyFormat'] ?? null,
             titleFormat: $updates['titleFormat'] ?? null,
@@ -286,3 +287,75 @@ it('can update both showSlugField and showStatusField', function () {
     expect($entryType->showSlugField)->toBeFalse();
     expect($entryType->showStatusField)->toBeFalse();
 });
+
+it('can remove title field by setting hasTitleField to false', function () {
+    $created = ($this->createEntryType)('Test Entry Type', ['hasTitleField' => true]);
+    
+    // Verify it starts with a title field
+    $entryType = Craft::$app->getEntries()->getEntryTypeById($created['entryTypeId']);
+    expect($entryType->hasTitleField)->toBeTrue();
+    expect($entryType->getFieldLayout()->isFieldIncluded('title'))->toBeTrue();
+
+    // Remove the title field (requires titleFormat)
+    $result = ($this->updateEntryType)($created['entryTypeId'], [
+        'hasTitleField' => false,
+        'titleFormat' => '{dateCreated|date}'
+    ]);
+
+    expect($result['hasTitleField'])->toBeFalse();
+    expect($result['titleFormat'])->toBe('{dateCreated|date}');
+
+    // Verify in database
+    $entryType = Craft::$app->getEntries()->getEntryTypeById($created['entryTypeId']);
+    expect($entryType->hasTitleField)->toBeFalse();
+    expect($entryType->getFieldLayout()->isFieldIncluded('title'))->toBeFalse();
+});
+
+it('can add title field by setting hasTitleField to true', function () {
+    $created = ($this->createEntryType)('Test Entry Type', [
+        'hasTitleField' => false,
+        'titleFormat' => '{dateCreated|date}'
+    ]);
+    
+    // Verify it starts without a title field
+    $entryType = Craft::$app->getEntries()->getEntryTypeById($created['entryTypeId']);
+    expect($entryType->hasTitleField)->toBeFalse();
+
+    // Add the title field
+    $result = ($this->updateEntryType)($created['entryTypeId'], [
+        'hasTitleField' => true
+    ]);
+
+    expect($result['hasTitleField'])->toBeTrue();
+
+    // Verify in database
+    $entryType = Craft::$app->getEntries()->getEntryTypeById($created['entryTypeId']);
+    expect($entryType->hasTitleField)->toBeTrue();
+    expect($entryType->getFieldLayout()->isFieldIncluded('title'))->toBeTrue();
+});
+
+it('throws exception when removing title field without titleFormat', function () {
+    $created = ($this->createEntryType)('Test Entry Type', ['hasTitleField' => true]);
+
+    expect(fn() => ($this->updateEntryType)($created['entryTypeId'], ['hasTitleField' => false]))
+        ->toThrow(\InvalidArgumentException::class, 'titleFormat must be set');
+});
+
+it('does not modify field layout when hasTitleField is not changed', function () {
+    $created = ($this->createEntryType)('Test Entry Type', ['hasTitleField' => true]);
+    $originalFieldLayoutId = $created['fieldLayoutId'];
+
+    // Update other properties without changing hasTitleField
+    $result = ($this->updateEntryType)($created['entryTypeId'], [
+        'name' => 'Updated Name',
+        'icon' => 'news'
+    ]);
+
+    // Field layout should remain unchanged
+    expect($result['fieldLayoutId'])->toBe($originalFieldLayoutId);
+    
+    $entryType = Craft::$app->getEntries()->getEntryTypeById($created['entryTypeId']);
+    expect($entryType->hasTitleField)->toBeTrue();
+    expect($entryType->getFieldLayout()->isFieldIncluded('title'))->toBeTrue();
+});
+
