@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace happycog\craftmcp\actions;
 
 use craft\base\FieldInterface;
+use craft\errors\FieldNotFoundException;
 use craft\fields\Matrix;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
@@ -25,11 +26,20 @@ class FieldFormatter
                 if (!$el instanceof CustomFieldElement) {
                     continue;
                 }
-                $field = $el->getField();
-                if (!$field instanceof FieldInterface) {
+                try {
+                    $field = $el->getField();
+                    if (!$field instanceof FieldInterface) {
+                        continue;
+                    }
+                    $results[] = $this->formatField($field, $el, $tab);
+                }
+
+                // If Craft (internally) can't find the field then we can't possibly format it
+                // so we'll just continue on. It's probably an old field in a layout that needs
+                // to be re-saved.
+                catch (FieldNotFoundException $e) {
                     continue;
                 }
-                $results[] = $this->formatField($field, $el, $tab);
             }
         }
         return $results;
