@@ -84,6 +84,7 @@ class DeleteField
                         // Keep element only if it's not a CustomField referencing the deleted field
                         if ($element instanceof \craft\fieldlayoutelements\CustomField) {
                             $elementField = $element->getField();
+                            // @phpstan-ignore identical.alwaysFalse (getField() returns null after field is deleted)
                             if ($elementField === null || $elementField->id === $fieldId) {
                                 $modified = true;
                                 continue; // Skip this element
