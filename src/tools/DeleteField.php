@@ -83,8 +83,8 @@ class DeleteField
                     foreach ($tab->getElements() as $element) {
                         // Keep element only if it's not a CustomField referencing the deleted field
                         if ($element instanceof \craft\fieldlayoutelements\CustomField) {
-                            // @phpstan-ignore booleanNot.alwaysFalse (getField() returns null after field is deleted)
-                            if (!$element->getField()) {
+                            // @phpstan-ignore booleanNot.alwaysFalse (runtime check for orphaned field reference)
+                            if (! $element->getField()) {
                                 $modified = true;
                                 continue; // Skip this element
                             }
