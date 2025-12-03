@@ -1,5 +1,6 @@
 <?php
 
+use craft\fieldlayoutelements\entries\EntryTitleField;
 use craft\fieldlayoutelements\Heading;
 use craft\fieldlayoutelements\HorizontalRule;
 use craft\fieldlayoutelements\LineBreak;
@@ -651,3 +652,75 @@ test('error when moving non-existent element UID', function () {
         position: ['type' => 'prepend']
     );
 })->throws(RuntimeException::class, "Element with UID 'non-existent-uid' not found");
+
+test('add EntryTitleField UI element', function () {
+    $addUiElement = Craft::$container->get(AddUiElementToFieldLayout::class);
+
+    // Use the test helper to create an entry type with a field layout
+    $layoutResult = ($this->createFieldLayout)();
+    $fieldLayoutId = $layoutResult['fieldLayoutId'];
+    
+    // Get the entry type that was created
+    $entriesService = Craft::$app->getEntries();
+    $entryType = null;
+    foreach ($entriesService->getAllEntryTypes() as $et) {
+        if ($et->fieldLayoutId === $fieldLayoutId) {
+            $entryType = $et;
+            break;
+        }
+    }
+    
+    throw_unless($entryType, 'Entry type not found for field layout');
+    
+    // Set titleFormat first (required when hasTitleField is false)
+    $entryType->titleFormat = '{dateCreated|date}';
+    
+    // Remove the title field
+    $entryType->hasTitleField = false;
+    $entriesService->saveEntryType($entryType);
+    
+    // Remove title field from layout
+    $fieldLayout = $entryType->getFieldLayout();
+    $newTabs = [];
+    foreach ($fieldLayout->getTabs() as $tab) {
+        $newElements = [];
+        foreach ($tab->getElements() as $element) {
+            if (!$element instanceof EntryTitleField) {
+                $newElements[] = $element;
+            }
+        }
+        $newTab = new \craft\models\FieldLayoutTab([
+            'layout' => $fieldLayout,
+            'name' => $tab->name,
+            'elements' => $newElements,
+        ]);
+        $newTabs[] = $newTab;
+    }
+    $fieldLayout->setTabs($newTabs);
+    Craft::$app->getFields()->saveLayout($fieldLayout);
+    
+    // Verify setup: no title field
+    $entryType = $entriesService->getEntryTypeById($entryType->id);
+    expect($entryType->hasTitleField)->toBeFalse();
+    expect($entryType->getFieldLayout()->isFieldIncluded('title'))->toBeFalse();
+
+    // Add title field via AddUiElement
+    $result = $addUiElement->add(
+        fieldLayoutId: $fieldLayoutId,
+        tabName: 'Content',
+        elementType: EntryTitleField::class,
+        config: [],
+        position: ['type' => 'prepend']
+    );
+
+    expect($result)->toHaveKey('addedElement');
+    expect($result['addedElement']['type'])->toBe(EntryTitleField::class);
+    
+    // Verify entry type now has hasTitleField set to true
+    $entryType = $entriesService->getEntryTypeById($entryType->id);
+    expect($entryType->hasTitleField)->toBeTrue();
+    
+    // Verify the field layout includes the title field
+    expect($entryType->getFieldLayout()->isFieldIncluded('title'))->toBeTrue();
+});
+

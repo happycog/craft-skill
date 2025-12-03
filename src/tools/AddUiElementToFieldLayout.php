@@ -2,8 +2,8 @@
 
 namespace happycog\craftmcp\tools;
 
-use Craft;
 use craft\base\FieldLayoutElement;
+use craft\fieldlayoutelements\entries\EntryTitleField;
 use craft\fieldlayoutelements\Heading;
 use craft\fieldlayoutelements\HorizontalRule;
 use craft\fieldlayoutelements\LineBreak;
@@ -11,8 +11,8 @@ use craft\fieldlayoutelements\Markdown;
 use craft\fieldlayoutelements\Template;
 use craft\fieldlayoutelements\Tip;
 use craft\models\FieldLayout;
-use craft\models\FieldLayoutTab;
 use craft\services\Fields;
+use happycog\craftmcp\actions\ManageEntryTitleField;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class AddUiElementToFieldLayout
@@ -20,6 +20,7 @@ class AddUiElementToFieldLayout
     public function __construct(
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
+        protected ManageEntryTitleField $manageEntryTitleField,
     ) {
     }
 
@@ -28,6 +29,9 @@ class AddUiElementToFieldLayout
      *
      * The target tab must already exist - use add_tab_to_field_layout to create tabs first.
      * Position can be before/after a specific element UID, or prepend/append to the tab's elements.
+     *
+     * When adding an EntryTitleField to an entry type's field layout, this will also update
+     * the entry type's hasTitleField property to true to keep the database and UI consistent.
      *
      * @param array<string, mixed> $position
      * @param array<string, mixed> $config
@@ -39,6 +43,7 @@ class AddUiElementToFieldLayout
 
         /**
          * Element type class name:
+         * - craft\fieldlayoutelements\entries\EntryTitleField
          * - craft\fieldlayoutelements\Heading
          * - craft\fieldlayoutelements\Tip
          * - craft\fieldlayoutelements\Markdown
@@ -63,6 +68,7 @@ class AddUiElementToFieldLayout
 
         /**
          * Element-specific configuration:
+         * - EntryTitleField: No config needed
          * - Heading: ['heading' => 'Text'] (required)
          * - Tip: ['tip' => 'Text'] (required), ['style' => 'tip'|'warning'], ['dismissible' => true|false]
          * - Markdown: ['content' => 'Text'] (required), ['displayInPane' => true|false]
@@ -76,6 +82,7 @@ class AddUiElementToFieldLayout
         throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
 
         $validTypes = [
+            EntryTitleField::class,
             Heading::class,
             Tip::class,
             Markdown::class,
@@ -157,8 +164,19 @@ class AddUiElementToFieldLayout
 
         throw_unless($this->fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
 
+        $notes = ['UI element added successfully'];
+        
+        // If we added an EntryTitleField, update the associated entry type
+        if ($newElement instanceof EntryTitleField) {
+            if ($this->manageEntryTitleField->updateEntryTypeHasTitleField($fieldLayout, true)) {
+                $notes[] = 'Entry type updated: hasTitleField set to true';
+            }
+        }
+        
+        $notes[] = 'Review the field layout in the control panel';
+
         return [
-            '_notes' => ['UI element added successfully', 'Review the field layout in the control panel'],
+            '_notes' => $notes,
             'fieldLayout' => $this->getFieldLayout->formatFieldLayout($fieldLayout),
             'addedElement' => [
                 'uid' => $newElement->uid,

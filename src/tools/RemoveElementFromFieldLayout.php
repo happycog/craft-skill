@@ -2,11 +2,11 @@
 
 namespace happycog\craftmcp\tools;
 
-use Craft;
 use craft\fieldlayoutelements\entries\EntryTitleField;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\services\Fields;
+use happycog\craftmcp\actions\ManageEntryTitleField;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class RemoveElementFromFieldLayout
@@ -14,6 +14,7 @@ class RemoveElementFromFieldLayout
     public function __construct(
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
+        protected ManageEntryTitleField $manageEntryTitleField,
     ) {
     }
 
@@ -66,23 +67,16 @@ class RemoveElementFromFieldLayout
         $fieldLayout->setTabs($newTabs);
         throw_unless($this->fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
 
+        $notes = ['Element removed successfully'];
+        
         // If we removed an EntryTitleField, update the associated entry type
-        $entryTypeUpdated = false;
         if ($removedElement instanceof EntryTitleField) {
-            $entryType = $this->findEntryTypeByFieldLayoutId($fieldLayoutId);
-            if ($entryType !== null) {
-                $entryType->hasTitleField = false;
-                $entriesService = Craft::$app->getEntries();
-                throw_unless($entriesService->saveEntryType($entryType), ModelSaveException::class, $entryType);
-                $entryTypeUpdated = true;
+            if ($this->manageEntryTitleField->updateEntryTypeHasTitleField($fieldLayout, false)) {
+                $notes[] = 'Entry type updated: hasTitleField set to false';
+                $notes[] = 'IMPORTANT: You must now set a titleFormat on this entry type using update_entry_type to define how titles are automatically generated. Example: titleFormat: "{dateCreated|date}" or titleFormat: "{fieldHandle}"';
             }
         }
-
-        $notes = ['Element removed successfully'];
-        if ($entryTypeUpdated) {
-            $notes[] = 'Entry type updated: hasTitleField set to false';
-            $notes[] = 'IMPORTANT: You must now set a titleFormat on this entry type using update_entry_type to define how titles are automatically generated. Example: titleFormat: "{dateCreated|date}" or titleFormat: "{fieldHandle}"';
-        }
+        
         $notes[] = 'Review the field layout in the control panel';
 
         return [
@@ -91,21 +85,5 @@ class RemoveElementFromFieldLayout
         ];
     }
 
-    /**
-     * Find an entry type that uses the given field layout ID.
-     *
-     * @return \craft\models\EntryType|null
-     */
-    private function findEntryTypeByFieldLayoutId(int $fieldLayoutId): ?\craft\models\EntryType
-    {
-        $entriesService = Craft::$app->getEntries();
 
-        foreach ($entriesService->getAllEntryTypes() as $entryType) {
-            if ($entryType->fieldLayoutId === $fieldLayoutId) {
-                return $entryType;
-            }
-        }
-
-        return null;
-    }
 }
