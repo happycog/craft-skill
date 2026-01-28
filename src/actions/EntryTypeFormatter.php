@@ -36,20 +36,20 @@ class EntryTypeFormatter
              'name' => $entryType->name,
              'handle' => $entryType->handle,
              'hasTitleField' => $entryType->hasTitleField,
-            'titleTranslationMethod' => $entryType->titleTranslationMethod,
-            'titleTranslationKeyFormat' => $entryType->titleTranslationKeyFormat,
-            'titleFormat' => $entryType->titleFormat,
-            'icon' => $entryType->icon,
-            'color' => $entryType->color?->value,
-            'showSlugField' => $entryType->showSlugField,
-            'showStatusField' => $entryType->showStatusField,
-            'fieldLayoutId' => $entryType->fieldLayoutId,
-            'uid' => $entryType->uid,
-            'fields' => $fields,
-            'editUrl' => $editUrl,
-        ], array_filter([
-            'usedBy' => $includeUsedBy ? $this->findEntryTypeUsage($entryType) : null,
-        ]));
+             'titleTranslationMethod' => $entryType->titleTranslationMethod,
+             'titleTranslationKeyFormat' => $entryType->titleTranslationKeyFormat,
+             'titleFormat' => $entryType->titleFormat,
+             'icon' => $entryType->icon,
+             'color' => $entryType->color?->value,
+             'showSlugField' => $entryType->showSlugField,
+             'showStatusField' => $entryType->showStatusField,
+             'fieldLayoutId' => $entryType->fieldLayoutId,
+             'uid' => $entryType->uid,
+             'fields' => $fields,
+             'editUrl' => $editUrl,
+         ], array_filter([
+             'usedBy' => $includeUsedBy ? $this->findEntryTypeUsage($entryType) : null,
+         ]));
     }
 
     /**
