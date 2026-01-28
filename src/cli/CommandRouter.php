@@ -126,6 +126,10 @@ class CommandRouter
     /**
      * Merge positional and flag arguments into a single array keyed by parameter name.
      *
+     * Flags that don't match any method parameter are collected into the
+     * 'attributeAndFieldData' parameter if it exists, allowing field data to be
+     * passed via simple flags like --title=foo instead of --attributeAndFieldData[title]=foo
+     *
      * @param array<int, \ReflectionParameter> $parameters
      * @param array<int, mixed> $positional
      * @param array<string, mixed> $flags
@@ -134,6 +138,12 @@ class CommandRouter
     private function mergeArguments(array $parameters, array $positional, array $flags): array
     {
         $merged = [];
+        $paramNames = [];
+
+        // Build a set of valid parameter names for quick lookup
+        foreach ($parameters as $param) {
+            $paramNames[$param->getName()] = true;
+        }
 
         // Map positional arguments to parameter names in order
         foreach ($positional as $index => $value) {
@@ -143,9 +153,23 @@ class CommandRouter
             }
         }
 
-        // Add all flag arguments
+        // Separate flags into direct parameters and field data
+        $fieldData = [];
         foreach ($flags as $key => $value) {
-            $merged[$key] = $value;
+            if (isset($paramNames[$key])) {
+                // This flag matches a method parameter directly
+                $merged[$key] = $value;
+            } else {
+                // This flag doesn't match a parameter, collect it as field data
+                $fieldData[$key] = $value;
+            }
+        }
+
+        // If there's unmatched field data and an attributeAndFieldData parameter exists,
+        // merge the field data into it
+        if (!empty($fieldData) && isset($paramNames['attributeAndFieldData'])) {
+            $existing = $merged['attributeAndFieldData'] ?? [];
+            $merged['attributeAndFieldData'] = array_merge($existing, $fieldData);
         }
 
         return $merged;
