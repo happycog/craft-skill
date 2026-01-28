@@ -20,7 +20,12 @@ declare(strict_types=1);
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 // Error handling setup - convert errors to exceptions for consistent handling
+// Note: error_reporting() still applies inside the error handler
 set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline): bool {
+    // Respect error_reporting() setting - only throw if error is not suppressed
+    if ((error_reporting() & $errno) === 0) {
+        return false; // Let default error handling occur
+    }
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
 
