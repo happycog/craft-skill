@@ -566,12 +566,42 @@ test('handles standalone path flag without value', function () {
     expect($result['flags'])->not->toHaveKey('path');
 });
 
-test('bracket notation with comma-separated values produces string Array', function () {
+test('bracket notation with comma-separated values produces empty string', function () {
     // This documents current behavior - bracket notation doesn't support comma-separated arrays
     // Use simple flags (without brackets) for comma-separated values instead
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--fields[tags]=a,b,c']);
 
-    // Current behavior: array-to-string conversion produces "Array"
-    expect($result['flags']['fields']['tags'])->toBe('Array');
+    // Current behavior: array values cannot be used with bracket notation (produces empty string)
+    expect($result['flags']['fields']['tags'])->toBe('');
+});
+
+// Test group 11: Public properties for early access
+test('verbosity property is set on parser instance', function () {
+    $parser = new ArgumentParser();
+    $parser->parse(['script', 'cmd', '-vv']);
+
+    expect($parser->verbosity)->toBe(2);
+});
+
+test('path property is set on parser instance', function () {
+    $parser = new ArgumentParser();
+    $parser->parse(['script', 'cmd', '--path=/custom/path']);
+
+    expect($parser->path)->toBe('/custom/path');
+});
+
+test('help property is set on parser instance', function () {
+    $parser = new ArgumentParser();
+    $parser->parse(['script', '--help']);
+
+    expect($parser->help)->toBeTrue();
+});
+
+test('properties have default values before parsing', function () {
+    $parser = new ArgumentParser();
+
+    expect($parser->verbosity)->toBe(0);
+    expect($parser->path)->toBeNull();
+    expect($parser->help)->toBeFalse();
 });

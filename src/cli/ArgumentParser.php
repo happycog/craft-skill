@@ -19,6 +19,24 @@ use function substr;
 class ArgumentParser
 {
     /**
+     * Verbosity level parsed from arguments.
+     * Set early in parse() so it's available even if parsing fails later.
+     */
+    public int $verbosity = 0;
+
+    /**
+     * Path parsed from arguments.
+     * Set early in parse() so it's available even if parsing fails later.
+     */
+    public ?string $path = null;
+
+    /**
+     * Help flag parsed from arguments.
+     * Set early in parse() so it's available even if parsing fails later.
+     */
+    public bool $help = false;
+
+    /**
      * Parse CLI arguments into structured data.
      *
      * Takes raw CLI arguments and parses them into a structured format suitable
@@ -38,42 +56,45 @@ class ArgumentParser
         $positional = [];
         /** @var array<string, mixed> $flags */
         $flags = [];
-        $verbosity = 0;
-        $path = null;
-        $help = false;
         $nextIsPath = false;
 
+        // First pass: extract verbosity, path, and help flags
+        // This ensures these values are available even if later parsing fails
         foreach ($args as $arg) {
-            // Handle value for --path when it was the previous argument
             if ($nextIsPath) {
-                $path = $arg;
+                $this->path = $arg;
                 $nextIsPath = false;
                 continue;
             }
 
-            // Handle help flags
             if ($arg === '--help' || $arg === '-h') {
-                $help = true;
+                $this->help = true;
+            } elseif ($arg === '-v') {
+                $this->verbosity = 1;
+            } elseif ($arg === '-vv') {
+                $this->verbosity = 2;
+            } elseif ($arg === '-vvv') {
+                $this->verbosity = 3;
+            } elseif (str_starts_with($arg, '--path=')) {
+                $this->path = substr($arg, 7);
+            } elseif ($arg === '--path') {
+                $nextIsPath = true;
+            }
+        }
+
+        // Second pass: parse command, positional arguments, and flags
+        $nextIsPath = false;
+        foreach ($args as $arg) {
+            // Skip --path value (already parsed)
+            if ($nextIsPath) {
+                $nextIsPath = false;
                 continue;
             }
 
-            // Handle verbosity flags
-            if ($arg === '-v') {
-                $verbosity = 1;
-                continue;
-            }
-            if ($arg === '-vv') {
-                $verbosity = 2;
-                continue;
-            }
-            if ($arg === '-vvv') {
-                $verbosity = 3;
-                continue;
-            }
-
-            // Handle --path flag separately (supports both --path=value and --path value)
-            if (str_starts_with($arg, '--path=')) {
-                $path = substr($arg, 7); // Remove '--path=' prefix
+            // Skip special flags (already parsed)
+            if ($arg === '--help' || $arg === '-h' ||
+                $arg === '-v' || $arg === '-vv' || $arg === '-vvv' ||
+                str_starts_with($arg, '--path=')) {
                 continue;
             }
             if ($arg === '--path') {
@@ -101,9 +122,9 @@ class ArgumentParser
             'command' => $command,
             'positional' => $positional,
             'flags' => $flags,
-            'verbosity' => $verbosity,
-            'path' => $path,
-            'help' => $help,
+            'verbosity' => $this->verbosity,
+            'path' => $this->path,
+            'help' => $this->help,
         ];
     }
 

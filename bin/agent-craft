@@ -21,32 +21,16 @@ set_error_handler(function (int $errno, string $errstr, string $errfile, int $er
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
 
-// Parse arguments early to get verbosity, path, and help flag
-$verbosity = 0;
-$craftPath = null;
-$helpRequested = false;
-$nextIsPath = false;
+// Load ArgumentParser early (before Craft autoloader) to parse verbosity and path
+require_once __DIR__ . '/../src/cli/ArgumentParser.php';
+$parser = new \happycog\craftmcp\cli\ArgumentParser();
 
-foreach ($argv as $arg) {
-    if ($nextIsPath) {
-        $craftPath = $arg;
-        $nextIsPath = false;
-        continue;
-    }
-
-    if ($arg === '-v') {
-        $verbosity = 1;
-    } elseif ($arg === '-vv') {
-        $verbosity = 2;
-    } elseif ($arg === '-vvv') {
-        $verbosity = 3;
-    } elseif (str_starts_with($arg, '--path=')) {
-        $craftPath = substr($arg, 7);
-    } elseif ($arg === '--path') {
-        $nextIsPath = true;
-    } elseif ($arg === '--help' || $arg === '-h') {
-        $helpRequested = true;
-    }
+// Parse arguments - verbosity/path/help are set on parser even if parsing fails
+try {
+    $parsed = $parser->parse($argv);
+} catch (Throwable $e) {
+    // Parser failed, but we still have verbosity from partial parsing
+    $parsed = null;
 }
 
 // Output error to stderr and exit with the given code
@@ -72,14 +56,19 @@ function exitWithError(int $code, string $message, ?Throwable $exception = null,
     exit($code);
 }
 
+// If parsing failed completely, exit now with what verbosity we have
+if ($parsed === null) {
+    exitWithError(2, 'Failed to parse arguments', $e ?? null, $parser->verbosity);
+}
+
 // Step 1: Locate Craft installation
 try {
     // Use provided path or current directory
-    $craftPath ??= getcwd();
+    $craftPath = $parser->path ?? getcwd();
 
     // Validate that the path exists
     if (!is_dir($craftPath)) {
-        exitWithError(3, "Craft path does not exist: {$craftPath}", null, $verbosity);
+        exitWithError(3, "Craft path does not exist: {$craftPath}", null, $parser->verbosity);
     }
 
     // Look for vendor/craftcms/cms directory (most reliable indicator)
@@ -91,12 +80,12 @@ try {
             3,
             "Craft CMS not found at {$craftPath}. Please ensure you're running from a Craft project directory or use --path=/path/to/craft",
             null,
-            $verbosity
+            $parser->verbosity
         );
     }
 
 } catch (Throwable $e) {
-    exitWithError(3, 'Failed to locate Craft installation', $e, $verbosity);
+    exitWithError(3, 'Failed to locate Craft installation', $e, $parser->verbosity);
 }
 
 // Step 2: Bootstrap Craft CMS
@@ -108,7 +97,7 @@ try {
     // Load Composer autoloader
     $autoloadPath = CRAFT_VENDOR_PATH . '/autoload.php';
     if (!file_exists($autoloadPath)) {
-        exitWithError(3, "Composer autoloader not found at {$autoloadPath}", null, $verbosity);
+        exitWithError(3, "Composer autoloader not found at {$autoloadPath}", null, $parser->verbosity);
     }
     require_once $autoloadPath;
 
@@ -133,37 +122,30 @@ try {
     // Load Craft's bootstrap
     $bootstrapPath = CRAFT_VENDOR_PATH . '/craftcms/cms/bootstrap/console.php';
     if (!file_exists($bootstrapPath)) {
-        exitWithError(3, "Craft bootstrap file not found at {$bootstrapPath}", null, $verbosity);
+        exitWithError(3, "Craft bootstrap file not found at {$bootstrapPath}", null, $parser->verbosity);
     }
 
     /** @var \craft\console\Application $app */
     $app = require $bootstrapPath;
 } catch (Throwable $e) {
-    exitWithError(3, 'Failed to bootstrap Craft CMS', $e, $verbosity);
+    exitWithError(3, 'Failed to bootstrap Craft CMS', $e, $parser->verbosity);
 }
 
-// Step 3: Parse CLI arguments
-try {
-    $parser = new \happycog\craftmcp\cli\ArgumentParser();
-    $parsed = $parser->parse($argv);
+// Step 3: Extract parsed arguments
+$command = $parsed['command'];
+$positional = $parsed['positional'];
+$flags = $parsed['flags'];
 
-    $command = $parsed['command'];
-    $positional = $parsed['positional'];
-    $flags = $parsed['flags'];
+// Handle help flag
+if ($parser->help) {
+    $helpGenerator = new \happycog\craftmcp\cli\HelpGenerator();
+    echo $helpGenerator->generate();
+    exit(0);
+}
 
-    // Handle help flag
-    if ($parsed['help'] || $helpRequested) {
-        $helpGenerator = new \happycog\craftmcp\cli\HelpGenerator();
-        echo $helpGenerator->generate();
-        exit(0);
-    }
-
-    // Validate that a command was provided
-    if ($command === null) {
-        exitWithError(2, 'No command specified. Usage: agent-craft <command> [arguments]', null, $verbosity);
-    }
-} catch (Throwable $e) {
-    exitWithError(2, 'Failed to parse arguments', $e, $verbosity);
+// Validate that a command was provided
+if ($command === null) {
+    exitWithError(2, 'No command specified. Usage: agent-craft <command> [arguments]', null, $parser->verbosity);
 }
 
 // Step 4: Route and execute command
@@ -184,21 +166,21 @@ try {
     exit(0);
 } catch (\InvalidArgumentException $e) {
     // Unknown command or invalid arguments
-    exitWithError(2, $e->getMessage(), $e, $verbosity);
+    exitWithError(2, $e->getMessage(), $e, $parser->verbosity);
 } catch (\CuyZ\Valinor\Mapper\MappingError $e) {
     // Valinor validation error
     $errors = [];
     foreach ($e->messages() as $message) {
         $errors[] = (string) $message;
     }
-    exitWithError(2, 'Validation failed: ' . implode('; ', $errors), $e, $verbosity);
+    exitWithError(2, 'Validation failed: ' . implode('; ', $errors), $e, $parser->verbosity);
 } catch (\happycog\craftmcp\exceptions\ValidationException $e) {
     // Custom validation exception
-    exitWithError(2, $e->getMessage(), $e, $verbosity);
+    exitWithError(2, $e->getMessage(), $e, $parser->verbosity);
 } catch (\happycog\craftmcp\exceptions\ModelSaveException $e) {
     // Craft model save/delete error
-    exitWithError(1, $e->getMessage(), $e, $verbosity);
+    exitWithError(1, $e->getMessage(), $e, $parser->verbosity);
 } catch (Throwable $e) {
     // General error during tool execution
-    exitWithError(1, 'Command execution failed: ' . $e->getMessage(), $e, $verbosity);
+    exitWithError(1, 'Command execution failed: ' . $e->getMessage(), $e, $parser->verbosity);
 }
