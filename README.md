@@ -73,7 +73,7 @@ git clone https://github.com/happycog/craft-skill.git
 cd craft-skill
 
 # Build the PHAR
-php -d phar.readonly=0 bin/create-phar.php
+php -d phar.readonly=0 bin/build-phar.php
 
 # Use the built PHAR
 ./agent-craft.phar --path=/path/to/craft sections/list
@@ -284,7 +284,7 @@ git clone https://github.com/happycog/craft-skill.git
 cd craft-skill
 
 # Build the PHAR
-php -d phar.readonly=0 bin/create-phar.php
+php -d phar.readonly=0 bin/build-phar.php
 
 # The built PHAR will be at agent-craft.phar (approx 200 KB)
 ```
@@ -363,7 +363,7 @@ agent-craft entries/create --fields[matrix]='[{"type":"block","data":{...}}]'
 
 ### Build Process
 
-The build script (`bin/create-phar.php`) creates a self-contained PHAR executable with:
+The build script (`bin/build-phar.php`) creates a self-contained PHAR executable with:
 
 1. **Plugin Source Code**: All files from `src/` directory
 2. **CLI Entrypoint**: The `bin/agent-craft` script
@@ -383,44 +383,26 @@ This architecture keeps the PHAR small (~200 KB) while ensuring it works with an
 cd /path/to/craft-skill
 
 # Build the PHAR
-php -d phar.readonly=0 bin/create-phar.php
+php -d phar.readonly=0 bin/build-phar.php
 
 # Output: agent-craft.phar in project root
 ```
 
 ### Build Output
 
-The build script provides detailed progress information:
+The build script provides progress information:
 
 ```
-🔨 Building agent-craft PHAR
-==================================================
+Building PHAR: /path/to/agent-craft.phar
+  Added: autoload.php
+  Added: 57 files from src/
+  Added: 150 files from vendor/cuyz/valinor/
+  Added: bin/agent-craft.php
 
-1️⃣  Checking prerequisites...
-   ✅ Phar extension available
-   ✅ phar.readonly is disabled
-   ✅ All required files present
-
-2️⃣  Cleaning up old PHAR...
-   ℹ️  No existing PHAR to clean up
-
-3️⃣  Creating PHAR archive...
-   📦 Adding files...
-      ✓ bin/agent-craft
-      ⏳ Adding src/ directory...
-      ✓ src/ directory (57 files)
-      ✓ Custom autoloader
-   ✅ Created PHAR stub
-   ✅ PHAR created successfully
-
-4️⃣  Verification & Summary
-   ✅ PHAR file exists: /path/to/agent-craft.phar
-   📊 PHAR size: 0.20 MB
-   🔒 Permissions: 0755
-   ✅ PHAR is valid and can be loaded
-
-==================================================
-✅ Build complete!
+PHAR built successfully!
+  Output: /path/to/agent-craft.phar
+  Size: 200 KB
+  Files: 209 total
 ```
 
 ### Distribution

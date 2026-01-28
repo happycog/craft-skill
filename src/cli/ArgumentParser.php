@@ -159,12 +159,14 @@ class ArgumentParser
     private function parseBracketNotation(string $key, mixed $value, array &$flags): void
     {
         // Use parse_str to handle bracket notation
-        /** @var array<string, mixed> $parsed */
         $parsed = [];
-        parse_str($key . '=' . urlencode((string) $value), $parsed);
+        $valueStr = is_scalar($value) || $value === null ? (string) $value : '';
+        parse_str($key . '=' . urlencode($valueStr), $parsed);
 
         // Merge the parsed structure into flags
-        $flags = $this->mergeArrays($flags, $parsed);
+        /** @var array<string, mixed> $parsedTyped */
+        $parsedTyped = $parsed;
+        $flags = $this->mergeArrays($flags, $parsedTyped);
     }
 
     /**
