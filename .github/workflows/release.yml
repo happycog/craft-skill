@@ -38,7 +38,7 @@ jobs:
       - name: Upload PHAR as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: agent-craft-phar
+          name: agent-craft
           path: agent-craft.phar
 
       - name: Upload PHAR to release
