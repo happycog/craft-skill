@@ -34,7 +34,7 @@ try {
 }
 
 // Output error to stderr and exit with the given code
-function exitWithError(int $code, string $message, ?Throwable $exception = null, int $verbosity = 0): never
+function exitWithError(int $code, string|array $message, ?Throwable $exception = null, int $verbosity = 0): never
 {
     $output = ['error' => $message];
 
@@ -168,12 +168,32 @@ try {
     // Unknown command or invalid arguments
     exitWithError(2, $e->getMessage(), $e, $parser->verbosity);
 } catch (\CuyZ\Valinor\Mapper\MappingError $e) {
-    // Valinor validation error
-    $errors = [];
-    foreach ($e->messages() as $message) {
-        $errors[] = (string) $message;
-    }
-    exitWithError(2, 'Validation failed: ' . implode('; ', $errors), $e, $parser->verbosity);
+     // Valinor validation error - format with parameter names
+     $errors = [];
+     foreach ($e->messages() as $message) {
+         $paramName = $message->name();
+         $msgText = (string) $message;
+         
+         // Only include messages with parameter names (skip root-level unexpected keys)
+         if (!empty($paramName)) {
+             $errors[] = [
+                 'parameter' => $paramName,
+                 'message' => $msgText,
+             ];
+         }
+     }
+     
+     // Fall back to original messages if none have names
+     if (empty($errors)) {
+         foreach ($e->messages() as $message) {
+             $errors[] = [
+                 'parameter' => $message->name() ?: 'root',
+                 'message' => (string) $message,
+             ];
+         }
+     }
+     
+     exitWithError(2, ['validation_errors' => $errors], $e, $parser->verbosity);
 } catch (\happycog\craftmcp\exceptions\ValidationException $e) {
     // Custom validation exception
     exitWithError(2, $e->getMessage(), $e, $parser->verbosity);

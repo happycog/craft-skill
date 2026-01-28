@@ -184,6 +184,7 @@ test('invalid command returns exit code 2', function () {
     $error = ($this->parseJsonOutput)($result['stderr']);
     expect($error)->toBeArray();
     expect($error)->toHaveKey('error');
+    expect($error['error'])->toBeString();
     expect($error['error'])->toContain('Unknown command');
 });
 
@@ -197,7 +198,10 @@ test('missing required arguments returns exit code 2', function () {
     $error = ($this->parseJsonOutput)($result['stderr']);
     expect($error)->toBeArray();
     expect($error)->toHaveKey('error');
-    expect($error['error'])->toContain('Validation failed');
+    expect($error['error'])->toBeArray();
+    expect($error['error'])->toHaveKey('validation_errors');
+    expect($error['error']['validation_errors'])->toBeArray();
+    expect(count($error['error']['validation_errors']))->toBeGreaterThan(0);
 });
 
 test('verbosity flag -v includes exception message', function () {
@@ -492,5 +496,8 @@ test('malformed validation error returns exit code 2', function () {
     $error = ($this->parseJsonOutput)($result['stderr']);
     expect($error)->toBeArray();
     expect($error)->toHaveKey('error');
-    expect($error['error'])->toContain('Validation failed');
+    expect($error['error'])->toBeArray();
+    expect($error['error'])->toHaveKey('validation_errors');
+    expect($error['error']['validation_errors'])->toBeArray();
+    expect(count($error['error']['validation_errors']))->toBeGreaterThan(0);
 });
