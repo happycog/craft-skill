@@ -286,14 +286,14 @@ cd craft-skill
 # Build the PHAR
 php -d phar.readonly=0 bin/build-phar.php
 
-# The built PHAR will be at agent-craft.phar (approx 200 KB)
+# The built PHAR will be at agent-craft.phar (under 1 MB)
 ```
 
 ## How It Works
 
 The `agent-craft` PHAR is a self-contained CLI tool that:
 
-1. Contains all plugin source code (~200 KB)
+1. Contains all plugin source code (under 1 MB)
 2. Locates your Craft installation (via `--path` or current directory)
 3. Bootstraps Craft and Yii2 frameworks from that installation
 4. Parses CLI arguments and maps them to tool methods
@@ -374,7 +374,7 @@ The PHAR does NOT include Craft CMS or vendor dependencies. Instead, it:
 - Bootstraps Craft CMS from the target installation (specified via --path or current directory)
 - Uses Craft's autoloader for all dependencies (Valinor, Craft core, etc.)
 
-This architecture keeps the PHAR small (~200 KB) while ensuring it works with any Craft installation.
+This architecture keeps the PHAR small (under 1 MB) while ensuring it works with any Craft installation.
 
 ### Build Command
 
@@ -395,14 +395,14 @@ The build script provides progress information:
 ```
 Building PHAR: /path/to/agent-craft.phar
   Added: autoload.php
-  Added: 57 files from src/
-  Added: 150 files from vendor/cuyz/valinor/
+  Added: 58 files from src/
+  Added: 437 files from vendor/cuyz/valinor/
   Added: bin/agent-craft.php
 
 PHAR built successfully!
   Output: /path/to/agent-craft.phar
-  Size: 200 KB
-  Files: 209 total
+  Size: 915 KB
+  Files: 497 total
 ```
 
 ### Distribution
