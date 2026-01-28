@@ -64,7 +64,7 @@ class FieldFormatter
 
                 // Get field UID without hitting the database
                 $fieldUid = $el->getFieldUid();
-                if ($fieldUid === null) {
+                if (!$fieldUid) {
                     continue;
                 }
 

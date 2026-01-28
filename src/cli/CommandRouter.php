@@ -169,6 +169,9 @@ class CommandRouter
         // merge the field data into it
         if (!empty($fieldData) && isset($paramNames['attributeAndFieldData'])) {
             $existing = $merged['attributeAndFieldData'] ?? [];
+            if (!is_array($existing)) {
+                $existing = [];
+            }
             $merged['attributeAndFieldData'] = array_merge($existing, $fieldData);
         }
 
