@@ -20,6 +20,9 @@
             "email": "mark@markhuot.com"
         }
     ],
+    "bin": [
+        "bin/agent-craft"
+    ],
     "extra": {
         "name": "AI Skill",
         "description": "An AI skill for interacting with Craft CMS",

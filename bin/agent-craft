@@ -25,8 +25,15 @@ set_error_handler(function (int $errno, string $errstr, string $errfile, int $er
 $verbosity = 0;
 $craftPath = null;
 $helpRequested = false;
+$nextIsPath = false;
 
 foreach ($argv as $arg) {
+    if ($nextIsPath) {
+        $craftPath = $arg;
+        $nextIsPath = false;
+        continue;
+    }
+
     if ($arg === '-v') {
         $verbosity = 1;
     } elseif ($arg === '-vv') {
@@ -35,6 +42,8 @@ foreach ($argv as $arg) {
         $verbosity = 3;
     } elseif (str_starts_with($arg, '--path=')) {
         $craftPath = substr($arg, 7);
+    } elseif ($arg === '--path') {
+        $nextIsPath = true;
     } elseif ($arg === '--help' || $arg === '-h') {
         $helpRequested = true;
     }
