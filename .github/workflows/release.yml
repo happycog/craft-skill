@@ -1,0 +1,63 @@
+name: Build and Release PHAR
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          ini-values: phar.readonly=0
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: composer install --no-dev --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Build PHAR
+        run: php -d phar.readonly=0 bin/build-phar.php agent-craft.phar
+
+      - name: Verify PHAR
+        run: |
+          php agent-craft.phar --help
+          echo "PHAR size: $(du -h agent-craft.phar | cut -f1)"
+
+      - name: Upload PHAR as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-craft-phar
+          path: agent-craft.phar
+
+      - name: Upload PHAR to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: agent-craft.phar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload PHAR to tag release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: agent-craft.phar
+          tag_name: ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
