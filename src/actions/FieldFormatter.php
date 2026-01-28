@@ -53,7 +53,7 @@ class FieldFormatter
      *
      * @return array<int, array<string, mixed>>
      */
-    public function formatFieldsForLayout(FieldLayout $layout): array
+    public function formatFieldsForLayout(FieldLayout $layout, int $depth = 0): array
     {
         $results = [];
         foreach ($layout->getTabs() as $tab) {
@@ -74,7 +74,7 @@ class FieldFormatter
                     continue;
                 }
 
-                $results[] = $this->formatField($field, $el, $tab);
+                $results[] = $this->formatField($field, $el, $tab, $depth);
             }
         }
         return $results;
@@ -87,7 +87,7 @@ class FieldFormatter
      * @param FieldLayoutTab|null $tab
      * @return array<string, mixed>
      */
-    public function formatField(FieldInterface $field, ?CustomFieldElement $layoutEl = null, ?FieldLayoutTab $tab = null): array
+    public function formatField(FieldInterface $field, ?CustomFieldElement $layoutEl = null, ?FieldLayoutTab $tab = null, int $depth = 0): array
     {
         $fieldData = [
             'id' => $field->id,
@@ -101,20 +101,24 @@ class FieldFormatter
             'tab' => $tab ? $tab->name : null,
         ];
 
-        // Nested fields (Matrix)
+        // Nested fields (Matrix) - but only up to 3 levels deep
         if ($field instanceof Matrix) {
-            $blockTypes = [];
-            foreach ($field->getEntryTypes() as $blockType) {
-                $blockLayout = $blockType->getFieldLayout();
-                $blockFields = $this->formatFieldsForLayout($blockLayout);
-                $blockTypes[] = [
-                    'id' => $blockType->id,
-                    'handle' => $blockType->handle,
-                    'name' => $blockType->name,
-                    'fields' => $blockFields,
-                ];
+            if ($depth >= 3) {
+                $fieldData['blockTypes'] = 'Maximum nesting depth reached';
+            } else {
+                $blockTypes = [];
+                foreach ($field->getEntryTypes() as $blockType) {
+                    $blockLayout = $blockType->getFieldLayout();
+                    $blockFields = $this->formatFieldsForLayout($blockLayout, $depth + 1);
+                    $blockTypes[] = [
+                        'id' => $blockType->id,
+                        'handle' => $blockType->handle,
+                        'name' => $blockType->name,
+                        'fields' => $blockFields,
+                    ];
+                }
+                $fieldData['blockTypes'] = $blockTypes;
             }
-            $fieldData['blockTypes'] = $blockTypes;
         }
 
         return $fieldData;
