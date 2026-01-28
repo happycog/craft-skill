@@ -480,6 +480,7 @@ Main executable script that bootstraps Craft and executes commands:
 - **Shebang**: `#!/usr/bin/env php` for direct execution
 - **Craft Detection**: Looks for `vendor/craftcms/cms` at `--path` or current directory
 - **Bootstrap Process**: Loads autoloader, defines constants, loads .env, bootstraps console
+- **Webroot Alias Fix**: Mocks `$_SERVER['SCRIPT_FILENAME']` to point to the target Craft installation's `craft` script, ensuring `@webroot` alias resolves correctly from the target installation (not PHAR location)
 - **Argument Flow**: Parse → Route → Execute → Output
 - **Exit Codes**:
   - `0`: Success
@@ -495,6 +496,8 @@ Main executable script that bootstraps Craft and executes commands:
   - `-vvv`: + File, line, and code details
 
 **Development Mode**: Script detects if running from plugin directory and adjusts paths accordingly.
+
+**Script Filename Mocking**: When bootstrapping Craft from a PHAR or non-standard location, the script sets `$_SERVER['SCRIPT_FILENAME']` to the target Craft installation's `craft` executable (if it exists). This allows Craft's console Request class to correctly auto-detect the webroot by looking for common web directories (`web`, `public`, `public_html`, `html`) relative to the `craft` script location, rather than using the PHAR file location.
 
 #### Testing
 Comprehensive test suite with 83 tests:

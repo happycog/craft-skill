@@ -102,6 +102,14 @@ try {
     define('CRAFT_BASE_PATH', $craftPath);
     define('CRAFT_VENDOR_PATH', $vendorPath);
 
+    // Mock SCRIPT_FILENAME to point to the target Craft installation's craft script
+    // This allows Craft's console Request->getScriptFile() to resolve @webroot correctly
+    // from the target installation's location, not the PHAR location
+    $craftScript = $craftPath . '/craft';
+    if (file_exists($craftScript)) {
+        $_SERVER['SCRIPT_FILENAME'] = $craftScript;
+    }
+
     // Load Composer autoloader
     $autoloadPath = CRAFT_VENDOR_PATH . '/autoload.php';
     if (!file_exists($autoloadPath)) {
