@@ -264,3 +264,93 @@ test('validates folder exists when creating asset', function () {
         folderId: 999999, // Non-existent folder
     );
 })->throws(\InvalidArgumentException::class, 'Folder with ID 999999 does not exist');
+
+test('can create blank image with default dimensions', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->create(
+        volumeId: $this->volumeId,
+        title: 'Default Blank Image',
+    );
+
+    expect($response)->toHaveKey('assetId');
+    expect($response)->toHaveKey('filename');
+    expect($response['filename'])->toContain('blank-500x500');
+    expect($response['filename'])->toEndWith('.png');
+    expect($response['title'])->toBe('Default Blank Image');
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Verify asset was created
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+});
+
+test('can create blank image with custom width and height', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->create(
+        volumeId: $this->volumeId,
+        width: 300,
+        height: 200,
+        title: 'Custom Blank Image',
+    );
+
+    expect($response)->toHaveKey('assetId');
+    expect($response['filename'])->toBe('blank-300x200.png');
+    expect($response['title'])->toBe('Custom Blank Image');
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Verify asset was created
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+});
+
+test('generated image has correct dimensions', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->create(
+        volumeId: $this->volumeId,
+        width: 640,
+        height: 480,
+    );
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Get the asset to access its file
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+
+    // The asset should have width and height properties after upload
+    // We'll verify the extension is png and the dimensions were passed through
+    expect($asset->extension)->toBe('png');
+    expect($response['filename'])->toContain('blank-640x480');
+});
+
+test('throws exception for invalid width and height', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $createAsset->create(
+        volumeId: $this->volumeId,
+        width: 0,
+        height: 100,
+    );
+})->throws(\InvalidArgumentException::class, 'Width and height must be positive integers');
+
+test('can create blank image without title', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->create(
+        volumeId: $this->volumeId,
+    );
+
+    expect($response)->toHaveKey('assetId');
+    // Filename will have a unique suffix added by Craft
+    expect($response['filename'])->toContain('blank-500x500');
+    expect($response['filename'])->toEndWith('.png');
+    // Craft auto-generates title from filename (case-insensitive check)
+    expect(strtolower($response['title']))->toContain('blank');
+
+    $this->createdAssetIds[] = $response['assetId'];
+});

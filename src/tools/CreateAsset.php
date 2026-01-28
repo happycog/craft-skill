@@ -11,16 +11,22 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 class CreateAsset
 {
     /**
-     * Upload a file and create an asset in Craft CMS.
+     * Upload a file and create an asset in Craft CMS, or generate a blank image.
      *
+     * **File Upload Mode:**
      * This tool accepts either a local file path (e.g., file:///path/to/file.jpg) or a remote URL
      * (e.g., https://example.com/image.jpg) and uploads it to a Craft asset volume.
      *
-     * **File Handling:**
      * - For local files: Provide the full file:// URL or absolute path
      * - For remote files: Provide the http:// or https:// URL
      * - The file will be downloaded to a temporary directory within the project before upload
      * - Supported file types depend on the target volume's configuration
+     *
+     * **Image Generation Mode:**
+     * If fileUrl is not provided, generates a blank grey image (500x500px by default).
+     * Optionally specify width and height for custom dimensions.
+     * - Default dimensions: 500x500px
+     * - Image color: #cccccc (light grey)
      *
      * **Volume Selection:**
      * - Use volumeId to specify the target volume
@@ -36,17 +42,23 @@ class CreateAsset
      * @return array<string, mixed>
      */
     public function create(
-        /** The file URL to upload - either local file:// path or remote http(s):// URL */
-        string $fileUrl,
-
         /** The ID of the asset volume to upload to */
         int $volumeId,
 
-        /** Optional title for the asset - defaults to filename if not provided */
+        /** Optional file URL to upload - either local file:// path or remote http(s):// URL. Omit to generate a blank image */
+        ?string $fileUrl = null,
+
+        /** Optional title for the asset - defaults to filename if not provided or generated image name */
         ?string $title = null,
 
         /** Optional folder ID within the volume - defaults to volume root */
         ?int $folderId = null,
+
+        /** Optional width for generated image in pixels (default: 500) */
+        ?int $width = null,
+
+        /** Optional height for generated image in pixels (default: 500) */
+        ?int $height = null,
     ): array
     {
         $assetsService = Craft::$app->getAssets();
@@ -65,18 +77,27 @@ class CreateAsset
             throw_unless($folder, "Could not find root folder for volume {$volumeId}");
         }
 
-        // Download file to temporary location within project
+        // Create temporary directory
         $tempDir = Craft::$app->getPath()->getTempPath() . '/asset-uploads';
         FileHelper::createDirectory($tempDir);
 
-        $tempFilePath = $this->downloadFile($fileUrl, $tempDir);
-
-        try {
+        // Generate file based on whether fileUrl is provided
+        if ($fileUrl === null) {
+            // Generate blank image
+            $width ??= 500;
+            $height ??= 500;
+            $tempFilePath = $this->generateBlankImage($width, $height, $tempDir);
+            $filename = "blank-{$width}x{$height}.png";
+        } else {
+            // Download file from URL or local path
+            $tempFilePath = $this->downloadFile($fileUrl, $tempDir);
             // Extract filename from URL or path
             $urlPath = parse_url($fileUrl, PHP_URL_PATH);
             $originalFilename = basename($urlPath ?: 'upload');
             $filename = AssetsHelper::prepareAssetName($originalFilename);
+        }
 
+        try {
             // Create the asset element
             $asset = new Asset();
             $asset->tempFilePath = $tempFilePath;
@@ -117,6 +138,51 @@ class CreateAsset
                 FileHelper::unlink($tempFilePath);
             }
         }
+    }
+
+    /**
+     * Generate a blank grey PNG image with specified dimensions.
+     *
+     * @param int $width The width of the image in pixels
+     * @param int $height The height of the image in pixels
+     * @param string $tempDir The temporary directory to store the image
+     * @return string The path to the generated image file
+     * @throws \RuntimeException
+     */
+    private function generateBlankImage(int $width, int $height, string $tempDir): string
+    {
+        // Validate dimensions
+        throw_if($width <= 0 || $height <= 0, \InvalidArgumentException::class, 'Width and height must be positive integers');
+
+        // Create a blank image with specified dimensions
+        $image = imagecreatetruecolor($width, $height);
+        throw_unless($image, \RuntimeException::class, 'Failed to create image resource');
+
+        // Fill with grey color (#cccccc)
+        $greyColor = imagecolorallocate($image, 204, 204, 204);
+        throw_unless($greyColor !== false, \RuntimeException::class, 'Failed to allocate color');
+
+        // Fill the entire image with the grey color
+        throw_unless(
+            imagefill($image, 0, 0, $greyColor),
+            \RuntimeException::class,
+            'Failed to fill image with color'
+        );
+
+        // Generate temporary file path
+        $tempFilePath = $tempDir . '/' . uniqid('generated_') . '.png';
+
+        // Save the image as PNG
+        throw_unless(
+            imagepng($image, $tempFilePath),
+            \RuntimeException::class,
+            "Failed to save image to {$tempFilePath}"
+        );
+
+        // Free up memory
+        imagedestroy($image);
+
+        return $tempFilePath;
     }
 
     /**
