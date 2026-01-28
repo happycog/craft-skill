@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace happycog\craftmcp\actions;
 
+use Craft;
 use craft\base\FieldInterface;
-use craft\errors\FieldNotFoundException;
 use craft\fields\Matrix;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
@@ -13,6 +13,41 @@ use craft\fieldlayoutelements\CustomField as CustomFieldElement;
 
 class FieldFormatter
 {
+    /**
+     * Static cache of all fields indexed by UID for performance.
+     *
+     * @var array<string, FieldInterface>|null
+     */
+    private static ?array $fieldCache = null;
+
+    /**
+     * Initialize the static field cache by loading all fields once.
+     */
+    private function ensureFieldCache(): void
+    {
+        if (self::$fieldCache !== null) {
+            return;
+        }
+
+        self::$fieldCache = [];
+        $allFields = Craft::$app->getFields()->getAllFields('global');
+
+        foreach ($allFields as $field) {
+            if ($field->uid !== null) {
+                self::$fieldCache[$field->uid] = $field;
+            }
+        }
+    }
+
+    /**
+     * Get a field by UID from the static cache.
+     */
+    private function getFieldByUid(string $fieldUid): ?FieldInterface
+    {
+        $this->ensureFieldCache();
+        return self::$fieldCache[$fieldUid] ?? null;
+    }
+
     /**
      * Format fields for a given FieldLayout preserving order, tabs, and required/width context.
      *
@@ -26,20 +61,20 @@ class FieldFormatter
                 if (!$el instanceof CustomFieldElement) {
                     continue;
                 }
-                try {
-                    $field = $el->getField();
-                    if (!$field instanceof FieldInterface) {
-                        continue;
-                    }
-                    $results[] = $this->formatField($field, $el, $tab);
-                }
 
-                // If Craft (internally) can't find the field then we can't possibly format it
-                // so we'll just continue on. It's probably an old field in a layout that needs
-                // to be re-saved.
-                catch (FieldNotFoundException $e) {
+                // Get field UID without hitting the database
+                $fieldUid = $el->getFieldUid();
+                if ($fieldUid === null) {
                     continue;
                 }
+
+                // Retrieve field from static cache (no database query)
+                $field = $this->getFieldByUid($fieldUid);
+                if (!$field instanceof FieldInterface) {
+                    continue;
+                }
+
+                $results[] = $this->formatField($field, $el, $tab);
             }
         }
         return $results;
