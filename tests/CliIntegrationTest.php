@@ -187,16 +187,17 @@ test('invalid command returns exit code 2', function () {
     expect($error['error'])->toContain('Unknown command');
 });
 
-test('missing required arguments returns exit code 1', function () {
+test('missing required arguments returns exit code 2', function () {
     // Missing sectionId and entryTypeId (required parameters)
     $result = ($this->execCli)('entries/create --attributeAndFieldData[title]="Missing IDs"', true);
-    
-    // Currently returns exit code 1 due to Valinor error handling issue
-    expect($result['exitCode'])->toBe(1);
+
+    expect($result['exitCode'])->toBe(2);
     expect($result['stderr'])->not->toBeEmpty();
-    
-    // Error output is plain text, not JSON due to bug in bin/agent-craft
-    expect($result['stderr'])->toContain('Error');
+
+    $error = ($this->parseJsonOutput)($result['stderr']);
+    expect($error)->toBeArray();
+    expect($error)->toHaveKey('error');
+    expect($error['error'])->toContain('Validation failed');
 });
 
 test('verbosity flag -v includes exception message', function () {
@@ -243,30 +244,32 @@ test('verbosity flag -vvv includes file and line information', function () {
 
 test('JSON output is valid and parseable for success', function () {
     $result = ($this->execCli)('sections/list', true);
-    
+
     expect($result['exitCode'])->toBe(0);
-    
+
     // Should be valid JSON
     $data = ($this->parseJsonOutput)($result['stdout']);
     expect($data)->not->toBeNull();
     expect($data)->toBeArray();
-    
-    // Should be pretty-printed (contains newlines)
-    expect($result['stdout'])->toContain("\n");
+
+    // Should be compressed (single line, no internal newlines)
+    $jsonOnly = trim($result['stdout']);
+    expect($jsonOnly)->not->toContain("\n");
 });
 
 test('JSON output is valid and parseable for errors', function () {
     $result = ($this->execCli)('invalid/command', true);
-    
+
     expect($result['exitCode'])->toBe(2);
-    
+
     // Should be valid JSON
     $error = ($this->parseJsonOutput)($result['stderr']);
     expect($error)->not->toBeNull();
     expect($error)->toBeArray();
-    
-    // Should be pretty-printed (contains newlines)
-    expect($result['stderr'])->toContain("\n");
+
+    // Should be compressed (single line, no internal newlines)
+    $jsonOnly = trim($result['stderr']);
+    expect($jsonOnly)->not->toContain("\n");
 });
 
 test('entries/update command with positional and flag arguments', function () {
@@ -476,19 +479,18 @@ test('command execution with combined output captures both stdout and stderr', f
     expect($data)->toBeArray();
 });
 
-test('malformed validation error returns exit code 1', function () {
+test('malformed validation error returns exit code 2', function () {
     // Try to create entry with invalid sectionId type (string instead of int)
     $result = ($this->execCli)(
         'entries/create --sectionId=invalid --entryTypeId=1 --attributeAndFieldData[title]="Test"',
         true
     );
-    
-    // Currently returns exit code 1 due to Valinor error handling issue
-    // TODO: This should be exit code 2 for validation errors
-    expect($result['exitCode'])->toBe(1);
+
+    expect($result['exitCode'])->toBe(2);
     expect($result['stderr'])->not->toBeEmpty();
-    
-    // Error output is plain text, not JSON due to bug in bin/agent-craft
-    // Just verify we got an error
-    expect($result['stderr'])->toContain('Error');
+
+    $error = ($this->parseJsonOutput)($result['stderr']);
+    expect($error)->toBeArray();
+    expect($error)->toHaveKey('error');
+    expect($error['error'])->toContain('Validation failed');
 });
