@@ -550,3 +550,37 @@ test('unknown command --help shows general help as fallback', function () {
     expect($result['output'])->toContain('Agent Craft CLI');
     expect($result['output'])->toContain('Available commands:');
 });
+
+test('space-separated flag syntax works correctly', function () {
+    // Test with space-separated syntax: --type single
+    $result = ($this->execCli)(
+        "entries/create --sectionId {$this->testSectionId} --entryTypeId {$this->testEntryTypeId} --attributeAndFieldData[title] \"Space Separated Title\"",
+        true
+    );
+    
+    expect($result['exitCode'])->toBe(0);
+    expect($result['stderr'])->toBeEmpty();
+    
+    $data = ($this->parseJsonOutput)($result['stdout']);
+    expect($data)->toHaveKey('entryId');
+    expect($data['title'])->toBe('Space Separated Title');
+    
+    $this->createdEntryIds[] = $data['entryId'];
+});
+
+test('mixed equals and space-separated flag syntax works correctly', function () {
+    // Test with mixed syntax: --sectionId=X --title "Y"
+    $result = ($this->execCli)(
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId {$this->testEntryTypeId} --attributeAndFieldData[title] \"Mixed Syntax Title\"",
+        true
+    );
+    
+    expect($result['exitCode'])->toBe(0);
+    expect($result['stderr'])->toBeEmpty();
+    
+    $data = ($this->parseJsonOutput)($result['stdout']);
+    expect($data)->toHaveKey('entryId');
+    expect($data['title'])->toBe('Mixed Syntax Title');
+    
+    $this->createdEntryIds[] = $data['entryId'];
+});

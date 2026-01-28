@@ -84,10 +84,26 @@ class ArgumentParser
 
         // Second pass: parse command, positional arguments, and flags
         $nextIsPath = false;
-        foreach ($args as $arg) {
+        $nextIsFlagValue = null;
+        $i = 0;
+        $argCount = count($args);
+        
+        while ($i < $argCount) {
+            $arg = $args[$i];
+            
+            // Handle flag value from previous iteration
+            if ($nextIsFlagValue !== null) {
+                // This argument is the value for the previous flag
+                $this->parseFlagWithValue($nextIsFlagValue, $arg, $flags);
+                $nextIsFlagValue = null;
+                $i++;
+                continue;
+            }
+            
             // Skip --path value (already parsed)
             if ($nextIsPath) {
                 $nextIsPath = false;
+                $i++;
                 continue;
             }
 
@@ -95,16 +111,34 @@ class ArgumentParser
             if ($arg === '--help' || $arg === '-h' ||
                 $arg === '-v' || $arg === '-vv' || $arg === '-vvv' ||
                 str_starts_with($arg, '--path=')) {
+                $i++;
                 continue;
             }
             if ($arg === '--path') {
                 $nextIsPath = true;
+                $i++;
                 continue;
             }
 
             // Handle flag arguments (--key=value or --key)
             if (str_starts_with($arg, '--')) {
-                $this->parseFlag($arg, $flags);
+                // Check if this has an equals sign
+                if (str_contains($arg, '=')) {
+                    // Has equals sign, parse as single argument
+                    $this->parseFlag($arg, $flags);
+                } else {
+                    // No equals sign, check if next arg is a value or another flag
+                    $nextArg = ($i + 1 < $argCount) ? $args[$i + 1] : null;
+                    
+                    if ($nextArg === null || str_starts_with($nextArg, '--') || str_starts_with($nextArg, '-')) {
+                        // Next arg is a flag or doesn't exist, treat as boolean
+                        $this->parseFlag($arg, $flags);
+                    } else {
+                        // Next arg is the value for this flag
+                        $nextIsFlagValue = substr($arg, 2); // Remove '--' prefix
+                    }
+                }
+                $i++;
                 continue;
             }
 
@@ -116,6 +150,8 @@ class ArgumentParser
                 // Subsequent positional arguments
                 $positional[] = $this->parseValue($arg);
             }
+            
+            $i++;
         }
 
         return [
@@ -156,6 +192,29 @@ class ArgumentParser
         $key = substr($arg, 0, $equalsPos);
         $value = substr($arg, $equalsPos + 1);
 
+        // Parse the value
+        $parsedValue = $this->parseValue($value);
+
+        // Handle bracket notation (e.g., fields[body]=text or items[]=1)
+        if (str_contains($key, '[')) {
+            $this->parseBracketNotation($key, $parsedValue, $flags);
+        } else {
+            // Simple key=value
+            $flags[$key] = $parsedValue;
+        }
+    }
+
+    /**
+     * Parse a flag with a separate value argument.
+     *
+     * This handles space-separated flag syntax like: --key value
+     *
+     * @param string $key The flag key (without '--' prefix)
+     * @param string $value The value argument
+     * @param array<string, mixed> $flags The flags array to modify (passed by reference)
+     */
+    private function parseFlagWithValue(string $key, string $value, array &$flags): void
+    {
         // Parse the value
         $parsedValue = $this->parseValue($value);
 

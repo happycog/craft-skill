@@ -558,6 +558,107 @@ test('handles multiple equals signs in value', function () {
     expect($result['flags']['equation'])->toBe('x=y=z');
 });
 
+// Test group 12: Space-separated flag syntax
+test('parses space-separated flag with string value', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--type', 'single']);
+
+    expect($result['flags']['type'])->toBe('single');
+});
+
+test('parses space-separated flag with numeric value', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--id', '123']);
+
+    expect($result['flags']['id'])->toBe(123);
+});
+
+test('parses space-separated flag with boolean string value', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--enabled', 'true']);
+
+    expect($result['flags']['enabled'])->toBeTrue();
+});
+
+test('parses multiple space-separated flags', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--type', 'single', '--name', 'Test']);
+
+    expect($result['flags']['type'])->toBe('single');
+    expect($result['flags']['name'])->toBe('Test');
+});
+
+test('parses mixed equals and space-separated flags', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--type=single', '--name', 'Test', '--id', '123']);
+
+    expect($result['flags']['type'])->toBe('single');
+    expect($result['flags']['name'])->toBe('Test');
+    expect($result['flags']['id'])->toBe(123);
+});
+
+test('treats flag without value as boolean when next arg is flag', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--enabled', '--type=single']);
+
+    expect($result['flags']['enabled'])->toBeTrue();
+    expect($result['flags']['type'])->toBe('single');
+});
+
+test('treats last flag as boolean when no value follows', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--type', 'single', '--enabled']);
+
+    expect($result['flags']['type'])->toBe('single');
+    expect($result['flags']['enabled'])->toBeTrue();
+});
+
+test('parses space-separated flag before positional args', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'entries/get', '--siteId', '2', '123']);
+
+    expect($result['command'])->toBe('entries/get');
+    expect($result['flags']['siteId'])->toBe(2);
+    expect($result['positional'])->toBe([123]);
+});
+
+test('parses space-separated flag after positional args', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'entries/get', '123', '--siteId', '2']);
+
+    expect($result['command'])->toBe('entries/get');
+    expect($result['positional'])->toBe([123]);
+    expect($result['flags']['siteId'])->toBe(2);
+});
+
+test('parses space-separated flag with comma-separated value', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--ids', '1,2,3']);
+
+    expect($result['flags']['ids'])->toBe([1, 2, 3]);
+});
+
+test('parses space-separated flag with bracket notation', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--fields[title]', 'Test']);
+
+    expect($result['flags']['fields']['title'])->toBe('Test');
+});
+
+test('space-separated flags with special characters in value', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--url', 'https://example.com/path']);
+
+    expect($result['flags']['url'])->toBe('https://example.com/path');
+});
+
+test('space-separated flag preserves whitespace in value', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--text', '  spaces  ']);
+
+    expect($result['flags']['text'])->toBe('  spaces  ');
+});
+
 test('handles standalone path flag without value', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--path']);
