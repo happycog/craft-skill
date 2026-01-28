@@ -16,6 +16,9 @@ declare(strict_types=1);
  * - 3: Craft not found or bootstrap failed
  */
 
+// Set the error reporting level - suppress deprecation warnings from old dependencies
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 // Error handling setup - convert errors to exceptions for consistent handling
 set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline): bool {
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
