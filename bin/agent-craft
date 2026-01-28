@@ -68,7 +68,7 @@ function exitWithError(int $code, string $message, ?Throwable $exception = null,
         }
     }
 
-    fwrite(STDERR, json_encode($output, JSON_PRETTY_PRINT) . PHP_EOL);
+    fwrite(STDERR, json_encode($output) . PHP_EOL);
     exit($code);
 }
 
@@ -180,7 +180,7 @@ try {
     $result = $router->route($command, $positional, $flags);
 
     // Output successful result as JSON to stdout
-    echo json_encode($result, JSON_PRETTY_PRINT) . PHP_EOL;
+    echo json_encode($result) . PHP_EOL;
     exit(0);
 } catch (\InvalidArgumentException $e) {
     // Unknown command or invalid arguments
@@ -188,7 +188,7 @@ try {
 } catch (\CuyZ\Valinor\Mapper\MappingError $e) {
     // Valinor validation error
     $errors = [];
-    foreach ($e->node()->messages() as $message) {
+    foreach ($e->messages() as $message) {
         $errors[] = (string) $message;
     }
     exitWithError(2, 'Validation failed: ' . implode('; ', $errors), $e, $verbosity);

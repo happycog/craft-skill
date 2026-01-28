@@ -126,8 +126,8 @@ composer install
 # Generate PHPStan baseline (if needed)
 ./vendor/bin/phpstan analyse --generate-baseline
 
-# Build the PHAR
-php build/build-phar.php
+# Build the PHAR (requires phar.readonly disabled)
+php -d phar.readonly=0 bin/build-phar.php
 ```
 
 ### CLI Testing
@@ -160,7 +160,8 @@ php build/build-phar.php
 # Test verbose output
 ./bin/agent-craft entries/create --title="Test" -vvv
 
-# Note: PHAR distribution (agent-craft.phar) is pending implementation
+# Using PHAR distribution
+./agent-craft.phar sections/list
 ```
 
 ### PHPStan Configuration
@@ -322,9 +323,7 @@ test('tool retrieves entry', function () {
 - [x] Error handling with appropriate exit codes
 - [x] Command routing for all existing tools
 - [x] CLI integration test suite (83 tests)
-
-### 🔄 In Progress
-- [ ] PHAR build script and distribution setup
+- [x] PHAR build script and distribution (`agent-craft.phar`)
 
 ### 🔜 Ready for Development
 - [ ] Enhanced error handling and validation
