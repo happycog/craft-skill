@@ -119,6 +119,15 @@ class CreateAsset
                 $asset
             );
 
+            // Verify the asset file was actually saved to the filesystem
+            $assetFs = $asset->getVolume()->getFs();
+            $assetPath = $asset->getPath();
+            throw_unless(
+                $assetFs->fileExists($assetPath),
+                \RuntimeException::class,
+                "Asset element saved but file not found on filesystem at: {$assetPath}"
+            );
+
             return [
                 '_notes' => 'The asset was successfully uploaded and created.',
                 'assetId' => $asset->id,
@@ -133,7 +142,8 @@ class CreateAsset
                 'cpEditUrl' => $asset->getCpEditUrl(),
             ];
         } finally {
-            // Clean up temp file
+            // Clean up temp file - only deleted after saveElement completes
+            // At this point, Craft should have already moved/copied the file to its final location
             if (file_exists($tempFilePath)) {
                 FileHelper::unlink($tempFilePath);
             }

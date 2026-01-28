@@ -354,3 +354,37 @@ test('can create blank image without title', function () {
 
     $this->createdAssetIds[] = $response['assetId'];
 });
+
+test('generated image file exists on filesystem', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->create(
+        volumeId: $this->volumeId,
+        width: 100,
+        height: 100,
+    );
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Get the asset
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+
+    // Get the filesystem path to the asset
+    $fs = $asset->getVolume()->getFs();
+    $assetPath = $asset->getPath();
+    
+    // Verify the file exists on the filesystem
+    expect($fs->fileExists($assetPath))->toBeTrue("Asset file should exist at {$assetPath}");
+    
+    // For local volumes, verify actual image dimensions and file exists
+    if (method_exists($fs, 'getRootPath')) {
+        $fullPath = $fs->getRootPath() . DIRECTORY_SEPARATOR . $assetPath;
+        expect(file_exists($fullPath))->toBeTrue("Physical file should exist at {$fullPath}");
+        
+        $imageSize = getimagesize($fullPath);
+        expect($imageSize)->toBeArray();
+        expect($imageSize[0])->toBe(100, "Image width should be 100px");
+        expect($imageSize[1])->toBe(100, "Image height should be 100px");
+    }
+});
