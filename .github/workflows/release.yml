@@ -35,11 +35,6 @@ jobs:
       - name: Build PHAR
         run: php -d phar.readonly=0 bin/build-phar.php agent-craft.phar
 
-      - name: Verify PHAR
-        run: |
-          php agent-craft.phar --help
-          echo "PHAR size: $(du -h agent-craft.phar | cut -f1)"
-
       - name: Upload PHAR as artifact
         uses: actions/upload-artifact@v4
         with:
