@@ -30,13 +30,12 @@ class EntryTypeFormatter
         // Generate control panel URL
         $editUrl = UrlHelper::cpUrl('settings/entry-types/' . $entryType->id);
 
-        // Build entry type data
-        return array_merge([
-            'id' => $entryType->id,
-            'name' => $entryType->name,
-            'handle' => $entryType->handle,
-            'description' => $entryType->description,
-            'hasTitleField' => $entryType->hasTitleField,
+         // Build entry type data
+         return array_merge([
+             'id' => $entryType->id,
+             'name' => $entryType->name,
+             'handle' => $entryType->handle,
+             'hasTitleField' => $entryType->hasTitleField,
             'titleTranslationMethod' => $entryType->titleTranslationMethod,
             'titleTranslationKeyFormat' => $entryType->titleTranslationKeyFormat,
             'titleFormat' => $entryType->titleFormat,
