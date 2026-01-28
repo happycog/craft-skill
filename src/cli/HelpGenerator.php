@@ -115,6 +115,107 @@ class HelpGenerator
     }
 
     /**
+     * Generate detailed help for a specific command.
+     *
+     * @param string $command The command to generate help for
+     * @return string Formatted help text
+     * @throws \InvalidArgumentException If command is not found
+     */
+    public function generateForCommand(string $command): string
+    {
+        if (!isset(self::COMMAND_MAP[$command])) {
+            throw new \InvalidArgumentException("Unknown command: {$command}");
+        }
+
+        $config = self::COMMAND_MAP[$command];
+        $output = "Command: {$command}\n\n";
+
+        try {
+            $reflection = new ReflectionMethod($config['class'], $config['method']);
+
+            // Extract full docblock
+            $docComment = $reflection->getDocComment();
+            if ($docComment !== false) {
+                $formatted = $this->formatDocblock($docComment);
+                $output .= $formatted . "\n\n";
+            }
+
+            // Extract parameters
+            $parameters = $reflection->getParameters();
+            if (count($parameters) > 0) {
+                $output .= "Parameters:\n";
+                foreach ($parameters as $param) {
+                    $paramName = $param->getName();
+                    $paramType = $param->getType();
+                    $typeStr = $paramType ? $paramType->__toString() : 'mixed';
+
+                    // Show if optional and default value
+                    if ($param->isOptional()) {
+                        $defaultValue = $param->isDefaultValueAvailable()
+                            ? var_export($param->getDefaultValue(), true)
+                            : 'null';
+                        $output .= "  --{$paramName}  ({$typeStr}, optional, default: {$defaultValue})\n";
+                    } else {
+                        $output .= "  --{$paramName}  ({$typeStr}, required)\n";
+                    }
+                }
+            }
+        } catch (\ReflectionException $e) {
+            $output .= "Error: Unable to load command details\n";
+        }
+
+        return $output;
+    }
+
+    /**
+     * Format a docblock for display.
+     *
+     * Removes comment delimiters, asterisks, and PHPDoc tags (@param, @return, etc.)
+     * while preserving content structure.
+     *
+     * @param string $docComment The raw docblock comment
+     * @return string Formatted docblock text
+     */
+    private function formatDocblock(string $docComment): string
+    {
+        // Remove opening /** and closing */
+        $docComment = preg_replace('/^\/\*\*\s*/', '', $docComment) ?? '';
+        $docComment = preg_replace('/\s*\*\/$/', '', $docComment) ?? '';
+
+        // Split into lines
+        $lines = explode("\n", $docComment);
+
+        $formatted = [];
+        $skipRemainingLines = false;
+
+        foreach ($lines as $line) {
+            // Remove leading asterisks and exactly one space if present
+            $line = preg_replace('/^\s*\*\s?/', '', $line) ?? '';
+
+            // Stop processing when we hit the first @param, @return, or other PHPDoc tag
+            if (preg_match('/^\s*@(param|return|throws|var|see|deprecated|since|author|copyright|license|link|todo|internal|ignore)/', $line)) {
+                $skipRemainingLines = true;
+                continue;
+            }
+
+            // Skip all lines after we've hit a PHPDoc tag
+            if ($skipRemainingLines) {
+                continue;
+            }
+
+            // Keep the line (including empty lines for structure)
+            $formatted[] = $line;
+        }
+
+        // Trim trailing empty lines
+        while (count($formatted) > 0 && trim($formatted[count($formatted) - 1]) === '') {
+            array_pop($formatted);
+        }
+
+        return implode("\n", $formatted);
+    }
+
+    /**
      * Parse the first meaningful line from a docblock.
      *
      * @param string $docComment The raw docblock comment
@@ -123,18 +224,18 @@ class HelpGenerator
     private function parseFirstLine(string $docComment): string
     {
         // Remove the opening /** and closing */
-        $docComment = preg_replace('/^\/\*\*\s*/', '', $docComment);
-        $docComment = preg_replace('/\s*\*\/$/', '', $docComment ?? '');
+        $docComment = preg_replace('/^\/\*\*\s*/', '', $docComment) ?? '';
+        $docComment = preg_replace('/\s*\*\/$/', '', $docComment) ?? '';
 
         // Split into lines
-        $lines = explode("\n", $docComment ?? '');
+        $lines = explode("\n", $docComment);
 
         $description = '';
 
         foreach ($lines as $line) {
             // Remove leading asterisks and whitespace
-            $line = preg_replace('/^\s*\*\s?/', '', $line);
-            $line = trim($line ?? '');
+            $line = preg_replace('/^\s*\*\s?/', '', $line) ?? '';
+            $line = trim($line);
 
             // Skip empty lines at the start
             if ($line === '' && $description === '') {

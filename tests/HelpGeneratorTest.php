@@ -61,3 +61,58 @@ test('commands are sorted alphabetically', function () {
 
     expect($keys)->toBe($sortedKeys);
 });
+
+test('generateForCommand outputs full docblock', function () {
+    $generator = new HelpGenerator();
+    $output = $generator->generateForCommand('entries/create');
+
+    expect($output)->toContain('Command: entries/create');
+    expect($output)->toContain('Create an entry in Craft');
+    expect($output)->toContain('An "Entry" in Craft is a generic term');
+    expect($output)->toContain('Parameters:');
+});
+
+test('generateForCommand lists required parameters', function () {
+    $generator = new HelpGenerator();
+    $output = $generator->generateForCommand('entries/create');
+
+    expect($output)->toContain('--sectionId');
+    expect($output)->toContain('int, required');
+    expect($output)->toContain('--entryTypeId');
+});
+
+test('generateForCommand lists optional parameters', function () {
+    $generator = new HelpGenerator();
+    $output = $generator->generateForCommand('entries/create');
+
+    expect($output)->toContain('--siteId');
+    expect($output)->toContain('optional');
+    expect($output)->toContain('--attributeAndFieldData');
+});
+
+test('generateForCommand throws exception for unknown command', function () {
+    $generator = new HelpGenerator();
+
+    expect(fn() => $generator->generateForCommand('unknown/command'))
+        ->toThrow(\InvalidArgumentException::class, 'Unknown command: unknown/command');
+});
+
+test('generateForCommand excludes @param and @return annotations from docblock', function () {
+    $generator = new HelpGenerator();
+    $output = $generator->generateForCommand('entries/create');
+
+    // Should not contain @param or @return in the docblock section
+    // (parameters are displayed separately in the Parameters section)
+    $lines = explode("\n", $output);
+    $beforeParameters = [];
+    foreach ($lines as $line) {
+        if (str_contains($line, 'Parameters:')) {
+            break;
+        }
+        $beforeParameters[] = $line;
+    }
+    $docblockSection = implode("\n", $beforeParameters);
+
+    expect($docblockSection)->not->toContain('@param');
+    expect($docblockSection)->not->toContain('@return');
+});

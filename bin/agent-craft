@@ -147,6 +147,20 @@ $flags = $parsed['flags'];
 // Handle help flag
 if ($parser->help) {
     $helpGenerator = new \happycog\craftmcp\cli\HelpGenerator();
+    
+    // If a command was provided, show help for that specific command
+    if ($command !== null) {
+        try {
+            echo $helpGenerator->generateForCommand($command);
+            exit(0);
+        } catch (\InvalidArgumentException $e) {
+            // Unknown command, fall through to show general help
+            echo $helpGenerator->generate();
+            exit(0);
+        }
+    }
+    
+    // No command provided, show general help
     echo $helpGenerator->generate();
     exit(0);
 }

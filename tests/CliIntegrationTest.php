@@ -501,3 +501,52 @@ test('malformed validation error returns exit code 2', function () {
     expect($error['error']['validation_errors'])->toBeArray();
     expect(count($error['error']['validation_errors']))->toBeGreaterThan(0);
 });
+
+test('--help flag shows general help output', function () {
+    $result = ($this->execCli)('--help', false);
+    
+    expect($result['exitCode'])->toBe(0);
+    expect($result['output'])->toContain('Agent Craft CLI');
+    expect($result['output'])->toContain('Usage:');
+    expect($result['output'])->toContain('Available commands:');
+    expect($result['output'])->toContain('sections/list');
+    expect($result['output'])->toContain('entries/create');
+});
+
+test('-h flag shows general help output', function () {
+    $result = ($this->execCli)('-h', false);
+    
+    expect($result['exitCode'])->toBe(0);
+    expect($result['output'])->toContain('Agent Craft CLI');
+    expect($result['output'])->toContain('Usage:');
+    expect($result['output'])->toContain('Available commands:');
+});
+
+test('command --help shows individual command help', function () {
+    $result = ($this->execCli)('entries/create --help', false);
+    
+    expect($result['exitCode'])->toBe(0);
+    expect($result['output'])->toContain('Command: entries/create');
+    expect($result['output'])->toContain('Create an entry in Craft');
+    expect($result['output'])->toContain('Parameters:');
+    expect($result['output'])->toContain('--sectionId');
+    expect($result['output'])->toContain('--entryTypeId');
+    expect($result['output'])->toContain('required');
+    expect($result['output'])->toContain('optional');
+});
+
+test('command -h shows individual command help', function () {
+    $result = ($this->execCli)('sections/list -h', false);
+    
+    expect($result['exitCode'])->toBe(0);
+    expect($result['output'])->toContain('Command: sections/list');
+    expect($result['output'])->toContain('Get a list of sections');
+});
+
+test('unknown command --help shows general help as fallback', function () {
+    $result = ($this->execCli)('unknown/command --help', false);
+    
+    expect($result['exitCode'])->toBe(0);
+    expect($result['output'])->toContain('Agent Craft CLI');
+    expect($result['output'])->toContain('Available commands:');
+});
