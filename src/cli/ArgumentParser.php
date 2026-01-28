@@ -41,8 +41,16 @@ class ArgumentParser
         $verbosity = 0;
         $path = null;
         $help = false;
+        $nextIsPath = false;
 
         foreach ($args as $arg) {
+            // Handle value for --path when it was the previous argument
+            if ($nextIsPath) {
+                $path = $arg;
+                $nextIsPath = false;
+                continue;
+            }
+
             // Handle help flags
             if ($arg === '--help' || $arg === '-h') {
                 $help = true;
@@ -63,13 +71,13 @@ class ArgumentParser
                 continue;
             }
 
-            // Handle --path flag separately
+            // Handle --path flag separately (supports both --path=value and --path value)
             if (str_starts_with($arg, '--path=')) {
                 $path = substr($arg, 7); // Remove '--path=' prefix
                 continue;
             }
             if ($arg === '--path') {
-                // Path value should be in next argument, but we'll handle it safely
+                $nextIsPath = true;
                 continue;
             }
 

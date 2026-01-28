@@ -319,6 +319,30 @@ test('handles relative path', function () {
     expect($result['path'])->toBe('../relative/path');
 });
 
+test('parses path flag with space-separated syntax', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--path', '/custom/path']);
+
+    expect($result['path'])->toBe('/custom/path');
+});
+
+test('space-separated path does not appear in positional args', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--path', '/custom/path', 'arg1']);
+
+    expect($result['path'])->toBe('/custom/path');
+    expect($result['positional'])->toBe(['arg1']);
+    expect($result['command'])->toBe('cmd');
+});
+
+test('space-separated path works at end of arguments', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--flag=value', '--path', '/my/path']);
+
+    expect($result['path'])->toBe('/my/path');
+    expect($result['flags']['flag'])->toBe('value');
+});
+
 // Test group 8.5: Help flag
 test('parses long help flag', function () {
     $parser = new ArgumentParser();
