@@ -26,6 +26,7 @@ use happycog\craftmcp\tools\GetFieldLayout;
 use happycog\craftmcp\tools\GetFields;
 use happycog\craftmcp\tools\GetFieldTypes;
 use happycog\craftmcp\tools\GetHealth;
+use happycog\craftmcp\tools\GetSection;
 use happycog\craftmcp\tools\GetSections;
 use happycog\craftmcp\tools\GetSites;
 use happycog\craftmcp\tools\GetVolumes;
@@ -93,6 +94,7 @@ class CommandMap
         // Sections
         'sections/create' => CreateSection::class,
         'sections/delete' => DeleteSection::class,
+        'sections/get' => GetSection::class,
         'sections/list' => GetSections::class,
         'sections/update' => UpdateSection::class,
 
