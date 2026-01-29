@@ -35,6 +35,15 @@ class UpdateEntry
      * - Example: --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="content"
      *           --matrixField\[new2\]\[type\]=image --matrixField\[new2\]\[fields\]\[image\]\[\]=123
      *
+     * PARTIAL MATRIX BLOCK UPDATES:
+     * - Matrix blocks are entries themselves and can be updated directly!
+     * - Use entries/get to find the block's ID, then update it individually
+     * - Example workflow:
+     *   1. entries/create --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="foo"
+     *   2. entries/get <entryId> (shows matrix block has ID 123)
+     *   3. entries/update 123 --body="updated directly!" (updates just that block)
+     * - This avoids having to pass all blocks when you only need to change one
+     *
      * Example (CORRECT):
      * agent-craft entries/update 123 --title="Updated Title" --body="New content" --author="Jane"
      *
