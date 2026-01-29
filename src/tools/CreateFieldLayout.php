@@ -20,7 +20,7 @@ class CreateFieldLayout
      *
      * @return array<string, mixed>
      */
-    public function create(
+    public function __invoke(
         /** The type of field layout to create (e.g., "craft\\elements\\Entry", "craft\\elements\\User", etc.) */
         string $type
     ): array {

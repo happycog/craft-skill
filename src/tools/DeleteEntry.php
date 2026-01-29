@@ -21,7 +21,7 @@ class DeleteEntry
      *
      * @return array<string, mixed>
      */
-    public function delete(
+    public function __invoke(
         int $entryId,
 
         /** Set to true to permanently delete the entry. Default is false (soft delete). */

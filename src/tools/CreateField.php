@@ -23,7 +23,7 @@ class CreateField
      * @param array<string, mixed> $settings
      * @return array<string, mixed>
      */
-    public function create(
+    public function __invoke(
         /** The field type class name (use GetFieldTypes to discover available types) */
         string $type,
 

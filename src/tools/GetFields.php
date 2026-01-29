@@ -21,7 +21,7 @@ class GetFields
      *
      * @return array<int, array<string, mixed>>
      */
-    public function get(
+    public function __invoke(
         /** Optional field layout ID to filter fields. Can be `null` to return all global fields. */
         ?int $fieldLayoutId = null
     ): array {

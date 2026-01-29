@@ -41,7 +41,7 @@ afterEach(function () {
 test('can get all volumes', function () {
     $getVolumes = Craft::$container->get(GetVolumes::class);
 
-    $response = $getVolumes->get();
+    $response = $getVolumes->__invoke();
 
     expect($response)->toHaveKey('_notes');
     expect($response)->toHaveKey('volumes');
@@ -59,7 +59,7 @@ test('can get all volumes', function () {
 test('can create asset from local file path', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         title: 'Test Upload',
@@ -86,7 +86,7 @@ test('can create asset from file:// URL', function () {
 
     $fileUrl = 'file://' . $this->testFilePath;
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         fileUrl: $fileUrl,
         volumeId: $this->volumeId,
     );
@@ -104,7 +104,7 @@ test('can create asset from file:// URL', function () {
 test('can update asset title', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         title: 'Original Title',
@@ -114,7 +114,7 @@ test('can update asset title', function () {
 
     // Now update it
     $updateAsset = Craft::$container->get(UpdateAsset::class);
-    $response = $updateAsset->update(
+    $response = $updateAsset->__invoke(
         assetId: $createResponse['assetId'],
         title: 'Updated Title',
     );
@@ -132,7 +132,7 @@ test('can update asset title', function () {
 test('can update asset with empty field data', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
     );
@@ -141,7 +141,7 @@ test('can update asset with empty field data', function () {
 
     // Update with empty field data (just testing it works without errors)
     $updateAsset = Craft::$container->get(UpdateAsset::class);
-    $response = $updateAsset->update(
+    $response = $updateAsset->__invoke(
         assetId: $createResponse['assetId'],
         fieldData: [],
     );
@@ -151,7 +151,7 @@ test('can update asset with empty field data', function () {
 });test('can update asset filename', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
     );
@@ -160,7 +160,7 @@ test('can update asset with empty field data', function () {
 
     // Update filename
     $updateAsset = Craft::$container->get(UpdateAsset::class);
-    $response = $updateAsset->update(
+    $response = $updateAsset->__invoke(
         assetId: $createResponse['assetId'],
         filename: 'renamed-file.txt',
     );
@@ -177,7 +177,7 @@ test('can update asset with empty field data', function () {
 test('can delete asset', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         title: 'To Be Deleted',
@@ -191,7 +191,7 @@ test('can delete asset', function () {
 
     // Delete it
     $deleteAsset = Craft::$container->get(DeleteAsset::class);
-    $response = $deleteAsset->delete($assetId);
+    $response = $deleteAsset->__invoke($assetId);
 
     expect($response)->toHaveKey('_notes');
     expect($response)->toHaveKey('assetId');
@@ -206,7 +206,7 @@ test('can delete asset', function () {
 test('throws exception when creating asset with invalid volume', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $createAsset->create(
+    $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: 999999, // Non-existent volume ID
     );
@@ -215,7 +215,7 @@ test('throws exception when creating asset with invalid volume', function () {
 test('throws exception when creating asset with non-existent file', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $createAsset->create(
+    $createAsset->__invoke(
         fileUrl: '/path/to/nonexistent/file.txt',
         volumeId: $this->volumeId,
     );
@@ -224,7 +224,7 @@ test('throws exception when creating asset with non-existent file', function () 
 test('throws exception when updating non-existent asset', function () {
     $updateAsset = Craft::$container->get(UpdateAsset::class);
 
-    $updateAsset->update(
+    $updateAsset->__invoke(
         assetId: 999999,
         title: 'New Title',
     );
@@ -233,7 +233,7 @@ test('throws exception when updating non-existent asset', function () {
 test('throws exception when deleting non-existent asset', function () {
     $deleteAsset = Craft::$container->get(DeleteAsset::class);
 
-    $deleteAsset->delete(999999);
+    $deleteAsset->__invoke(999999);
 })->throws(\InvalidArgumentException::class, 'Asset with ID 999999 not found');
 
 test('can create asset with optional folder id', function () {
@@ -242,7 +242,7 @@ test('can create asset with optional folder id', function () {
     // Get root folder
     $rootFolder = Craft::$app->getAssets()->getRootFolderByVolumeId($this->volumeId);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         folderId: $rootFolder->id,
@@ -258,7 +258,7 @@ test('can create asset with optional folder id', function () {
 test('validates folder exists when creating asset', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $createAsset->create(
+    $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         folderId: 999999, // Non-existent folder
@@ -268,7 +268,7 @@ test('validates folder exists when creating asset', function () {
 test('can create blank image with default dimensions', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         volumeId: $this->volumeId,
         title: 'Default Blank Image',
     );
@@ -289,7 +289,7 @@ test('can create blank image with default dimensions', function () {
 test('can create blank image with custom width and height', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         volumeId: $this->volumeId,
         width: 300,
         height: 200,
@@ -310,7 +310,7 @@ test('can create blank image with custom width and height', function () {
 test('generated image has correct dimensions', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         volumeId: $this->volumeId,
         width: 640,
         height: 480,
@@ -331,7 +331,7 @@ test('generated image has correct dimensions', function () {
 test('throws exception for invalid width and height', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $createAsset->create(
+    $createAsset->__invoke(
         volumeId: $this->volumeId,
         width: 0,
         height: 100,
@@ -341,7 +341,7 @@ test('throws exception for invalid width and height', function () {
 test('can create blank image without title', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         volumeId: $this->volumeId,
     );
 
@@ -358,7 +358,7 @@ test('can create blank image without title', function () {
 test('generated image file exists on filesystem', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         volumeId: $this->volumeId,
         width: 100,
         height: 100,

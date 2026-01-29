@@ -13,24 +13,24 @@ class EntryTypesController extends Controller
     public function actionCreate(): Response
     {
         $tool = \Craft::$container->get(CreateEntryType::class);
-        return $this->callTool($tool->create(...));
+        return $this->callTool($tool);
     }
 
     public function actionList(): Response
     {
         $tool = \Craft::$container->get(GetEntryTypes::class);
-        return $this->callTool($tool->getAll(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 
     public function actionUpdate(int $id): Response
     {
         $tool = \Craft::$container->get(UpdateEntryType::class);
-        return $this->callTool($tool->update(...), ['entryTypeId' => $id]);
+        return $this->callTool($tool, ['entryTypeId' => $id]);
     }
 
     public function actionDelete(int $id): Response
     {
         $tool = \Craft::$container->get(DeleteEntryType::class);
-        return $this->callTool($tool->delete(...), ['entryTypeId' => $id]);
+        return $this->callTool($tool, ['entryTypeId' => $id]);
     }
 }

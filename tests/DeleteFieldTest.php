@@ -22,7 +22,7 @@ beforeEach(function () {
     $this->createTestField = function (string $name = 'Test Field', array $options = []) {
         $createField = Craft::$container->get(CreateField::class);
         
-        $result = $createField->create(
+        $result = $createField->__invoke(
             type: 'craft\fields\PlainText',
             name: $name,
             handle: $options['handle'] ?? 'testField',
@@ -42,7 +42,7 @@ beforeEach(function () {
     $this->deleteField = function (int $fieldId) {
         $deleteField = Craft::$container->get(DeleteField::class);
         
-        return $deleteField->delete(
+        return $deleteField->__invoke(
             fieldId: $fieldId
         );
     };

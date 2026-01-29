@@ -27,7 +27,7 @@ beforeEach(function () {
         $name = $name ?: 'Test Field';
         $createField = Craft::$container->get(CreateField::class);
         
-        $result = $createField->create(
+        $result = $createField->__invoke(
             type: 'craft\fields\PlainText',
             name: $name,
             handle: $options['handle'] ?? 'testField',
@@ -47,7 +47,7 @@ beforeEach(function () {
     $this->updateField = function (int $fieldId, array $updates = []) {
         $updateField = Craft::$container->get(UpdateField::class);
         
-        return $updateField->update(
+        return $updateField->__invoke(
             fieldId: $fieldId,
             name: $updates['name'] ?? null,
             handle: $updates['handle'] ?? null,

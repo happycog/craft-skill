@@ -9,7 +9,7 @@ it('can soft delete an entry (default behavior)', function () {
         ->title('Entry to Delete')
         ->create();
 
-    $response = Craft::$container->get(DeleteEntry::class)->delete(
+    $response = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $entry->id,
     );
 
@@ -37,7 +37,7 @@ it('can permanently delete an entry when specified', function () {
         ->title('Entry to Permanently Delete')
         ->create();
 
-    $response = Craft::$container->get(DeleteEntry::class)->delete(
+    $response = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $entry->id,
         permanentlyDelete: true,
     );
@@ -64,7 +64,7 @@ it('returns proper response format after deletion', function () {
         ->title('Response Test Entry')
         ->create();
 
-    $response = Craft::$container->get(DeleteEntry::class)->delete(
+    $response = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $entry->id,
     );
 
@@ -85,7 +85,7 @@ it('returns proper response format after deletion', function () {
 
 it('throws exception when entry not found', function () {
     expect(function () {
-        Craft::$container->get(DeleteEntry::class)->delete(
+        Craft::$container->get(DeleteEntry::class)->__invoke(
             entryId: 99999, // Non-existent ID
         );
     })->toThrow(\InvalidArgumentException::class, 'Entry with ID 99999 not found');
@@ -102,11 +102,11 @@ it('can delete entries from different sections', function () {
         ->title('Page Entry to Delete')
         ->create();
 
-    $newsResponse = Craft::$container->get(DeleteEntry::class)->delete(
+    $newsResponse = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $newsEntry->id,
     );
     
-    $pageResponse = Craft::$container->get(DeleteEntry::class)->delete(
+    $pageResponse = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $pageEntry->id,
     );
 
@@ -134,7 +134,7 @@ it('includes section information in response', function () {
         ->title('Section Info Test')
         ->create();
 
-    $response = Craft::$container->get(DeleteEntry::class)->delete(
+    $response = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $entry->id,
     );
 
@@ -149,7 +149,7 @@ it('handles entries with custom fields', function () {
         ->body('This entry has custom fields')
         ->create();
 
-    $response = Craft::$container->get(DeleteEntry::class)->delete(
+    $response = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $entry->id,
     );
 
@@ -172,7 +172,7 @@ it('can delete entries with various post date formats', function () {
         ->postDate('2023-01-01 12:00:00')
         ->create();
 
-    $response = Craft::$container->get(DeleteEntry::class)->delete(
+    $response = Craft::$container->get(DeleteEntry::class)->__invoke(
         entryId: $entry->id,
     );
 

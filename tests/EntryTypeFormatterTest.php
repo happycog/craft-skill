@@ -43,7 +43,7 @@ afterEach(function () {
 it('includes usedBy information in formatted entry type', function () {
     // Create a standalone entry type first
     $createEntryType = Craft::$container->get(CreateEntryType::class);
-    $entryTypeResult = $createEntryType->create('Test Entry Type for Usage');
+    $entryTypeResult = $createEntryType->__invoke('Test Entry Type for Usage');
     $this->createdEntryTypeIds[] = $entryTypeResult['entryTypeId'];
 
     // Get the entry type and format it
@@ -64,12 +64,12 @@ it('includes usedBy information in formatted entry type', function () {
 it('detects entry type usage by sections', function () {
     // Create an entry type first
     $createEntryType = Craft::$container->get(CreateEntryType::class);
-    $entryTypeResult = $createEntryType->create('Test Entry Type in Section');
+    $entryTypeResult = $createEntryType->__invoke('Test Entry Type in Section');
     $this->createdEntryTypeIds[] = $entryTypeResult['entryTypeId'];
 
     // Create a section and assign the entry type to it
     $createSection = Craft::$container->get(CreateSection::class);
-    $sectionResult = $createSection->create(
+    $sectionResult = $createSection->__invoke(
         name: 'Test Section for Usage',
         type: 'channel',
         entryTypeIds: [$entryTypeResult['entryTypeId']],
@@ -97,7 +97,7 @@ it('detects entry type usage by matrix fields', function () {
 
     // Create a standalone entry type
     $createEntryType = Craft::$container->get(CreateEntryType::class);
-    $entryTypeResult = $createEntryType->create('Test Matrix Block Type');
+    $entryTypeResult = $createEntryType->__invoke('Test Matrix Block Type');
     $this->createdEntryTypeIds[] = $entryTypeResult['entryTypeId'];
 
     // Format the entry type and verify the structure exists

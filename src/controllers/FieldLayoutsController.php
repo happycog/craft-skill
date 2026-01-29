@@ -16,13 +16,13 @@ class FieldLayoutsController extends Controller
     public function actionCreate(): Response
     {
         $tool = \Craft::$container->get(CreateFieldLayout::class);
-        return $this->callTool($tool->create(...));
+        return $this->callTool($tool);
     }
 
     public function actionGet(): Response
     {
         $tool = \Craft::$container->get(GetFieldLayout::class);
-        return $this->callTool($tool->get(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 
     public function actionAddTab(int $id): Response

@@ -27,7 +27,7 @@ test('controller rejects unknown parameters', function () {
 test('controller reports multiple validation errors at once', function () {
     // Create a test entry type first
     $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
-    $entryTypeData = $createEntryType->create(
+    $entryTypeData = $createEntryType->__invoke(
         name: 'Test Entry Type for Multiple Errors',
         handle: 'testEntryTypeForMultipleErrors' . time()
     );

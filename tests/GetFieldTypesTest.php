@@ -4,7 +4,7 @@ use happycog\craftmcp\tools\GetFieldTypes;
 
 it('returns available field types', function () {
     $getFieldTypes = Craft::$container->get(GetFieldTypes::class);
-    $result = $getFieldTypes->get();
+    $result = $getFieldTypes->__invoke();
 
     expect($result)->toBeArray();
     expect($result)->not->toBeEmpty();
@@ -20,7 +20,7 @@ it('returns available field types', function () {
 
 it('only returns selectable field types', function () {
     $getFieldTypes = Craft::$container->get(GetFieldTypes::class);
-    $result = $getFieldTypes->get();
+    $result = $getFieldTypes->__invoke();
 
     // Verify all returned field types are selectable
     foreach ($result as $fieldType) {
@@ -31,7 +31,7 @@ it('only returns selectable field types', function () {
 
 it('includes common built-in field types', function () {
     $getFieldTypes = Craft::$container->get(GetFieldTypes::class);
-    $result = $getFieldTypes->get();
+    $result = $getFieldTypes->__invoke();
 
     $fieldTypeClasses = array_column($result, 'class');
 
@@ -43,7 +43,7 @@ it('includes common built-in field types', function () {
 
 it('returns field types sorted by name', function () {
     $getFieldTypes = Craft::$container->get(GetFieldTypes::class);
-    $result = $getFieldTypes->get();
+    $result = $getFieldTypes->__invoke();
 
     $names = array_column($result, 'name');
     $sortedNames = $names;

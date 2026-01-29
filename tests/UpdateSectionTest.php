@@ -32,7 +32,7 @@ beforeEach(function () {
     $this->createEntryType = function (string $name, string $handle = null) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
-        $result = $createEntryType->create(
+        $result = $createEntryType->__invoke(
             name: $name,
             handle: $handle
         );
@@ -46,7 +46,7 @@ beforeEach(function () {
     $this->createSection = function (string $name, string $type, array $entryTypeIds, array $options = []) {
         $createSection = Craft::$container->get(CreateSection::class);
 
-        $result = $createSection->create(
+        $result = $createSection->__invoke(
             name: $name,
             type: $type,
             entryTypeIds: $entryTypeIds,
@@ -119,7 +119,7 @@ test('updates section name successfully', function () {
     $section = ($this->createSection)('Original Name', 'channel', [$entryType['entryTypeId']], ['handle' => 'updateTestChannel']);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         name: 'Updated Section Name'
     );
@@ -136,7 +136,7 @@ test('updates section handle successfully', function () {
     $section = ($this->createSection)('Test Section', 'channel', [$entryType['entryTypeId']], ['handle' => 'updateTestSingle']);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         handle: 'newSectionHandle'
     );
@@ -152,7 +152,7 @@ test('updates section type from channel to single', function () {
     $section = ($this->createSection)('Type Change Test', 'channel', [$entryType['entryTypeId']], ['handle' => 'typeChangeTest']);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         type: 'single'
     );
@@ -168,7 +168,7 @@ test('updates section type from single to channel', function () {
     $section = ($this->createSection)('Single Section', 'single', [$entryType['entryTypeId']]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         type: 'channel'
     );
@@ -184,7 +184,7 @@ test('updates section propagation method', function () {
     $section = ($this->createSection)('Propagation Test', 'channel', [$entryType['entryTypeId']], ['handle' => 'propagationTest']);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         propagationMethod: 'siteGroup'
     );
@@ -199,7 +199,7 @@ test('updates structure section max levels', function () {
     $section = ($this->createSection)('Structure Test', 'structure', [$entryType['entryTypeId']], ['handle' => 'structureTest']);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         maxLevels: 5
     );
@@ -215,7 +215,7 @@ test('updates structure section to unlimited levels', function () {
     $section = ($this->createSection)('Unlimited Structure', 'structure', [$entryType['entryTypeId']], ['maxLevels' => 3]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         maxLevels: 0 // 0 means unlimited
     );
@@ -233,7 +233,7 @@ test('updates site settings for section', function () {
     $primarySite = Craft::$app->getSites()->getPrimarySite();
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         siteSettingsData: [
             [
@@ -257,7 +257,7 @@ test('updates entry type associations by adding new types', function () {
     $section = ($this->createSection)('Entry Type Test', 'channel', [$entryType1['entryTypeId']], ['handle' => 'entryTypeAssocTest']);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         entryTypeIds: [$entryType1['entryTypeId'], $entryType2['entryTypeId']]
     );
@@ -281,7 +281,7 @@ test('updates entry type associations by removing types', function () {
     $section = ($this->createSection)('Remove Type Test', 'channel', [$entryType1['entryTypeId'], $entryType2['entryTypeId']]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         entryTypeIds: [$entryType1['entryTypeId']] // Only keep the first one
     );
@@ -308,7 +308,7 @@ test('prevents type change from structure when entries exist', function () {
 
     $tool = new UpdateSection();
 
-    expect(fn() => $tool->update(
+    expect(fn() => $tool->__invoke(
         sectionId: $section['sectionId'],
         type: 'channel'
     ))->toThrow(RuntimeException::class, 'Structure sections require manual data migration');
@@ -324,7 +324,7 @@ test('prevents type change to structure when entries exist', function () {
 
     $tool = new UpdateSection();
 
-    expect(fn() => $tool->update(
+    expect(fn() => $tool->__invoke(
         sectionId: $section['sectionId'],
         type: 'structure'
     ))->toThrow(RuntimeException::class, 'Structure sections require manual data migration');
@@ -336,7 +336,7 @@ test('allows type change when no entries exist', function () {
     $section = ($this->createSection)('Empty Section', 'channel', [$entryType['entryTypeId']]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         type: 'structure'
     );
@@ -348,7 +348,7 @@ test('allows type change when no entries exist', function () {
 test('fails when section does not exist', function () {
     $tool = new UpdateSection();
 
-    expect(fn() => $tool->update(sectionId: 99999))
+    expect(fn() => $tool->__invoke(sectionId: 99999))
         ->toThrow(RuntimeException::class, 'Section with ID 99999 not found');
 });
 
@@ -419,7 +419,7 @@ test('fails when non-existent entry type ID provided', function () {
 
     $tool = new UpdateSection();
 
-    expect(fn() => $tool->update(
+    expect(fn() => $tool->__invoke(
         sectionId: $section['sectionId'],
         entryTypeIds: [99999]
     ))->toThrow(RuntimeException::class, 'Entry type with ID 99999 not found');
@@ -432,7 +432,7 @@ test('fails when non-existent site ID provided in site settings', function () {
 
     $tool = new UpdateSection();
 
-    expect(fn() => $tool->update(
+    expect(fn() => $tool->__invoke(
         sectionId: $section['sectionId'],
         siteSettingsData: [
             [
@@ -453,7 +453,7 @@ test('fails when duplicate handle provided', function () {
 
     $tool = new UpdateSection();
 
-    expect(fn() => $tool->update(
+    expect(fn() => $tool->__invoke(
         sectionId: $section2['sectionId'],
         handle: 'duplicateHandleTest' // Same handle as first section
     ))->toThrow(ModelSaveException::class);
@@ -465,7 +465,7 @@ test('updates multiple properties at once', function () {
     $section = ($this->createSection)('Multi Update Test', 'channel', [$entryType['entryTypeId']]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         name: 'Updated Multi Test',
         handle: 'updatedMultiTest',
@@ -488,7 +488,7 @@ test('preserves existing properties when not updated', function () {
     ]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         name: 'Updated Preserve Test' // Only update name
     );
@@ -505,7 +505,7 @@ test('includes control panel URL in response', function () {
     $section = ($this->createSection)('Control Panel Test', 'channel', [$entryType['entryTypeId']]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         name: 'Updated Control Panel Test'
     );
@@ -522,7 +522,7 @@ test('handles error handling test case', function () {
     $tool = new UpdateSection();
 
     // Test with missing sectionId
-    expect(fn() => $tool->update(sectionId: 0))
+    expect(fn() => $tool->__invoke(sectionId: 0))
         ->toThrow(RuntimeException::class, 'Section with ID 0 not found');
 });
 
@@ -532,7 +532,7 @@ test('updates section maxAuthors setting', function () {
     $section = ($this->createSection)('Max Authors Test', 'channel', [$entryType['entryTypeId']]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         maxAuthors: 5
     );
@@ -548,7 +548,7 @@ test('updates section maxAuthors from existing value', function () {
     $section = ($this->createSection)('Update Max Authors Test', 'channel', [$entryType['entryTypeId']], ['maxAuthors' => 2]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         maxAuthors: 10
     );
@@ -564,7 +564,7 @@ test('preserves maxAuthors when not specified in update', function () {
     $section = ($this->createSection)('Preserve Max Authors Test', 'channel', [$entryType['entryTypeId']], ['maxAuthors' => 7]);
 
     $tool = new UpdateSection();
-    $result = $tool->update(
+    $result = $tool->__invoke(
         sectionId: $section['sectionId'],
         name: 'Updated Preserve Max Authors Test' // Only update name
     );

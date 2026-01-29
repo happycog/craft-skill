@@ -40,7 +40,7 @@ afterEach(function () {
 test('removing entry title field updates entry type hasTitleField to false', function () {
     // Step 1: Create an entry type with a title field (default behavior)
     $createEntryType = Craft::$container->get(CreateEntryType::class);
-    $entryTypeResult = $createEntryType->create(
+    $entryTypeResult = $createEntryType->__invoke(
         name: 'Test Remove Title',
         handle: 'testRemoveTitle',
         hasTitleField: true
@@ -57,7 +57,7 @@ test('removing entry title field updates entry type hasTitleField to false', fun
 
     // Step 2: Get the field layout to find the EntryTitleField UID
     $getFieldLayout = Craft::$container->get(GetFieldLayout::class);
-    $fieldLayoutResult = $getFieldLayout->get($fieldLayoutId);
+    $fieldLayoutResult = $getFieldLayout->__invoke($fieldLayoutId);
 
     // Find the EntryTitleField UID
     $titleFieldUid = null;
@@ -74,7 +74,7 @@ test('removing entry title field updates entry type hasTitleField to false', fun
 
     // Step 3: Remove the title field
     $removeElement = Craft::$container->get(RemoveElementFromFieldLayout::class);
-    $removeResult = $removeElement->remove(
+    $removeResult = $removeElement->__invoke(
         fieldLayoutId: $fieldLayoutId,
         elementUid: $titleFieldUid
     );
@@ -119,7 +119,7 @@ test('removing entry title field updates entry type hasTitleField to false', fun
 test('removing non-title field does not update entry type hasTitleField', function () {
     // Step 1: Create an entry type with a title field
     $createEntryType = Craft::$container->get(CreateEntryType::class);
-    $entryTypeResult = $createEntryType->create(
+    $entryTypeResult = $createEntryType->__invoke(
         name: 'Test Remove Field',
         handle: 'testRemoveField',
         hasTitleField: true
@@ -161,7 +161,7 @@ test('removing non-title field does not update entry type hasTitleField', functi
 
         // Step 3: Remove the HR element
         $removeElement = Craft::$container->get(RemoveElementFromFieldLayout::class);
-        $removeResult = $removeElement->remove(
+        $removeResult = $removeElement->__invoke(
             fieldLayoutId: $fieldLayoutId,
             elementUid: $hrUid
         );
@@ -202,7 +202,7 @@ test('removing title field from non-entry-type field layout works without error'
 
     // Remove the title field - should not throw error even though no entry type is associated
     $removeElement = Craft::$container->get(RemoveElementFromFieldLayout::class);
-    $removeResult = $removeElement->remove(
+    $removeResult = $removeElement->__invoke(
         fieldLayoutId: $fieldLayout->id,
         elementUid: $titleFieldUid
     );
@@ -223,7 +223,7 @@ test('removing title field from non-entry-type field layout works without error'
 test('removing element with non-existent UID throws error', function () {
     // Create an entry type to get a valid field layout
     $createEntryType = Craft::$container->get(CreateEntryType::class);
-    $entryTypeResult = $createEntryType->create(
+    $entryTypeResult = $createEntryType->__invoke(
         name: 'Test Invalid UID',
         handle: 'testInvalidUid',
         hasTitleField: true
@@ -235,7 +235,7 @@ test('removing element with non-existent UID throws error', function () {
     // Try to remove element with non-existent UID
     $removeElement = Craft::$container->get(RemoveElementFromFieldLayout::class);
 
-    expect(fn() => $removeElement->remove(
+    expect(fn() => $removeElement->__invoke(
         fieldLayoutId: $fieldLayoutId,
         elementUid: 'non-existent-uid-12345'
     ))->toThrow(RuntimeException::class);

@@ -12,7 +12,7 @@ beforeEach(function () {
     // Helper to create a published entry for draft testing
     $this->createPublishedEntry = function (array $attributeAndFieldData = []) {
         $createEntry = Craft::$container->get(CreateEntry::class);
-        $response = $createEntry->create(
+        $response = $createEntry->__invoke(
             sectionId: $this->sectionId,
             entryTypeId: $this->entryTypeId,
             attributeAndFieldData: array_merge(['title' => 'Test Entry'], $attributeAndFieldData)
@@ -26,12 +26,12 @@ beforeEach(function () {
         $createDraft = Craft::$container->get(CreateDraft::class);
         
         if ($canonicalId) {
-            $response = $createDraft->create(
+            $response = $createDraft->__invoke(
                 canonicalId: $canonicalId,
                 attributeAndFieldData: $attributeAndFieldData
             );
         } else {
-            $response = $createDraft->create(
+            $response = $createDraft->__invoke(
                 sectionId: $this->sectionId,
                 entryTypeId: $this->entryTypeId,
                 attributeAndFieldData: array_merge(['title' => 'Draft Title'], $attributeAndFieldData)
@@ -47,7 +47,7 @@ it('can update draft content fields', function () {
     
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
-    $response = $updateDraft->update(
+    $response = $updateDraft->__invoke(
         draftId: $draftId,
         attributeAndFieldData: ['title' => 'Updated Draft Title']
     );
@@ -64,7 +64,7 @@ it('can update draft metadata', function () {
     $canonicalId = ($this->createPublishedEntry)();
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    $createResponse = $createDraft->create(
+    $createResponse = $createDraft->__invoke(
         canonicalId: $canonicalId,
         draftName: 'Original Name',
         draftNotes: 'Original Notes'
@@ -73,7 +73,7 @@ it('can update draft metadata', function () {
     
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
-    $response = $updateDraft->update(
+    $response = $updateDraft->__invoke(
         draftId: $draftId,
         draftName: 'Updated Name',
         draftNotes: 'Updated Notes'
@@ -93,7 +93,7 @@ it('uses PATCH semantics - preserves existing fields', function () {
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
     // Only update title, slug should be preserved
-    $response = $updateDraft->update(
+    $response = $updateDraft->__invoke(
         draftId: $draftId,
         attributeAndFieldData: ['title' => 'New Title']
     );
@@ -110,7 +110,7 @@ it('can update both content and metadata in one call', function () {
     $canonicalId = ($this->createPublishedEntry)();
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    $createResponse = $createDraft->create(
+    $createResponse = $createDraft->__invoke(
         canonicalId: $canonicalId,
         draftName: 'Original Name'
     );
@@ -118,7 +118,7 @@ it('can update both content and metadata in one call', function () {
     
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
-    $response = $updateDraft->update(
+    $response = $updateDraft->__invoke(
         draftId: $draftId,
         attributeAndFieldData: ['title' => 'Updated Title'],
         draftName: 'Updated Name',
@@ -135,7 +135,7 @@ it('works with provisional drafts', function () {
     // let's test that the UpdateDraft tool throws the expected error for a non-existent draft
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
-    expect(fn() => $updateDraft->update(
+    expect(fn() => $updateDraft->__invoke(
         draftId: 99999,
         attributeAndFieldData: ['title' => 'Should Fail']
     ))->toThrow(\InvalidArgumentException::class, 'Entry with ID 99999 does not exist');
@@ -144,7 +144,7 @@ it('works with provisional drafts', function () {
 it('validates draft exists', function () {
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
-    expect(fn() => $updateDraft->update(draftId: 99999))
+    expect(fn() => $updateDraft->__invoke(draftId: 99999))
         ->toThrow(\InvalidArgumentException::class, 'Entry with ID 99999 does not exist');
 });
 
@@ -153,7 +153,7 @@ it('validates entry is actually a draft', function () {
     
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
-    expect(fn() => $updateDraft->update(
+    expect(fn() => $updateDraft->__invoke(
         draftId: $publishedId,
         attributeAndFieldData: ['title' => 'Should Fail']
     ))->toThrow(\InvalidArgumentException::class, 'is not a draft');
@@ -164,7 +164,7 @@ it('handles empty update gracefully', function () {
     
     $updateDraft = Craft::$container->get(UpdateDraft::class);
     
-    $response = $updateDraft->update(draftId: $draftId);
+    $response = $updateDraft->__invoke(draftId: $draftId);
 
     expect($response['title'])->toBe('Original Title'); // Should remain unchanged
     expect($response['draftId'])->toBe($draftId);

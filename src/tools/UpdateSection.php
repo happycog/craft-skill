@@ -30,7 +30,7 @@ class UpdateSection
      * @param array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null $siteSettingsData
      * @return array<string, mixed>
      */
-    public function update(
+    public function __invoke(
         /** The ID of the section to update */
         int $sectionId,
 

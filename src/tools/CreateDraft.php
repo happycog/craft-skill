@@ -39,7 +39,7 @@ class CreateDraft
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
      */
-    public function create(
+    public function __invoke(
         /** Section ID when creating from scratch */
         ?int $sectionId = null,
 

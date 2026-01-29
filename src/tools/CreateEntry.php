@@ -36,7 +36,7 @@ class CreateEntry
      * @param array<string, mixed> $attributeAndFieldData
      * @return array{_notes: string, entryId: int|null, title: string|null, slug: string|null, postDate: string|null, url: string}
      */
-    public function create(
+    public function __invoke(
         int $sectionId,
         int $entryTypeId,
 

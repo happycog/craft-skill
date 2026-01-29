@@ -58,7 +58,7 @@ test('field layout cleanup runs when field is deleted', function () {
     $deleteField = Craft::$container->get(DeleteField::class);
 
     // Step 1: Create a field
-    $fieldResult = $createField->create(
+    $fieldResult = $createField->__invoke(
         type: 'craft\fields\PlainText',
         name: 'Heading',
         handle: 'heading',
@@ -68,7 +68,7 @@ test('field layout cleanup runs when field is deleted', function () {
     $originalFieldId = $fieldResult['fieldId'];
 
     // Step 2: Create an entry type with a field layout
-    $entryTypeResult = $createEntryType->create(
+    $entryTypeResult = $createEntryType->__invoke(
         name: 'Test Broken Reference',
         handle: 'testBrokenRef',
         hasTitleField: true
@@ -76,7 +76,7 @@ test('field layout cleanup runs when field is deleted', function () {
     $fieldLayoutId = $entryTypeResult['fieldLayoutId'];
 
     // Step 3: Add the field to the field layout
-    $addResult = $addField->add(
+    $addResult = ($addField)(
         fieldLayoutId: $fieldLayoutId,
         fieldId: $originalFieldId,
         tabName: 'Content',
@@ -87,7 +87,7 @@ test('field layout cleanup runs when field is deleted', function () {
     expect($addResult['addedField']['fieldId'])->toBe($originalFieldId);
 
     // Step 4: Delete the field - this should clean up the field layout
-    $deleteResult = $deleteField->delete(fieldId: $originalFieldId);
+    $deleteResult = $deleteField->__invoke(fieldId: $originalFieldId);
     expect($deleteResult['success'])->toBeTrue();
     
     // Verify the delete result includes cleanup information
@@ -104,7 +104,7 @@ test('field layout cleanup is mentioned in delete notes', function () {
     $deleteField = Craft::$container->get(DeleteField::class);
 
     // Step 1: Create a field
-    $fieldResult = $createField->create(
+    $fieldResult = $createField->__invoke(
         type: 'craft\fields\PlainText',
         name: 'Test Field',
         handle: 'testField',
@@ -114,7 +114,7 @@ test('field layout cleanup is mentioned in delete notes', function () {
     $fieldId = $fieldResult['fieldId'];
 
     // Step 2: Create an entry type with a field layout
-    $entryTypeResult = $createEntryType->create(
+    $entryTypeResult = $createEntryType->__invoke(
         name: 'Test Entry Type',
         handle: 'testEntryType',
         hasTitleField: true
@@ -122,7 +122,7 @@ test('field layout cleanup is mentioned in delete notes', function () {
     $fieldLayoutId = $entryTypeResult['fieldLayoutId'];
 
     // Step 3: Add the field to the layout
-    $addField->add(
+    ($addField)(
         fieldLayoutId: $fieldLayoutId,
         fieldId: $fieldId,
         tabName: 'Content',
@@ -130,7 +130,7 @@ test('field layout cleanup is mentioned in delete notes', function () {
     );
 
     // Step 4: Delete the field
-    $deleteResult = $deleteField->delete(fieldId: $fieldId);
+    $deleteResult = $deleteField->__invoke(fieldId: $fieldId);
     
     // Step 5: Verify cleanup information is in the response
     expect($deleteResult)->toHaveKey('cleanedLayouts');

@@ -22,7 +22,7 @@ class GetSites
      *
      * @return array<int, array<string, mixed>>
      */
-    public function get(): array
+    public function __invoke(): array
     {
         $sites = Craft::$app->getSites()->getAllSites();
         $primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;

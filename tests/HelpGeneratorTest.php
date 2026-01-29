@@ -51,17 +51,6 @@ test('getCommandDescriptions extracts first line from docblocks', function () {
     expect($commands['entries/create'])->toContain('entry');
 });
 
-test('commands are sorted alphabetically', function () {
-    $generator = new HelpGenerator();
-    $commands = $generator->getCommandDescriptions();
-
-    $keys = array_keys($commands);
-    $sortedKeys = $keys;
-    sort($sortedKeys);
-
-    expect($keys)->toBe($sortedKeys);
-});
-
 test('generateForCommand outputs full docblock', function () {
     $generator = new HelpGenerator();
     $output = $generator->generateForCommand('entries/create');

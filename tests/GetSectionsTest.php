@@ -3,7 +3,7 @@
 use happycog\craftmcp\tools\GetSections;
 
 it('gets all sections and entry types', function () {
-    $response = Craft::$container->get(GetSections::class)->get();
+    $response = Craft::$container->get(GetSections::class)->__invoke();
 
     expect($response)->toBeArray();
     expect(count($response))->toBeGreaterThan(0);
@@ -19,7 +19,7 @@ it('gets all sections and entry types', function () {
 });
 
 it('includes entry type details for each section', function () {
-    $response = Craft::$container->get(GetSections::class)->get();
+    $response = Craft::$container->get(GetSections::class)->__invoke();
 
     foreach ($response as $section) {
         expect($section['entryTypes'])->not->toBeEmpty();
@@ -34,7 +34,7 @@ it('includes entry type details for each section', function () {
 });
 
 it('returns sections with expected handles', function () {
-    $response = Craft::$container->get(GetSections::class)->get();
+    $response = Craft::$container->get(GetSections::class)->__invoke();
     
     $handles = array_column($response, 'handle');
     
@@ -43,7 +43,7 @@ it('returns sections with expected handles', function () {
 });
 
 it('returns proper section types', function () {
-    $response = Craft::$container->get(GetSections::class)->get();
+    $response = Craft::$container->get(GetSections::class)->__invoke();
     
     $types = array_unique(array_column($response, 'type'));
     
@@ -53,7 +53,7 @@ it('returns proper section types', function () {
 });
 
 it('has consistent data structure across all sections', function () {
-    $response = Craft::$container->get(GetSections::class)->get();
+    $response = Craft::$container->get(GetSections::class)->__invoke();
 
     foreach ($response as $section) {
         expect($section['id'])->toBeGreaterThan(0);
@@ -70,7 +70,7 @@ it('has consistent data structure across all sections', function () {
 });
 
 it('returns sections that can be used for creating entries', function () {
-    $response = Craft::$container->get(GetSections::class)->get();
+    $response = Craft::$container->get(GetSections::class)->__invoke();
     
     $firstSection = $response[0];
     $sectionId = $firstSection['id'];

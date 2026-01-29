@@ -13,24 +13,24 @@ class SectionsController extends Controller
     public function actionCreate(): Response
     {
         $tool = \Craft::$container->get(CreateSection::class);
-        return $this->callTool($tool->create(...));
+        return $this->callTool($tool);
     }
 
     public function actionList(): Response
     {
         $tool = \Craft::$container->get(GetSections::class);
-        return $this->callTool($tool->get(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 
     public function actionUpdate(int $id): Response
     {
         $tool = \Craft::$container->get(UpdateSection::class);
-        return $this->callTool($tool->update(...), ['sectionId' => $id]);
+        return $this->callTool($tool, ['sectionId' => $id]);
     }
 
     public function actionDelete(int $id): Response
     {
         $tool = \Craft::$container->get(DeleteSection::class);
-        return $this->callTool($tool->delete(...), ['sectionId' => $id]);
+        return $this->callTool($tool, ['sectionId' => $id]);
     }
 }

@@ -14,30 +14,30 @@ class EntriesController extends Controller
     public function actionCreate(): Response
     {
         $tool = \Craft::$container->get(CreateEntry::class);
-        return $this->callTool($tool->create(...));
+        return $this->callTool($tool);
     }
 
     public function actionGet(int $id): Response
     {
         $tool = \Craft::$container->get(GetEntry::class);
-        return $this->callTool($tool->get(...), ['entryId' => $id], useQueryParams: true);
+        return $this->callTool($tool, ['entryId' => $id], useQueryParams: true);
     }
 
     public function actionUpdate(int $id): Response
     {
         $tool = \Craft::$container->get(UpdateEntry::class);
-        return $this->callTool($tool->update(...), ['entryId' => $id]);
+        return $this->callTool($tool, ['entryId' => $id]);
     }
 
     public function actionDelete(int $id): Response
     {
         $tool = \Craft::$container->get(DeleteEntry::class);
-        return $this->callTool($tool->delete(...), ['entryId' => $id]);
+        return $this->callTool($tool, ['entryId' => $id]);
     }
 
     public function actionSearch(): Response
     {
         $tool = \Craft::$container->get(SearchContent::class);
-        return $this->callTool($tool->search(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 }

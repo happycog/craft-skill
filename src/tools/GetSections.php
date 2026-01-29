@@ -25,7 +25,7 @@ class GetSections
      * @param array<int>|null $sectionIds
      * @return array<int, array<string, mixed>>
      */
-    public function get(
+    public function __invoke(
         /** Optional list of section IDs to limit results */
         ?array $sectionIds = null
     ): array

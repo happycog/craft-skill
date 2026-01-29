@@ -8,39 +8,6 @@ use ReflectionMethod;
 
 class HelpGenerator
 {
-    /**
-     * @var array<string, array{class: class-string, method: string}>
-     */
-    private const COMMAND_MAP = [
-        'assets/create' => ['class' => \happycog\craftmcp\tools\CreateAsset::class, 'method' => 'create'],
-        'assets/delete' => ['class' => \happycog\craftmcp\tools\DeleteAsset::class, 'method' => 'delete'],
-        'assets/update' => ['class' => \happycog\craftmcp\tools\UpdateAsset::class, 'method' => 'update'],
-        'drafts/apply' => ['class' => \happycog\craftmcp\tools\ApplyDraft::class, 'method' => 'apply'],
-        'drafts/create' => ['class' => \happycog\craftmcp\tools\CreateDraft::class, 'method' => 'create'],
-        'drafts/update' => ['class' => \happycog\craftmcp\tools\UpdateDraft::class, 'method' => 'update'],
-        'entries/create' => ['class' => \happycog\craftmcp\tools\CreateEntry::class, 'method' => 'create'],
-        'entries/delete' => ['class' => \happycog\craftmcp\tools\DeleteEntry::class, 'method' => 'delete'],
-        'entries/get' => ['class' => \happycog\craftmcp\tools\GetEntry::class, 'method' => 'get'],
-        'entries/search' => ['class' => \happycog\craftmcp\tools\SearchContent::class, 'method' => 'search'],
-        'entries/update' => ['class' => \happycog\craftmcp\tools\UpdateEntry::class, 'method' => 'update'],
-        'entry-types/create' => ['class' => \happycog\craftmcp\tools\CreateEntryType::class, 'method' => 'create'],
-        'entry-types/delete' => ['class' => \happycog\craftmcp\tools\DeleteEntryType::class, 'method' => 'delete'],
-        'entry-types/list' => ['class' => \happycog\craftmcp\tools\GetEntryTypes::class, 'method' => 'getAll'],
-        'entry-types/update' => ['class' => \happycog\craftmcp\tools\UpdateEntryType::class, 'method' => 'update'],
-        'field-layouts/create' => ['class' => \happycog\craftmcp\tools\CreateFieldLayout::class, 'method' => 'create'],
-        'field-layouts/get' => ['class' => \happycog\craftmcp\tools\GetFieldLayout::class, 'method' => 'get'],
-        'fields/create' => ['class' => \happycog\craftmcp\tools\CreateField::class, 'method' => 'create'],
-        'fields/delete' => ['class' => \happycog\craftmcp\tools\DeleteField::class, 'method' => 'delete'],
-        'fields/list' => ['class' => \happycog\craftmcp\tools\GetFields::class, 'method' => 'get'],
-        'fields/types' => ['class' => \happycog\craftmcp\tools\GetFieldTypes::class, 'method' => 'get'],
-        'fields/update' => ['class' => \happycog\craftmcp\tools\UpdateField::class, 'method' => 'update'],
-        'sections/create' => ['class' => \happycog\craftmcp\tools\CreateSection::class, 'method' => 'create'],
-        'sections/delete' => ['class' => \happycog\craftmcp\tools\DeleteSection::class, 'method' => 'delete'],
-        'sections/list' => ['class' => \happycog\craftmcp\tools\GetSections::class, 'method' => 'get'],
-        'sections/update' => ['class' => \happycog\craftmcp\tools\UpdateSection::class, 'method' => 'update'],
-        'sites/list' => ['class' => \happycog\craftmcp\tools\GetSites::class, 'method' => 'get'],
-        'volumes/list' => ['class' => \happycog\craftmcp\tools\GetVolumes::class, 'method' => 'get'],
-    ];
 
     /**
      * Generate help output listing all available commands with descriptions.
@@ -83,8 +50,8 @@ class HelpGenerator
     {
         $commands = [];
 
-        foreach (self::COMMAND_MAP as $command => $config) {
-            $description = $this->extractDescription($config['class'], $config['method']);
+        foreach (CommandMap::all() as $command => $toolClass) {
+            $description = $this->extractDescription($toolClass);
             $commands[$command] = $description;
         }
 
@@ -95,13 +62,12 @@ class HelpGenerator
      * Extract the first line of a method's docblock.
      *
      * @param class-string $class
-     * @param string $method
      * @return string The first line of the docblock, or empty string if none
      */
-    private function extractDescription(string $class, string $method): string
+    private function extractDescription(string $class): string
     {
         try {
-            $reflection = new ReflectionMethod($class, $method);
+            $reflection = new ReflectionMethod($class, '__invoke');
             $docComment = $reflection->getDocComment();
 
             if ($docComment === false) {
@@ -123,15 +89,16 @@ class HelpGenerator
      */
     public function generateForCommand(string $command): string
     {
-        if (!isset(self::COMMAND_MAP[$command])) {
+        $toolClass = CommandMap::getToolClass($command);
+        
+        if ($toolClass === null) {
             throw new \InvalidArgumentException("Unknown command: {$command}");
         }
 
-        $config = self::COMMAND_MAP[$command];
         $output = "Command: {$command}\n\n";
 
         try {
-            $reflection = new ReflectionMethod($config['class'], $config['method']);
+            $reflection = new ReflectionMethod($toolClass, '__invoke');
 
             // Extract full docblock
             $docComment = $reflection->getDocComment();
@@ -152,7 +119,7 @@ class HelpGenerator
                     // Show if optional and default value
                     if ($param->isOptional()) {
                         $defaultValue = $param->isDefaultValueAvailable()
-                            ? var_export($param->getDefaultValue(), true)
+                            ? $this->formatDefaultValue($param->getDefaultValue())
                             : 'null';
                         $output .= "  --{$paramName}  ({$typeStr}, optional, default: {$defaultValue})\n";
                     } else {
@@ -213,6 +180,24 @@ class HelpGenerator
         }
 
         return implode("\n", $formatted);
+    }
+
+    /**
+     * Format a default value for display in help text.
+     *
+     * @param mixed $value The default value to format
+     * @return string Formatted representation of the value
+     */
+    private function formatDefaultValue(mixed $value): string
+    {
+        return match (true) {
+            is_null($value) => 'null',
+            is_bool($value) => $value ? 'true' : 'false',
+            is_string($value) => "'{$value}'",
+            is_int($value) || is_float($value) => (string) $value,
+            is_array($value) => $value === [] ? '[]' : '[...]',
+            default => gettype($value),
+        };
     }
 
     /**

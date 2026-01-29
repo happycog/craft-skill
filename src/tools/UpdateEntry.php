@@ -40,7 +40,7 @@ class UpdateEntry
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
      */
-    public function update(
+    public function __invoke(
         int $entryId,
 
         /** The attribute and field data keyed by the handle. For example, to set the body to "foo" you would pass {"body":"foo"}. This field is idempotent so setting a field here will replace all field contents with the provided field contents. If you are updating a field you must first get the field contents, update the content, and then pass the entire updated content here. */

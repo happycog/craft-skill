@@ -23,7 +23,7 @@ beforeEach(function () {
     $this->createEntryType = function (string $name, array $options = []) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
-        $result = $createEntryType->create(
+        $result = $createEntryType->__invoke(
             name: $name,
             handle: $options['handle'] ?? null,
             hasTitleField: $options['hasTitleField'] ?? true,
@@ -41,7 +41,7 @@ beforeEach(function () {
     $this->updateEntryType = function (int $entryTypeId, array $updates = []) {
         $updateEntryType = Craft::$container->get(UpdateEntryType::class);
 
-        return $updateEntryType->update(
+        return $updateEntryType->__invoke(
             entryTypeId: $entryTypeId,
             name: $updates['name'] ?? null,
             handle: $updates['handle'] ?? null,
@@ -231,7 +231,7 @@ it('returns all expected response fields', function () {
         'id',
         'name',
         'handle',
-        'description',
+        // 'description', // removed, it was added in a newer Craft 5+ and isn't present on _all_ Craft 5 installs
         'hasTitleField',
         'titleTranslationMethod',
         'titleTranslationKeyFormat',

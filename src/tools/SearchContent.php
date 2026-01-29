@@ -24,7 +24,7 @@ class SearchContent
      * @param array<int>|null $sectionIds
      * @return array{_notes: string, results: Collection<int, array{entryId: int, title: string, url: string}>}
      */
-    public function search(
+    public function __invoke(
         ?string $query = null,
         int $limit = 5,
 

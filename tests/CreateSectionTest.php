@@ -28,7 +28,7 @@ beforeEach(function () {
     $this->createEntryType = function (string $name, string $handle = null) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
-        $result = $createEntryType->create(
+        $result = $createEntryType->__invoke(
             name: $name,
             handle: $handle
         );
@@ -41,7 +41,7 @@ beforeEach(function () {
     $this->createSection = function (string $name, string $type, array $entryTypeIds, array $options = []) {
         $createSection = Craft::$container->get(CreateSection::class);
 
-        $result = $createSection->create(
+        $result = $createSection->__invoke(
             name: $name,
             type: $type,
             entryTypeIds: $entryTypeIds,
@@ -157,14 +157,14 @@ test('creates section with site-specific settings', function () {
 test('fails when section name is missing', function () {
     $tool = Craft::$container->get(CreateSection::class);
 
-    expect(fn() => $tool->create('', 'channel', [1]))
+    expect(fn() => $tool->__invoke('', 'channel', [1]))
         ->toThrow(\happycog\craftmcp\exceptions\ModelSaveException::class);
 });
 
 test('fails when section type is invalid', function () {
     $tool = new CreateSection();
 
-    expect(fn() => $tool->create('Test Section', 'invalid', [1]))
+    expect(fn() => $tool->__invoke('Test Section', 'invalid', [1]))
         ->toThrow(RuntimeException::class, 'Section type must be single, channel, or structure');
 });
 
@@ -174,7 +174,7 @@ test('fails when site id is invalid in site settings', function () {
 
     $tool = new CreateSection();
 
-    expect(fn() => $tool->create('Test Section', 'channel', [$entryType['entryTypeId']], siteSettings: [
+    expect(fn() => $tool->__invoke('Test Section', 'channel', [$entryType['entryTypeId']], siteSettings: [
         [
             'siteId' => 99999, // Non-existent site ID
             'enabledByDefault' => true
@@ -213,7 +213,7 @@ test('handles duplicate section handle gracefully', function () {
     // Try to create another with the same handle
     $tool = new CreateSection();
 
-    expect(fn() => $tool->create('Another Test', 'channel', [$entryType2['entryTypeId']], handle: 'duplicateTest'))
+    expect(fn() => $tool->__invoke('Another Test', 'channel', [$entryType2['entryTypeId']], handle: 'duplicateTest'))
         ->toThrow(\happycog\craftmcp\exceptions\ModelSaveException::class);
 });
 

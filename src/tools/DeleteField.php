@@ -19,7 +19,7 @@ class DeleteField
      *
      * @return array<string, mixed>
      */
-    public function delete(
+    public function __invoke(
         /** The ID of the field to delete */
         int $fieldId
     ): array

@@ -30,7 +30,7 @@ class UpdateDraft
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
      */
-    public function update(
+    public function __invoke(
         /** The draft ID to update */
         int $draftId,
 

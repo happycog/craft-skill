@@ -29,7 +29,7 @@ class RemoveElementFromFieldLayout
      *
      * @return array<string, mixed>
      */
-    public function remove(
+    public function __invoke(
         /** The ID of the field layout to modify */
         int $fieldLayoutId,
 

@@ -35,7 +35,7 @@ class UpdateAsset
      * @param array<string, mixed> $fieldData
      * @return array<string, mixed>
      */
-    public function update(
+    public function __invoke(
         /** The ID of the asset to update */
         int $assetId,
 

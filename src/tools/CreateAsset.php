@@ -41,7 +41,7 @@ class CreateAsset
      *
      * @return array<string, mixed>
      */
-    public function create(
+    public function __invoke(
         /** The ID of the asset volume to upload to */
         int $volumeId,
 

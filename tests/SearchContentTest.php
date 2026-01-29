@@ -5,13 +5,13 @@ use happycog\craftmcp\tools\GetSections;
 
 beforeEach(function () {
     $this->searchContent = Craft::$container->get(SearchContent::class);
-    $this->sections = Craft::$container->get(GetSections::class)->get();
+    $this->sections = Craft::$container->get(GetSections::class)->__invoke();
     $this->validSectionId = $this->sections[0]['id'];
     $this->invalidSectionId = 99999;
 });
 
 it('searches content with query parameter (backward compatibility)', function () {
-    $result = $this->searchContent->search('content');
+    $result = $this->searchContent->__invoke('content');
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
@@ -20,7 +20,7 @@ it('searches content with query parameter (backward compatibility)', function ()
 });
 
 it('searches content with both query and sectionIds parameters', function () {
-    $result = $this->searchContent->search('content', 5, 'live', [$this->validSectionId]);
+    $result = $this->searchContent->__invoke('content', 5, 'live', [$this->validSectionId]);
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
@@ -30,7 +30,7 @@ it('searches content with both query and sectionIds parameters', function () {
 });
 
 it('returns all entries from specific sections without query', function () {
-    $result = $this->searchContent->search(null, 5, 'live', [$this->validSectionId]);
+    $result = $this->searchContent->__invoke(null, 5, 'live', [$this->validSectionId]);
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
@@ -40,7 +40,7 @@ it('returns all entries from specific sections without query', function () {
 });
 
 it('returns all entries when no parameters provided', function () {
-    $result = $this->searchContent->search();
+    $result = $this->searchContent->__invoke();
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
@@ -50,7 +50,7 @@ it('returns all entries when no parameters provided', function () {
 
 it('handles multiple section IDs', function () {
     $sectionIds = array_slice(array_column($this->sections, 'id'), 0, 2);
-    $result = $this->searchContent->search(null, 5, 'live', $sectionIds);
+    $result = $this->searchContent->__invoke(null, 5, 'live', $sectionIds);
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
@@ -59,33 +59,33 @@ it('handles multiple section IDs', function () {
 });
 
 it('throws exception for invalid section ID', function () {
-    expect(fn() => $this->searchContent->search(null, 5, 'live', [$this->invalidSectionId]))
+    expect(fn() => $this->searchContent->__invoke(null, 5, 'live', [$this->invalidSectionId]))
         ->toThrow(\RuntimeException::class, "Section with ID {$this->invalidSectionId} not found");
 });
 
 it('throws exception for mix of valid and invalid section IDs', function () {
     $mixedSectionIds = [$this->validSectionId, $this->invalidSectionId];
     
-    expect(fn() => $this->searchContent->search(null, 5, 'live', $mixedSectionIds))
+    expect(fn() => $this->searchContent->__invoke(null, 5, 'live', $mixedSectionIds))
         ->toThrow(\RuntimeException::class, "Section with ID {$this->invalidSectionId} not found");
 });
 
 it('respects limit parameter with section filtering', function () {
     $limit = 2;
-    $result = $this->searchContent->search(null, $limit, 'live', [$this->validSectionId]);
+    $result = $this->searchContent->__invoke(null, $limit, 'live', [$this->validSectionId]);
     
     expect($result['results']->count())->toBeLessThanOrEqual($limit);
 });
 
 it('respects status parameter with section filtering', function () {
-    $result = $this->searchContent->search(null, 5, 'live', [$this->validSectionId]);
+    $result = $this->searchContent->__invoke(null, 5, 'live', [$this->validSectionId]);
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
 });
 
 it('returns proper entry structure in results', function () {
-    $result = $this->searchContent->search(null, 1, 'live', [$this->validSectionId]);
+    $result = $this->searchContent->__invoke(null, 1, 'live', [$this->validSectionId]);
     
     if ($result['results']->isNotEmpty()) {
         $entry = $result['results']->first();
@@ -98,7 +98,7 @@ it('returns proper entry structure in results', function () {
 });
 
 it('handles empty sectionIds array', function () {
-    $result = $this->searchContent->search('content', 5, 'live', []);
+    $result = $this->searchContent->__invoke('content', 5, 'live', []);
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
@@ -107,7 +107,7 @@ it('handles empty sectionIds array', function () {
 
 it('maintains backward compatibility with existing calls', function () {
     // Test the old way of calling the method (positional parameters)
-    $result = $this->searchContent->search('test');
+    $result = $this->searchContent->__invoke('test');
     
     expect($result)->toBeArray();
     expect($result)->toHaveKeys(['_notes', 'results']);
@@ -117,14 +117,14 @@ it('maintains backward compatibility with existing calls', function () {
 
 it('generates correct notes for different parameter combinations', function () {
     // Query only
-    $result1 = $this->searchContent->search('test');
+    $result1 = $this->searchContent->__invoke('test');
     expect($result1['_notes'])->toBe('The following entries were found matching search query "test".');
     
     // Sections only
-    $result2 = $this->searchContent->search(null, 5, 'live', [$this->validSectionId]);
+    $result2 = $this->searchContent->__invoke(null, 5, 'live', [$this->validSectionId]);
     expect($result2['_notes'])->toMatch('/The following entries were found matching section\(s\): .+\./');
     
     // Neither
-    $result3 = $this->searchContent->search();
+    $result3 = $this->searchContent->__invoke();
     expect($result3['_notes'])->toBe('The following entries were found.');
 });

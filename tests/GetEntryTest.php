@@ -10,7 +10,7 @@ it('gets entry details', function () {
         ->body('bar')
         ->create();
 
-    $response = Craft::$container->get(GetEntry::class)->get($entry->id);
+    $response = Craft::$container->get(GetEntry::class)->__invoke($entry->id);
 
     expect($response)->toMatchArray([
         'title' => 'foo',

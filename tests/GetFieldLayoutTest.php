@@ -34,7 +34,7 @@ beforeEach(function () {
     $this->createEntryType = function (string $name, array $options = []) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
-        $result = $createEntryType->create(
+        $result = $createEntryType->__invoke(
             name: $name,
             handle: $options['handle'] ?? null,
             hasTitleField: $options['hasTitleField'] ?? true,
@@ -51,7 +51,7 @@ beforeEach(function () {
     $this->createField = function (string $name, string $type = 'craft\\fields\\PlainText', array $options = []) {
         $createField = Craft::$container->get(CreateField::class);
 
-        $result = $createField->create(
+        $result = $createField->__invoke(
             type: $type,
             name: $name,
             handle: $options['handle'] ?? null,
@@ -80,7 +80,7 @@ beforeEach(function () {
 
         $getFieldLayout = Craft::$container->get(GetFieldLayout::class);
 
-        return $getFieldLayout->get($fieldLayoutId);
+        return $getFieldLayout->__invoke($fieldLayoutId);
     };
 
     $this->updateFieldLayout = function (int $entryTypeId, array $tabs) {
@@ -158,7 +158,7 @@ describe('GetFieldLayout', function () {
     test('validates field layout exists', function () {
         expect(function () {
             $getFieldLayout = Craft::$container->get(GetFieldLayout::class);
-            $getFieldLayout->get(999999);
+            $getFieldLayout->__invoke(999999);
         })->toThrow(\RuntimeException::class, 'Field layout with ID 999999 not found');
     });
 

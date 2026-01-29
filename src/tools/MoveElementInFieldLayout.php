@@ -26,7 +26,7 @@ class MoveElementInFieldLayout
      * @param array<string, mixed> $position
      * @return array<string, mixed>
      */
-    public function move(
+    public function __invoke(
         /** The ID of the field layout to modify */
         int $fieldLayoutId,
 

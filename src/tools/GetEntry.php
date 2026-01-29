@@ -12,7 +12,7 @@ class GetEntry
      *
      * @return array<string, mixed>
      */
-    public function get(
+    public function __invoke(
         int $entryId,
     ): array
     {

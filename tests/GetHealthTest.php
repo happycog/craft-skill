@@ -51,7 +51,7 @@ test('health response includes site information', function () {
 
 test('GetHealth tool returns expected structure', function () {
     $tool = Craft::$container->get(GetHealth::class);
-    $result = $tool->get();
+    $result = $tool->__invoke();
 
     expect($result)->toHaveKey('status')
         ->and($result['status'])->toBe('ok')

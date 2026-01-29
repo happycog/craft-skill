@@ -22,7 +22,7 @@ class UpdateField
      * @param array<string, mixed>|null $settings
      * @return array<string, mixed>
      */
-    public function update(
+    public function __invoke(
         /** The ID of the field to update */
         int $fieldId,
 

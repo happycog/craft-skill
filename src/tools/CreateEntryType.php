@@ -24,7 +24,7 @@ class CreateEntryType
      *
      * @return array<string, mixed>
      */
-    public function create(
+    public function __invoke(
         /** The display name for the entry type */
         string $name,
 

@@ -18,7 +18,7 @@ class DeleteEntryType
      *
      * @return array<string, mixed>
      */
-    public function delete(
+    public function __invoke(
         /** The ID of the entry type to delete */
         int $entryTypeId,
 

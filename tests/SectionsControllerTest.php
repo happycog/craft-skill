@@ -5,14 +5,14 @@ use craft\elements\Entry;
 test('PUT /api/sections/<id> updates a section', function () {
     // Create a test entry type first
     $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
-    $entryTypeData = $createEntryType->create(
+    $entryTypeData = $createEntryType->__invoke(
         name: 'Test Entry Type for Section',
         handle: 'testEntryTypeForSection' . time()
     );
     
     // Create a test section
     $createSection = Craft::$container->get(\happycog\craftmcp\tools\CreateSection::class);
-    $sectionData = $createSection->create(
+    $sectionData = $createSection->__invoke(
         name: 'Test Section',
         type: 'channel',
         entryTypeIds: [$entryTypeData['entryTypeId']],
@@ -37,14 +37,14 @@ test('PUT /api/sections/<id> updates a section', function () {
 test('DELETE /api/sections/<id> deletes a section', function () {
     // Create a test entry type first
     $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
-    $entryTypeData = $createEntryType->create(
+    $entryTypeData = $createEntryType->__invoke(
         name: 'Test Entry Type for Delete Section',
         handle: 'testEntryTypeForDeleteSection' . time()
     );
     
     // Create a test section
     $createSection = Craft::$container->get(\happycog\craftmcp\tools\CreateSection::class);
-    $sectionData = $createSection->create(
+    $sectionData = $createSection->__invoke(
         name: 'Test Section to Delete',
         type: 'channel',
         entryTypeIds: [$entryTypeData['entryTypeId']],
@@ -69,7 +69,7 @@ test('DELETE /api/sections/<id> deletes a section', function () {
 test('PUT /api/entry-types/<id> updates an entry type', function () {
     // Create a test entry type first
     $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
-    $entryTypeData = $createEntryType->create(
+    $entryTypeData = $createEntryType->__invoke(
         name: 'Test Entry Type',
         handle: 'testEntryType' . time()
     );
@@ -92,7 +92,7 @@ test('PUT /api/entry-types/<id> updates an entry type', function () {
 test('DELETE /api/entry-types/<id> deletes an entry type', function () {
     // Create a test entry type first
     $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
-    $entryTypeData = $createEntryType->create(
+    $entryTypeData = $createEntryType->__invoke(
         name: 'Test Entry Type to Delete',
         handle: 'testEntryTypeDelete' . time()
     );
@@ -115,7 +115,7 @@ test('DELETE /api/entry-types/<id> deletes an entry type', function () {
 test('POST /api/sections with invalid type returns validation error', function () {
     // Create a test entry type first (needed for section creation)
     $createEntryType = Craft::$container->get(\happycog\craftmcp\tools\CreateEntryType::class);
-    $entryTypeData = $createEntryType->create(
+    $entryTypeData = $createEntryType->__invoke(
         name: 'Test Entry Type for Invalid Section',
         handle: 'testEntryTypeForInvalidSection' . time()
     );
