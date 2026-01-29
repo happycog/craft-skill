@@ -30,6 +30,13 @@ class CreateEntry
      * - siteId: Optional site ID for multi-site installations. Defaults to primary site if not provided.
      * Use the GetSites tool to discover valid siteId values.
      *
+     * CLI Field Syntax Shortcuts:
+     * Instead of using --attributeAndFieldData='{"field":"value"}', you can use simpler syntax:
+     * - Direct fields: --title="My Title" --slug="my-slug" (equivalent to --attributeAndFieldData='{"title":"My Title","slug":"my-slug"}')
+     * - Any unrecognized flag is automatically added to attributeAndFieldData
+     * - This makes it easier to set fields without constructing large JSON blobs
+     * Example: `agent-craft entries/create --sectionId=1 --entryTypeId=2 --title="Test" --body="Content"`
+     *
      * After creating the entry always link the user back to the entry in the Craft control panel so they can review
      * the changes in the context of the Craft UI.
      *

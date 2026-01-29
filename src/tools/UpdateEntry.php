@@ -34,6 +34,13 @@ class UpdateEntry
      * tool and its corresponding UpdateDraft tool. This way the user can reciew their changes in thr Craft UI before
      * accepting them.
      *
+     * CLI Field Syntax Shortcuts:
+     * Instead of using --attributeAndFieldData='{"field":"value"}', you can use simpler syntax:
+     * - Direct fields: --title="My Title" --body="Content" (equivalent to --attributeAndFieldData='{"title":"My Title","body":"Content"}')
+     * - Any unrecognized flag is automatically added to attributeAndFieldData
+     * - This makes it easier to set fields without constructing large JSON blobs
+     * Example: `agent-craft entries/update 123 --title="Updated Title" --body="New content"`
+     *
      * After updating the entry always link the user back to the entry in the Craft control panel so they can review
      * the changes in the context of the Craft UI.
      *
