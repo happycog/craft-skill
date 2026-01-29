@@ -33,9 +33,11 @@ class CreateEntry
      * CLI Field Syntax Shortcuts:
      * Instead of using --attributeAndFieldData='{"field":"value"}', you can use simpler syntax:
      * - Direct fields: --title="My Title" --slug="my-slug" (equivalent to --attributeAndFieldData='{"title":"My Title","slug":"my-slug"}')
+     * - Array syntax (escaped): --relationshipField\[\]=123 or --jsonField[foo][bar]=qux
+     * - Nested objects: --siteSettings[0][siteId]=1 --siteSettings[0][uriFormat]="blog/{slug}"
      * - Any unrecognized flag is automatically added to attributeAndFieldData
      * - This makes it easier to set fields without constructing large JSON blobs
-     * Example: `agent-craft entries/create --sectionId=1 --entryTypeId=2 --title="Test" --body="Content"`
+     * Example: `agent-craft entries/create --sectionId=1 --entryTypeId=2 --title="Test" --body="Content" --categories\[\]=5`
      *
      * After creating the entry always link the user back to the entry in the Craft control panel so they can review
      * the changes in the context of the Craft UI.
