@@ -26,8 +26,22 @@ class UpdateEntry
      * - For nested data use bracket notation: --matrix[0][type]="text" --matrix[0][fields][body]="content"
      * - This is REQUIRED for debugging and maintainability
      *
+     * MATRIX FIELDS - IMPORTANT:
+     * - Matrix fields are ALWAYS replaced entirely (idempotent operation)
+     * - You MUST pass the WHOLE matrix field contents, not just changes
+     * - To preserve existing blocks: First get the entry, then include ALL blocks (existing + new) in the update
+     * - Each block must use keys: new1, new2, new3, etc. (NOT numeric indices, even for existing blocks)
+     * - Each block needs: [type] and [fields][fieldHandle] for each field in that block
+     * - Example: --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="content"
+     *           --matrixField\[new2\]\[type\]=image --matrixField\[new2\]\[fields\]\[image\]\[\]=123
+     *
      * Example (CORRECT):
      * agent-craft entries/update 123 --title="Updated Title" --body="New content" --author="Jane"
+     *
+     * Example with Matrix - Replacing ALL blocks (CORRECT):
+     * agent-craft entries/update 123 --title="Test" \
+     *   --blocks\[new1\]\[type\]=textBlock --blocks\[new1\]\[fields\]\[heading\]="Intro" \
+     *   --blocks\[new2\]\[type\]=imageBlock --blocks\[new2\]\[fields\]\[image\]\[\]=456
      *
      * Example (INCORRECT - DO NOT DO THIS):
      * agent-craft entries/update 123 --attributeAndFieldData='{"title":"Updated Title",...}'
