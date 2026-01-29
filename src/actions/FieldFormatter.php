@@ -91,7 +91,7 @@ class FieldFormatter
     {
         $fieldData = [
             'id' => $field->id,
-            'handle' => $field->handle,
+            'handle' => $layoutEl?->handle ?? $field->handle,
             'name' => $field->name,
             'type' => get_class($field),
             'instructions' => $field->instructions,
