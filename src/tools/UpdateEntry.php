@@ -19,29 +19,24 @@ class UpdateEntry
     /**
      * Update an entry in Craft.
      *
-     * - An "Entry" in Craft is a generic term. Entries could hold categories, media, and a variety of other data types.
-     * - You should query the sections to get the types of entries that can be updated. Always use the section type and
-     * section definition to determine if the user is requesting an "Entry".
-     * - When updating a new entry pass an integer `$sectionId` and an integer `$entryTypeId`. You can use other tools
-     * to determine the appropriate IDs to use.
-     * - Attribute and field data can be passed native attributes like title, slug, postDate, etc. as well as any
-     * custom fields that are associated with the entry type. You can look up custom field handles with a separate tool
-     * call.
-     * - The attribute and field data is a JSON object keyed by the field handle. For example, a body field would be
-     * set by passing {"body":"This is the body content"}. And if you pass multiple fields like a title and body field
-     * like {"title":"This is the title","body":"This is the body content"}
-     * - You should prefer creating a Draft instead of updating an entry in place. You can do this with the CreateDraft
-     * tool and its corresponding UpdateDraft tool. This way the user can reciew their changes in thr Craft UI before
-     * accepting them.
+     * CRITICAL - CLI USAGE REQUIREMENTS:
+     * - DO NOT use --attributeAndFieldData with JSON blobs
+     * - ALWAYS use direct field flags: --title="value" --body="content" --customField="data"
+     * - For arrays use escaped brackets: --tags\[\]=news --tags\[\]=featured
+     * - For nested data use bracket notation: --matrix[0][type]="text" --matrix[0][fields][body]="content"
+     * - This is REQUIRED for debugging and maintainability
      *
-     * CLI Field Syntax Shortcuts:
-     * Instead of using --attributeAndFieldData='{"field":"value"}', you can use simpler syntax:
-     * - Direct fields: --title="My Title" --body="Content" (equivalent to --attributeAndFieldData='{"title":"My Title","body":"Content"}')
-     * - Array syntax (escaped): --relationshipField\[\]=123 or --jsonField[foo][bar]=qux
-     * - Nested objects: --siteSettings[0][siteId]=1 --siteSettings[0][uriFormat]="blog/{slug}"
-     * - Any unrecognized flag is automatically added to attributeAndFieldData
-     * - This makes it easier to set fields without constructing large JSON blobs
-     * Example: `agent-craft entries/update 123 --title="Updated Title" --tags\[\]=news --tags\[\]=featured`
+     * Example (CORRECT):
+     * agent-craft entries/update 123 --title="Updated Title" --body="New content" --author="Jane"
+     *
+     * Example (INCORRECT - DO NOT DO THIS):
+     * agent-craft entries/update 123 --attributeAndFieldData='{"title":"Updated Title",...}'
+     *
+     * Entry Information:
+     * - An "Entry" in Craft is a generic term. Entries could hold categories, media, and a variety of other data types.
+     * - Query sections first to get the types of entries that can be updated. Use the section type and definition.
+     * - Prefer creating a Draft instead of updating an entry in place. Use CreateDraft and UpdateDraft tools so the
+     * user can review changes in the Craft UI before accepting them.
      *
      * After updating the entry always link the user back to the entry in the Craft control panel so they can review
      * the changes in the context of the Craft UI.

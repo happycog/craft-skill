@@ -16,28 +16,26 @@ class CreateEntry
     /**
      * Create an entry in Craft.
      *
+     * CRITICAL - CLI USAGE REQUIREMENTS:
+     * - DO NOT use --attributeAndFieldData with JSON blobs
+     * - ALWAYS use direct field flags: --title="value" --body="content" --customField="data"
+     * - For arrays use escaped brackets: --categories\[\]=1 --categories\[\]=2
+     * - For nested data use bracket notation: --matrix[0][type]="text" --matrix[0][fields][body]="content"
+     * - This is REQUIRED for debugging and maintainability
+     *
+     * Example (CORRECT):
+     * agent-craft entries/create --sectionId=1 --entryTypeId=2 --title="My Entry" --body="Content" --author="John"
+     *
+     * Example (INCORRECT - DO NOT DO THIS):
+     * agent-craft entries/create --sectionId=1 --entryTypeId=2 --attributeAndFieldData='{"title":"My Entry",...}'
+     *
+     * Entry Information:
      * - An "Entry" in Craft is a generic term. Entries could hold categories, media, and a variety of other data types.
-     * - You should query the sections to get the types of entries that can be created. Always use the section type and
-     * section definition to determine if the user is requesting an "Entry".
-     * - When creating a new entry pass an integer `$sectionId` and an integer `$entryTypeId`. You can use other tools
-     * to determine the appropriate IDs to use.
-     * - Attribute and field data can be passed native attributes like title, slug, postDate, etc. as well as any
-     * custom fields that are associated with the entry type. You can look up custom field handles with a separate tool
-     * call.
-     * - The attribute and field data is a JSON object keyed by the field handle. For example, a body field would be
-     * set by passing {"body":"This is the body content"}. And if you pass multiple fields like a title and body field
-     * like {"title":"This is the title","body":"This is the body content"}
+     * - Query sections first to get the types of entries that can be created. Use the section type and definition to
+     * determine if the user is requesting an "Entry".
+     * - Pass integer `$sectionId` and integer `$entryTypeId`. Use other tools to determine the appropriate IDs.
      * - siteId: Optional site ID for multi-site installations. Defaults to primary site if not provided.
      * Use the GetSites tool to discover valid siteId values.
-     *
-     * CLI Field Syntax Shortcuts:
-     * Instead of using --attributeAndFieldData='{"field":"value"}', you can use simpler syntax:
-     * - Direct fields: --title="My Title" --slug="my-slug" (equivalent to --attributeAndFieldData='{"title":"My Title","slug":"my-slug"}')
-     * - Array syntax (escaped): --relationshipField\[\]=123 or --jsonField[foo][bar]=qux
-     * - Nested objects: --siteSettings[0][siteId]=1 --siteSettings[0][uriFormat]="blog/{slug}"
-     * - Any unrecognized flag is automatically added to attributeAndFieldData
-     * - This makes it easier to set fields without constructing large JSON blobs
-     * Example: `agent-craft entries/create --sectionId=1 --entryTypeId=2 --title="Test" --body="Content" --categories\[\]=5`
      *
      * After creating the entry always link the user back to the entry in the Craft control panel so they can review
      * the changes in the context of the Craft UI.
