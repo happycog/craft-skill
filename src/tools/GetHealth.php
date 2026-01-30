@@ -14,7 +14,7 @@ class GetHealth
      *
      * @return array<string, mixed>
      */
-    public function get(): array
+    public function __invoke(): array
     {
         return [
             'status' => 'ok',

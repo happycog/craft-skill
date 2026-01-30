@@ -2,22 +2,25 @@
 
 ## Project Overview
 
-This is a Craft CMS plugin that provides a RESTful HTTP API with structured access to Craft CMS content management capabilities. The plugin exposes Craft CMS functionality through HTTP endpoints including content creation, modification, search, and management operations.
+This is a standalone CLI tool that provides programmatic access to Craft CMS content management capabilities. The tool is distributed as a self-contained PHAR executable that bootstraps Craft CMS and exposes all CMS functionality through a clean command-line interface designed specifically for AI agents and automation workflows.
 
 ## Tech Stack
 
 - **Backend**: PHP 8.1+ with Craft CMS 5.x framework
-- **Validation**: CuyZ/Valinor ^2.2 for request parameter validation and mapping
-- **Transport Layer**: HTTP endpoints integrated with Yii2 routing (Craft's underlying framework)
+- **Validation**: CuyZ/Valinor ^2.2 for parameter validation and mapping
+- **Distribution**: PHAR (PHP Archive) - self-contained executable
+- **CLI Framework**: Custom argument parser with support for positional args, flags, and JSON data
 - **Testing**: Pest PHP testing framework with craft-pest-core
 - **Package Management**:
-  - PHP: Composer
-- **Build Tool**: None required (server-side PHP plugin)
+  - PHP: Composer (development only)
+- **Build Tool**: PHAR compiler for creating standalone executable
 
 ## Project Structure
 
 ```
 /
+├── bin/
+│   └── agent-craft                  # CLI entrypoint script
 ├── src/
 │   ├── actions/
 │   │   ├── UpsertEntry.php          # Entry creation/update action
@@ -29,6 +32,9 @@ This is a Craft CMS plugin that provides a RESTful HTTP API with structured acce
 │   │   └── RegisterListener.php     # Event listener registration
 │   ├── base/
 │   │   └── Plugin.php               # Base plugin class with DI
+│   ├── cli/
+│   │   ├── ArgumentParser.php       # CLI argument parser
+│   │   └── CommandRouter.php        # Command routing
 │   ├── controllers/
 │   │   ├── Controller.php           # Base controller with Valinor validation
 │   │   ├── EntriesController.php    # Entry CRUD endpoints
@@ -67,6 +73,7 @@ This is a Craft CMS plugin that provides a RESTful HTTP API with structured acce
 - cuyz/valinor dependency for request validation
 - craft-pest-core for testing framework
 - PHPStan for static analysis
+- `"bin": ["bin/agent-craft"]` for CLI script distribution
 
 ### 2. `src/Plugin.php`
 - Main plugin entry point with dependency injection setup
@@ -118,32 +125,43 @@ composer install
 
 # Generate PHPStan baseline (if needed)
 ./vendor/bin/phpstan analyse --generate-baseline
+
+# Build the PHAR (requires phar.readonly disabled)
+php -d phar.readonly=0 bin/build-phar.php
 ```
 
-### API Testing
+### CLI Testing
 ```bash
-# IMPORTANT: Base URL and API Prefix Configuration
-# The API requires a base URL from PRIMARY_SITE_URL environment variable.
-# Check .env file or ENV for PRIMARY_SITE_URL value.
-# If not set, ask the user for the base URL to use.
-#
-# The API prefix is configurable (defaults to 'api').
-# Check config/skills.php for 'apiPrefix' in the PHP array first.
-# If not found, try the default '/api'.
-# If requests fail, ask the user for the configured prefix.
-# Example: PRIMARY_SITE_URL=http://craft-mcp.dev.markhuot.com
+# IMPORTANT: The CLI tool works from any directory
+# Use --path to specify the Craft installation location
 
-# Test with curl (replace {BASE_URL} and {API_PREFIX} with actual values)
-# Default API prefix is 'api'
-curl -X POST {BASE_URL}/{API_PREFIX}/entries \
-  -H "Content-Type: application/json" \
-  -d '{"sectionId": 1, "entryTypeId": 1, "attributeAndFieldData": {"title": "Test Entry"}}'
+# Test basic functionality from plugin directory
+./bin/agent-craft sections/list
 
-# Search entries
-curl -X GET "{BASE_URL}/{API_PREFIX}/entries/search?query=test"
+# Test with custom Craft path
+./bin/agent-craft sections/list --path=/path/to/craft
 
-# Get specific entry
-curl -X GET {BASE_URL}/{API_PREFIX}/entries/123
+# Test entry creation with simple flags
+./bin/agent-craft entries/create \
+  --sectionId=1 \
+  --entryTypeId=2 \
+  --attributeAndFieldData[title]="Test Entry"
+
+# Test with bracket notation for structured data
+./bin/agent-craft entries/create \
+  --sectionId=1 \
+  --entryTypeId=2 \
+  --attributeAndFieldData[title]="Test Entry" \
+  --attributeAndFieldData[fields][bodyContent]="<p>Test</p>"
+
+# Test positional arguments
+./bin/agent-craft entries/get 123
+
+# Test verbose output
+./bin/agent-craft entries/create --title="Test" -vvv
+
+# Using PHAR distribution
+./agent-craft.phar sections/list
 ```
 
 ### PHPStan Configuration
@@ -169,39 +187,8 @@ parameters:
 
 ## Development Patterns
 
-### 1. Creating New HTTP Endpoints
-Create controller classes in `src/controllers/` and tool classes in `src/tools/`:
-
-**Controller Pattern with Valinor Validation:**
-
-```php
-// src/controllers/ExampleController.php
-namespace happycog\craftmcp\controllers;
-
-use happycog\craftmcp\tools\ExampleTool;
-use yii\web\Response;
-
-class ExampleController extends Controller
-{
-    public function actionCreate(): Response
-    {
-        $tool = \Craft::$container->get(ExampleTool::class);
-        return $this->callTool($tool->create(...));
-    }
-
-    public function actionGet(int $id): Response
-    {
-        $tool = \Craft::$container->get(ExampleTool::class);
-        return $this->callTool($tool->get(...), ['id' => $id], useQueryParams: true);
-    }
-
-    public function actionUpdate(int $id): Response
-    {
-        $tool = \Craft::$container->get(ExampleTool::class);
-        return $this->callTool($tool->update(...), ['id' => $id]);
-    }
-}
-```
+### 1. Creating New CLI Commands
+Create tool classes in `src/tools/` that implement the business logic:
 
 **Tool Implementation with Dependency Injection:**
 
@@ -244,62 +231,74 @@ class ExampleTool
 }
 ```
 
-**Route Registration in Plugin.php:**
+**CLI Invocation:**
 
-```php
-// src/Plugin.php
-#[RegisterListener(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES)]
-protected function registerSiteUrlRules(RegisterUrlRulesEvent $event): void
-{
-    $apiPrefix = $this->getSettings()->apiPrefix ?? 'api';
+The CLI argument parser automatically maps command-line arguments to tool method parameters:
 
-    // Example routes
-    $event->rules['POST ' . $apiPrefix . '/examples'] = 'mcp/example/create';
-    $event->rules['GET ' . $apiPrefix . '/examples/<id>'] = 'mcp/example/get';
-    $event->rules['PUT ' . $apiPrefix . '/examples/<id>'] = 'mcp/example/update';
-}
+```bash
+# Simple flags map directly to parameters
+./agent-craft.phar examples/create --parameter="test value"
+
+# Positional arguments for IDs
+./agent-craft.phar examples/get 123
+
+# Bracket notation for structured data (recommended)
+./agent-craft.phar examples/create \
+  --parameter="test" \
+  --data[key]="value" \
+  --data[nested][foo]="bar" \
+  --data[items]=1,2,3
+
+# Auto-indexed arrays
+./agent-craft.phar examples/create \
+  --parameter="test" \
+  --data[items][]=1 \
+  --data[items][]=2 \
+  --data[items][]=3
+
+# JSON strings for very complex nested structures (fallback)
+./agent-craft.phar examples/create \
+  --parameter="test" \
+  --data='{"key":"value","nested":{"foo":"bar"}}'
 ```
 
-### 2. Base Controller Features
-Controllers extend the base `Controller` class which provides automatic Valinor validation:
+### 2. CLI Argument Parsing
+The CLI framework provides automatic argument parsing with Valinor validation:
 
-```php
-// Base controller method that handles validation automatically
-protected function callTool(
-    callable $tool,
-    array $params = [],
-    bool $useQueryParams = false
-): Response {
-    // Automatically maps request body/query params to tool method parameters
-    // Validates types and throws 400 errors for invalid input
-    // Returns JSON response with tool result
-}
-```
+- **Positional Arguments**: Map to method parameters in order (e.g., `entries/get 123` → `get(int $id)`)
+- **Flag Arguments**: Map to named parameters (e.g., `--title="Test"` → `create(string $title)`)
+- **Bracket Notation**: Parse nested structures using query string style (e.g., `--fields[body]="text"` → `['fields' => ['body' => 'text']]`)
+- **Array Syntax**: Support both comma-separated (`--ids=1,2,3`) and auto-indexed (`--items[]=1 --items[]=2`)
+- **JSON Fallback**: Complex nested data can use JSON strings (e.g., `--data='{"complex":"structure"}'`)
+- **Type Validation**: Valinor validates and type-casts all parameters automatically
+- **Error Handling**: Invalid arguments return exit code 2 with error message to stderr
 
 ### 3. Testing
-Use Pest with HTTP endpoint testing patterns:
+Use Pest with direct tool invocation patterns:
 
 ```php
 // tests/ExampleTest.php
-test('endpoint creates resource successfully', function () {
-    $response = $this->post('/api/examples', [
-        'parameter' => 'test value',
-        'data' => ['key' => 'value']
-    ]);
+test('tool creates resource successfully', function () {
+    $tool = \Craft::$container->get(ExampleTool::class);
+    
+    $result = $tool->create(
+        parameter: 'test value',
+        data: ['key' => 'value']
+    );
 
-    $response->assertStatus(200);
-    $data = $response->json();
-    expect($data['success'])->toBeTrue();
-    expect($data['parameter'])->toBe('test value');
+    expect($result['success'])->toBeTrue();
+    expect($result['parameter'])->toBe('test value');
 });
 
-// For GET requests with query parameters
-test('endpoint retrieves resource', function () {
-    $response = $this->get('/api/examples/123?filter=active');
-
-    $response->assertStatus(200);
-    $data = $response->json();
-    expect($data)->toHaveKey('id');
+// Testing with Craft elements
+test('tool retrieves entry', function () {
+    $entry = Entry::factory()->create();
+    $tool = \Craft::$container->get(GetEntry::class);
+    
+    $result = $tool->get(id: $entry->id);
+    
+    expect($result)->toHaveKey('id');
+    expect($result['id'])->toBe($entry->id);
 });
 ```
 
@@ -316,12 +315,20 @@ test('endpoint retrieves resource', function () {
 - [x] Site information endpoints
 - [x] Asset management with upload, update, and delete operations
 - [x] Comprehensive test suite with Pest
+- [x] CLI argument parser with positional args and flags
+- [x] JSON parameter parsing for complex data
+- [x] Craft bootstrap logic from CLI context
+- [x] Path detection and --path override flag
+- [x] Verbose output flags (-v, -vv, -vvv)
+- [x] Error handling with appropriate exit codes
+- [x] Command routing for all existing tools
+- [x] CLI integration test suite (83 tests)
+- [x] PHAR build script and distribution (`agent-craft.phar`)
 
-### 🔄 Ready for Development
+### 🔜 Ready for Development
 - [ ] Enhanced error handling and validation
 - [ ] Performance optimization for large content sets
 - [ ] Extended field type support
-- [ ] User and permission management endpoints
 
 ## Important Notes for Future Agents
 
@@ -374,67 +381,171 @@ ls -1 SKILLS/*.md | xargs -n1 basename | sed 's/.md$//' | sort
 ```
 
 ### Base URL Configuration for HTTP API
-- **PRIMARY_SITE_URL Environment Variable**: The standard Craft CMS way to configure the base URL is via the `PRIMARY_SITE_URL` environment variable
-- **Configuration Sources**: Check for `PRIMARY_SITE_URL` in:
-  1. System environment variables (ENV)
-  2. `.env` file in project root
-  3. Craft configuration files
-- **If Not Set**: If `PRIMARY_SITE_URL` is not defined, ask the user for the base URL to use for API requests
-- **API Prefix Configuration**: The API prefix is configurable in multiple locations (defaults to `api`)
-  - **Configuration Sources** (check in this order):
-    1. `config/skills.php` - PHP array with `apiPrefix` key (e.g., `return ['apiPrefix' => 'custom-api'];`)
-    2. Plugin settings via `$this->getSettings()->apiPrefix` in `src/Plugin.php`
-    3. Default value: `api`
-  - **Usage**: Try the default `/api` first, but check `config/skills.php` if available
-  - **If Requests Fail**: Ask the user for the configured API prefix
-- **Route Format**: All API routes follow the pattern: `{PRIMARY_SITE_URL}/{apiPrefix}/{endpoint}`
-- **Examples**:
-  - Default: `https://craft-site.com/api/sections` - List sections
-  - Custom prefix: `https://craft-site.com/custom-api/entries` - Create entry
-  - With ID: `https://craft-site.com/api/entries/123` - Get entry by ID
+- **DEPRECATED**: The HTTP API is being replaced by a CLI interface
+- **Legacy Information**: Previously used `PRIMARY_SITE_URL` environment variable and configurable API prefix
+- **Migration Path**: All HTTP functionality will be accessible via CLI commands in the PHAR executable
 
-### HTTP API Development Guidelines
-- **Endpoint Naming Convention**: Use RESTful conventions with plural nouns (e.g., `/api/entries`, `/api/sections`, `/api/fields`)
-- **HTTP Methods**: Use appropriate methods - POST for creation, GET for retrieval, PUT for updates, DELETE for deletion
-- **Control Panel Links**: All endpoints that create, update, or modify Craft content should include control panel URLs in responses for user review
-- **Pattern**: Include a `url` field in response objects with `ElementHelper::elementEditorUrl($element)` for entries
-- **Examples**: See EntriesController.php, SectionsController.php for proper implementation patterns
-
-### HTTP API Architecture
-- **Request Validation**: Uses Valinor library for automatic type checking and parameter mapping
-- **Controller Pattern**: Controllers extend base Controller class with `callTool()` method for validation
-- **Tool Layer**: Business logic separated into tool classes in `src/tools/` directory
+### CLI Tool Architecture (Replacing HTTP API)
+- **PHAR Distribution**: Self-contained executable with all dependencies bundled
+- **Craft Bootstrap**: Tool bootstraps Craft CMS internally from PHAR context
+- **Argument Parsing**: Custom CLI parser with support for positional args, flags, and JSON data
+- **Command Format**: `agent-craft <tool/action> [positional-args] [--flags]`
+- **Validation**: Uses Valinor library for automatic type checking and parameter mapping
+- **Tool Layer**: Business logic remains in `src/tools/` directory (unchanged from HTTP API)
 - **Dependency Injection**: Tools use constructor injection for clean architecture
-- **Routes Available**:
-  - `POST /api/entries` - Create entry
-  - `GET /api/entries/<id>` - Get entry
-  - `PUT /api/entries/<id>` - Update entry
-  - `DELETE /api/entries/<id>` - Delete entry
-  - `GET /api/entries/search` - Search entries
-  - `POST /api/sections` - Create section
-  - `GET /api/sections` - List sections
-  - `PUT /api/sections/<id>` - Update section
-  - `DELETE /api/sections/<id>` - Delete section
-  - `POST /api/entry-types` - Create entry type
-  - `GET /api/entry-types` - List entry types
-  - `PUT /api/entry-types/<id>` - Update entry type
-  - `DELETE /api/entry-types/<id>` - Delete entry type
-  - `POST /api/fields` - Create field
-  - `GET /api/fields` - List fields
-  - `GET /api/fields/types` - List field types
-  - `PUT /api/fields/<id>` - Update field
-  - `DELETE /api/fields/<id>` - Delete field
-  - `POST /api/drafts` - Create draft
-  - `PUT /api/drafts/<id>` - Update draft
-  - `POST /api/drafts/<id>/apply` - Apply draft
-  - `POST /api/field-layouts` - Create field layout
-  - `GET /api/field-layouts` - Get field layout
-  - `PUT /api/field-layouts/<id>` - Update field layout
-  - `GET /api/sites` - List sites
-  - `POST /api/assets` - Create asset
-  - `PUT /api/assets/<id>` - Update asset
-  - `DELETE /api/assets/<id>` - Delete asset
-  - `GET /api/volumes` - List volumes
+- **Available Commands**:
+  - `entries/create` - Create entry
+  - `entries/get <id>` - Get entry
+  - `entries/update <id>` - Update entry
+  - `entries/delete <id>` - Delete entry
+  - `entries/search` - Search entries
+  - `sections/create` - Create section
+  - `sections/list` - List sections
+  - `sections/update <id>` - Update section
+  - `sections/delete <id>` - Delete section
+  - `entry-types/create` - Create entry type
+  - `entry-types/list` - List entry types
+  - `entry-types/update <id>` - Update entry type
+  - `entry-types/delete <id>` - Delete entry type
+  - `fields/create` - Create field
+  - `fields/list` - List fields
+  - `fields/types` - List field types
+  - `fields/update <id>` - Update field
+  - `fields/delete <id>` - Delete field
+  - `drafts/create` - Create draft
+  - `drafts/update <id>` - Update draft
+  - `drafts/apply <id>` - Apply draft
+  - `field-layouts/create` - Create field layout
+  - `field-layouts/get` - Get field layout
+  - `field-layouts/update <id>` - Update field layout
+  - `sites/list` - List sites
+  - `assets/create` - Create asset
+  - `assets/update <id>` - Update asset
+  - `assets/delete <id>` - Delete asset
+  - `volumes/list` - List volumes
+
+### CLI Architecture Implementation (Completed)
+
+The CLI framework is fully implemented with three core components:
+
+#### 1. ArgumentParser (`src/cli/ArgumentParser.php`)
+Lightweight argument parser optimized for AI agents:
+
+- **Positional Arguments**: First arg is command, rest are positional params
+- **Flag Arguments**: `--key=value` syntax
+- **Bracket Notation**: `--fields[body]=text` → `['fields' => ['body' => 'text']]`
+- **Comma-Separated Arrays**: `--ids=1,2,3` → `['ids' => [1, 2, 3]]`
+- **Auto-Indexed Arrays**: `--items[]=1 --items[]=2` → `['items' => [1, 2]]`
+- **JSON Parsing**: Detects and parses JSON strings starting with `{` or `[`
+- **Type Auto-Detection**: Converts "true"/"false" to bool, numbers to int
+- **Verbosity Extraction**: `-v`, `-vv`, `-vvv` mapped to levels 0-3
+- **Path Override**: `--path=/custom/path` extracted separately
+
+**Return Structure**:
+```php
+[
+    'command' => 'entries/create',
+    'positional' => [123],
+    'flags' => ['title' => 'Test', 'fields' => ['body' => 'text']],
+    'verbosity' => 2,
+    'path' => '/path/to/craft'
+]
+```
+
+**Known Limitations**:
+- Auto-indexed arrays (`--items[]=1 --items[]=2`) only keep last value due to `parse_str()` behavior
+- Bracket notation with comma-separated values produces string "Array" - use simple flags instead
+
+#### 2. CommandRouter (`src/cli/CommandRouter.php`)
+Routes CLI commands to tool methods:
+
+- **Command Map**: 27 commands mapped to tool classes and methods
+- **Valinor Integration**: Uses `ArgumentsMapper` for parameter validation
+- **Positional + Flag Merging**: Combines positional args with flags using reflection
+- **DI Container**: Gets tool instances via `Craft::$container->get()`
+- **Error Handling**: Throws `InvalidArgumentException` for unknown commands
+
+**Adding New Commands**:
+Add entries to the `COMMAND_MAP` constant:
+```php
+private const COMMAND_MAP = [
+    'entries/create' => [CreateEntry::class, 'create'],
+    'your-command' => [YourTool::class, 'methodName'],
+];
+```
+
+#### 3. CLI Entrypoint (`bin/agent-craft`)
+Main executable script that bootstraps Craft and executes commands:
+
+- **Shebang**: `#!/usr/bin/env php` for direct execution
+- **Craft Detection**: Looks for `vendor/craftcms/cms` at `--path` or current directory
+- **Bootstrap Process**: Loads autoloader, defines constants, loads .env, bootstraps console
+- **Webroot Alias Fix**: Mocks `$_SERVER['SCRIPT_FILENAME']` to point to the target Craft installation's `craft` script, ensuring `@webroot` alias resolves correctly from the target installation (not PHAR location)
+- **Argument Flow**: Parse → Route → Execute → Output
+- **Exit Codes**:
+  - `0`: Success
+  - `1`: General error (tool execution failed)
+  - `2`: Invalid arguments (validation failed, unknown command)
+  - `3`: Craft not found or bootstrap failed
+- **Output Format**:
+  - Success: Pretty-printed JSON to stdout
+  - Errors: JSON error messages to stderr
+- **Verbosity Levels**:
+  - `-v`: Exception message
+  - `-vv`: + Stack trace
+  - `-vvv`: + File, line, and code details
+
+**Development Mode**: Script detects if running from plugin directory and adjusts paths accordingly.
+
+**Script Filename Mocking**: When bootstrapping Craft from a PHAR or non-standard location, the script sets `$_SERVER['SCRIPT_FILENAME']` to the target Craft installation's `craft` executable (if it exists). This allows Craft's console Request class to correctly auto-detect the webroot by looking for common web directories (`web`, `public`, `public_html`, `html`) relative to the `craft` script location, rather than using the PHAR file location.
+
+#### Testing
+Comprehensive test suite with 83 tests:
+- `tests/ArgumentParserTest.php`: 53 tests (122 assertions)
+- `tests/CommandRouterTest.php`: 5 tests
+- `tests/CliIntegrationTest.php`: 25 tests (130 assertions)
+
+All tests use Pest PHP and follow existing project patterns.
+
+#### Usage Examples
+See README.md for detailed usage examples. Key patterns:
+
+```bash
+# Simple command
+./bin/agent-craft sections/list
+
+# Positional arguments
+./bin/agent-craft entries/get 123
+
+# Flags with bracket notation
+./bin/agent-craft entries/create \
+  --sectionId=1 \
+  --entryTypeId=2 \
+  --attributeAndFieldData[title]="Test" \
+  --attributeAndFieldData[fields][body]="Content"
+
+# Custom path
+./bin/agent-craft --path=/path/to/craft sections/list
+
+# Verbose errors
+./bin/agent-craft invalid/command -vvv
+```
+
+### Legacy HTTP API (Deprecated)
+- **Status**: Being replaced by CLI interface
+- **Controllers**: Legacy controller classes remain in `src/controllers/` for reference
+- **Route Registration**: HTTP route registration in Plugin.php deprecated
+- **Migration**: All HTTP endpoints have equivalent CLI commands
+
+### CLI Implementation Notes
+- **ArgumentParser Implementation**: Uses PHP's `parse_str()` for bracket notation parsing
+- **Auto-Indexed Array Limitation**: Auto-indexed arrays (`--items[]=1 --items[]=2`) only keep the last value due to `parse_str()` behavior - use comma-separated values or numbered indices instead
+- **Command Mapping**: CommandRouter requires manual mapping for new commands in the `COMMAND_MAP` constant
+- **Exit Codes**: Standardized across all commands (0=success, 1=general error, 2=invalid args, 3=bootstrap failed)
+- **Development Mode**: Script auto-detects when running from plugin directory and adjusts paths for bootstrapping Craft
+- **Path Resolution**: Supports both `--path` flag and working directory detection for locating Craft installation
+- **Verbosity Levels**: Three levels of error detail (-v, -vv, -vvv) for debugging and troubleshooting
+- **Testing Pattern**: Integration tests run actual CLI commands via `exec()` to verify end-to-end behavior
 
 ### Craft 5.x Specific Considerations
 - **Draft Properties**: Always use `draftName`, `draftNotes`, `isProvisionalDraft` - these are the correct Craft 5.x property names
@@ -730,11 +841,20 @@ ls -1 SKILLS/*.md | xargs -n1 basename | sed 's/.md$//' | sort
 
 ## Architecture Decisions
 
-### Why HTTP REST API over Other Protocols?
-- Simple, well-understood RESTful patterns
-- Easy integration with any HTTP client
-- No protocol-specific dependencies required
-- Standard JSON request/response format
+### Why PHAR Distribution over HTTP API?
+- No HTTP server setup or configuration required
+- Single executable file - easy to deploy and distribute
+- Direct integration with Craft - faster execution, no HTTP overhead
+- Simpler security model - no exposed web endpoints
+- Works offline - no network dependencies
+- Better suited for AI agent automation workflows
+
+### Why CLI over HTTP REST API?
+- Simpler invocation for AI agents and automation tools
+- No need for BASE_URL configuration or HTTP client setup
+- Standard exit codes for error handling
+- Works in any environment with PHP (no web server needed)
+- Clean separation between tool logic and transport layer
 
 ### Why Valinor for Validation?
 - Automatic type mapping from request data to method parameters
@@ -753,5 +873,3 @@ ls -1 SKILLS/*.md | xargs -n1 basename | sed 's/.md$//' | sort
 - Type-safe dependency resolution via container
 - Cleaner code without manual service location
 - Follows SOLID principles and best practices
-
-This plugin provides a robust foundation for external systems to interact with Craft CMS through a clean RESTful HTTP API.

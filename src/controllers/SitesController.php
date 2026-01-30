@@ -10,6 +10,6 @@ class SitesController extends Controller
     public function actionList(): Response
     {
         $tool = \Craft::$container->get(GetSites::class);
-        return $this->callTool($tool->get(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 }

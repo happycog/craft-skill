@@ -1,0 +1,236 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Agent Craft CLI Tool
+ *
+ * Provides programmatic access to Craft CMS content management capabilities
+ * through a clean command-line interface designed for AI agents and automation.
+ *
+ * Exit codes:
+ * - 0: Success
+ * - 1: General error (tool execution failed)
+ * - 2: Invalid arguments (validation failed)
+ * - 3: Craft not found or bootstrap failed
+ */
+
+// Set the error reporting level - suppress deprecation warnings from old dependencies
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+// Error handling setup - convert errors to exceptions for consistent handling
+// Note: error_reporting() still applies inside the error handler
+set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline): bool {
+    // Respect error_reporting() setting - only throw if error is not suppressed
+    if ((error_reporting() & $errno) === 0) {
+        return false; // Let default error handling occur
+    }
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
+
+// Load ArgumentParser early (before Craft autoloader) to parse verbosity and path
+require_once __DIR__ . '/../src/cli/ArgumentParser.php';
+$parser = new \happycog\craftmcp\cli\ArgumentParser();
+
+// Parse arguments - verbosity/path/help are set on parser even if parsing fails
+try {
+    $parsed = $parser->parse($argv);
+} catch (Throwable $e) {
+    // Parser failed, but we still have verbosity from partial parsing
+    $parsed = null;
+}
+
+// Output error to stderr and exit with the given code
+function exitWithError(int $code, string|array $message, ?Throwable $exception = null, int $verbosity = 0): never
+{
+    $output = ['error' => $message];
+
+    if ($exception !== null && $verbosity >= 1) {
+        $output['message'] = $exception->getMessage();
+
+        if ($verbosity >= 2) {
+            $output['trace'] = $exception->getTraceAsString();
+        }
+
+        if ($verbosity >= 3) {
+            $output['file'] = $exception->getFile();
+            $output['line'] = $exception->getLine();
+            $output['code'] = $exception->getCode();
+        }
+    }
+
+    fwrite(STDERR, json_encode($output) . PHP_EOL);
+    exit($code);
+}
+
+// If parsing failed completely, exit now with what verbosity we have
+if ($parsed === null) {
+    exitWithError(2, 'Failed to parse arguments', $e ?? null, $parser->verbosity);
+}
+
+// Step 1: Locate Craft installation
+try {
+    // Use provided path or current directory
+    $craftPath = $parser->path ?? getcwd();
+
+    // Validate that the path exists
+    if (!is_dir($craftPath)) {
+        exitWithError(3, "Craft path does not exist: {$craftPath}", null, $parser->verbosity);
+    }
+
+    // Look for vendor/craftcms/cms directory (most reliable indicator)
+    $vendorPath = $craftPath . '/vendor';
+    $craftCmsPath = $vendorPath . '/craftcms/cms';
+
+    if (!is_dir($craftCmsPath)) {
+        exitWithError(
+            3,
+            "Craft CMS not found at {$craftPath}. Please ensure you're running from a Craft project directory or use --path=/path/to/craft",
+            null,
+            $parser->verbosity
+        );
+    }
+
+} catch (Throwable $e) {
+    exitWithError(3, 'Failed to locate Craft installation', $e, $parser->verbosity);
+}
+
+// Step 2: Bootstrap Craft CMS
+try {
+    // Define path constants required by Craft
+    define('CRAFT_BASE_PATH', $craftPath);
+    define('CRAFT_VENDOR_PATH', $vendorPath);
+
+    // Mock SCRIPT_FILENAME to point to the target Craft installation's craft script
+    // This allows Craft's console Request->getScriptFile() to resolve @webroot correctly
+    // from the target installation's location, not the PHAR location
+    $craftScript = $craftPath . '/craft';
+    if (file_exists($craftScript)) {
+        $_SERVER['SCRIPT_FILENAME'] = $craftScript;
+    }
+
+    // Load Composer autoloader
+    $autoloadPath = CRAFT_VENDOR_PATH . '/autoload.php';
+    if (!file_exists($autoloadPath)) {
+        exitWithError(3, "Composer autoloader not found at {$autoloadPath}", null, $parser->verbosity);
+    }
+    require_once $autoloadPath;
+
+    // Load environment variables if .env exists
+    if (file_exists(CRAFT_BASE_PATH . '/.env')) {
+        if (class_exists('\Dotenv\Dotenv')) {
+            if (method_exists('\Dotenv\Dotenv', 'createUnsafeImmutable')) {
+                \Dotenv\Dotenv::createUnsafeImmutable(CRAFT_BASE_PATH)->safeLoad();
+            } elseif (method_exists('\Dotenv\Dotenv', 'create')) {
+                \Dotenv\Dotenv::create(CRAFT_BASE_PATH)->load();
+            } else {
+                (new \Dotenv\Dotenv(CRAFT_BASE_PATH))->load();
+            }
+        }
+    }
+
+    // Define Craft environment
+    if (!defined('CRAFT_ENVIRONMENT')) {
+        define('CRAFT_ENVIRONMENT', getenv('ENVIRONMENT') ?: 'production');
+    }
+
+    // Load Craft's bootstrap
+    $bootstrapPath = CRAFT_VENDOR_PATH . '/craftcms/cms/bootstrap/console.php';
+    if (!file_exists($bootstrapPath)) {
+        exitWithError(3, "Craft bootstrap file not found at {$bootstrapPath}", null, $parser->verbosity);
+    }
+
+    /** @var \craft\console\Application $app */
+    $app = require $bootstrapPath;
+} catch (Throwable $e) {
+    exitWithError(3, 'Failed to bootstrap Craft CMS', $e, $parser->verbosity);
+}
+
+// Step 3: Extract parsed arguments
+$command = $parsed['command'];
+$positional = $parsed['positional'];
+$flags = $parsed['flags'];
+
+// Handle help flag
+if ($parser->help) {
+    $helpGenerator = new \happycog\craftmcp\cli\HelpGenerator();
+    
+    // If a command was provided, show help for that specific command
+    if ($command !== null) {
+        try {
+            echo $helpGenerator->generateForCommand($command);
+            exit(0);
+        } catch (\InvalidArgumentException $e) {
+            // Unknown command, fall through to show general help
+            echo $helpGenerator->generate();
+            exit(0);
+        }
+    }
+    
+    // No command provided, show general help
+    echo $helpGenerator->generate();
+    exit(0);
+}
+
+// Validate that a command was provided
+if ($command === null) {
+    exitWithError(2, 'No command specified. Usage: agent-craft <command> [arguments]', null, $parser->verbosity);
+}
+
+// Step 4: Route and execute command
+try {
+    // Create Valinor mapper for parameter validation
+    $mapperBuilder = (new \CuyZ\Valinor\MapperBuilder())
+        ->allowPermissiveTypes()
+        ->allowSuperfluousKeys();
+
+    $mapper = $mapperBuilder->argumentsMapper();
+
+    // Create router and execute command
+    $router = new \happycog\craftmcp\cli\CommandRouter($mapper);
+    $result = $router->route($command, $positional, $flags);
+
+    // Output successful result as JSON to stdout
+    echo json_encode($result) . PHP_EOL;
+    exit(0);
+} catch (\InvalidArgumentException $e) {
+    // Unknown command or invalid arguments
+    exitWithError(2, $e->getMessage(), $e, $parser->verbosity);
+} catch (\CuyZ\Valinor\Mapper\MappingError $e) {
+     // Valinor validation error - format with parameter names
+     $errors = [];
+     foreach ($e->messages() as $message) {
+         $paramName = $message->name();
+         $msgText = (string) $message;
+         
+         // Only include messages with parameter names (skip root-level unexpected keys)
+         if (!empty($paramName)) {
+             $errors[] = [
+                 'parameter' => $paramName,
+                 'message' => $msgText,
+             ];
+         }
+     }
+     
+     // Fall back to original messages if none have names
+     if (empty($errors)) {
+         foreach ($e->messages() as $message) {
+             $errors[] = [
+                 'parameter' => $message->name() ?: 'root',
+                 'message' => (string) $message,
+             ];
+         }
+     }
+     
+     exitWithError(2, ['validation_errors' => $errors], $e, $parser->verbosity);
+} catch (\happycog\craftmcp\exceptions\ValidationException $e) {
+    // Custom validation exception
+    exitWithError(2, $e->getMessage(), $e, $parser->verbosity);
+} catch (\happycog\craftmcp\exceptions\ModelSaveException $e) {
+    // Craft model save/delete error
+    exitWithError(1, $e->getMessage(), $e, $parser->verbosity);
+} catch (Throwable $e) {
+    // General error during tool execution
+    exitWithError(1, 'Command execution failed: ' . $e->getMessage(), $e, $parser->verbosity);
+}

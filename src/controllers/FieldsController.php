@@ -14,30 +14,30 @@ class FieldsController extends Controller
     public function actionCreate(): Response
     {
         $tool = \Craft::$container->get(CreateField::class);
-        return $this->callTool($tool->create(...));
+        return $this->callTool($tool);
     }
 
     public function actionList(): Response
     {
         $tool = \Craft::$container->get(GetFields::class);
-        return $this->callTool($tool->get(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 
     public function actionUpdate(int $id): Response
     {
         $tool = \Craft::$container->get(UpdateField::class);
-        return $this->callTool($tool->update(...), ['fieldId' => $id]);
+        return $this->callTool($tool, ['fieldId' => $id]);
     }
 
     public function actionDelete(int $id): Response
     {
         $tool = \Craft::$container->get(DeleteField::class);
-        return $this->callTool($tool->delete(...), ['fieldId' => $id]);
+        return $this->callTool($tool, ['fieldId' => $id]);
     }
 
     public function actionTypes(): Response
     {
         $tool = \Craft::$container->get(GetFieldTypes::class);
-        return $this->callTool($tool->get(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 }

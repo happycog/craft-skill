@@ -16,7 +16,7 @@ beforeEach(function () {
             $name = 'Test Entry Type ' . $this->uniqueId . mt_rand(1000, 9999);
         }
         $tool = new CreateEntryType();
-        return $tool->create($name);
+        return $tool->__invoke($name);
     };
 
     // Helper to create a test section
@@ -29,7 +29,7 @@ beforeEach(function () {
         }
 
         $tool = new CreateSection();
-        $sectionData = $tool->create($name, $type, $entryTypeIds);
+        $sectionData = $tool->__invoke($name, $type, $entryTypeIds);
 
         // Merge section data with entry types for convenience
         $sectionData['entryTypes'] = $entryTypes;
@@ -39,7 +39,7 @@ beforeEach(function () {
     // Helper to create a test entry
     $this->createTestEntry = function (int $sectionId, int $entryTypeId, string $title = 'Test Entry'): array {
         $tool = Craft::$container->get(CreateEntry::class);
-        return $tool->create($sectionId, $entryTypeId, null, ['title' => $title]);
+        return $tool->__invoke($sectionId, $entryTypeId, null, ['title' => $title]);
     };
 });
 
@@ -49,7 +49,7 @@ test('deletes empty section successfully', function () {
     $section = ($this->createTestSection)($sectionName);
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId']);
+    $result = $tool->__invoke($section['sectionId']);
 
     expect($result)->toBeArray()
         ->and($result['id'])->toBe($section['sectionId'])
@@ -72,7 +72,7 @@ test('prevents deletion of section with entries without force', function () {
 
     $tool = new DeleteSection();
 
-    expect(fn() => $tool->delete($section['sectionId']))
+    expect(fn() => $tool->__invoke($section['sectionId']))
         ->toThrow(RuntimeException::class, "Section '{$sectionName}' contains data and cannot be deleted without force=true");
 });
 
@@ -86,7 +86,7 @@ test('deletes section with entries when force is true', function () {
     $entry = ($this->createTestEntry)($section['sectionId'], $entryType['entryTypeId'], 'Test Entry for Force Delete');
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId'], true);
+    $result = $tool->__invoke($section['sectionId'], true);
 
     expect($result)->toBeArray()
         ->and($result['id'])->toBe($section['sectionId'])
@@ -108,11 +108,11 @@ test('provides detailed impact assessment', function () {
 
     $tool = new DeleteSection();
 
-    expect(fn() => $tool->delete($section['sectionId']))
+    expect(fn() => $tool->__invoke($section['sectionId']))
         ->toThrow(RuntimeException::class)
         ->and(function () use ($tool, $section) {
             try {
-                $tool->delete($section['sectionId']);
+                $tool->__invoke($section['sectionId']);
             } catch (\RuntimeException $e) {
                 $message = $e->getMessage();
                 expect($message)->toContain('Impact Assessment:')
@@ -127,7 +127,7 @@ test('provides detailed impact assessment', function () {
 test('fails when section does not exist', function () {
     $tool = new DeleteSection();
 
-    expect(fn() => $tool->delete(99999))
+    expect(fn() => $tool->__invoke(99999))
         ->toThrow(RuntimeException::class, 'Section with ID 99999 not found');
 });
 
@@ -136,7 +136,7 @@ test('deletes single section type', function () {
 
     $tool = new DeleteSection();
     // Single sections may have auto-created entries, use force if needed
-    $result = $tool->delete($section['sectionId'], true);
+    $result = $tool->__invoke($section['sectionId'], true);
 
     expect($result)->toBeArray()
         ->and($result['type'])->toBe(Section::TYPE_SINGLE);
@@ -146,7 +146,7 @@ test('deletes channel section type', function () {
     $section = ($this->createTestSection)('Channel Section Delete ' . $this->uniqueId, 'channel');
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId']);
+    $result = $tool->__invoke($section['sectionId']);
 
     expect($result)->toBeArray()
         ->and($result['type'])->toBe(Section::TYPE_CHANNEL);
@@ -156,7 +156,7 @@ test('deletes structure section type', function () {
     $section = ($this->createTestSection)('Structure Section Delete ' . $this->uniqueId, 'structure');
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId']);
+    $result = $tool->__invoke($section['sectionId']);
 
     expect($result)->toBeArray()
         ->and($result['type'])->toBe(Section::TYPE_STRUCTURE);
@@ -166,7 +166,7 @@ test('analyzes impact correctly for empty section', function () {
     $section = ($this->createTestSection)('Empty Impact Test ' . $this->uniqueId);
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId']);
+    $result = $tool->__invoke($section['sectionId']);
 
     expect($result['impact'])->toBeArray()
         ->and($result['impact']['hasContent'])->toBeFalse()
@@ -182,7 +182,7 @@ test('includes entry type information in impact', function () {
     $section = ($this->createTestSection)('Impact Entry Type Test ' . $this->uniqueId, 'channel', [$entryType['entryTypeId']]);
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId']);
+    $result = $tool->__invoke($section['sectionId']);
 
     expect($result['impact']['entryTypes'])->toBeArray()
         ->and($result['impact']['entryTypes'][0])->toHaveKeys(['id', 'name', 'handle'])
@@ -200,7 +200,7 @@ test('handles section with multiple entry types', function () {
     ]);
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId']);
+    $result = $tool->__invoke($section['sectionId']);
 
     expect($result['impact']['entryTypeCount'])->toBe(2)
         ->and($result['impact']['entryTypes'])->toHaveCount(2);
@@ -212,11 +212,11 @@ test('force parameter validation', function () {
     $tool = new DeleteSection();
 
     // Test with valid force values
-    expect($tool->delete($section['sectionId'], false))->toBeArray();
+    expect($tool->__invoke($section['sectionId'], false))->toBeArray();
 
     // Create new section for second test
     $section2 = ($this->createTestSection)('Force Validation Test 2 ' . $this->uniqueId);
-    expect($tool->delete($section2['sectionId'], true))->toBeArray();
+    expect($tool->__invoke($section2['sectionId'], true))->toBeArray();
 });
 
 test('error message includes section name and details', function () {
@@ -229,11 +229,11 @@ test('error message includes section name and details', function () {
 
     $tool = new DeleteSection();
 
-    expect(fn() => $tool->delete($section['sectionId']))
+    expect(fn() => $tool->__invoke($section['sectionId']))
         ->toThrow(RuntimeException::class)
         ->and(function () use ($tool, $section, $sectionName) {
             try {
-                $tool->delete($section['sectionId']);
+                $tool->__invoke($section['sectionId']);
             } catch (\RuntimeException $e) {
                 $message = $e->getMessage();
                 expect($message)->toContain($sectionName)
@@ -247,7 +247,7 @@ test('successful deletion includes complete information', function () {
     $section = ($this->createTestSection)('Complete Info Test ' . $this->uniqueId);
 
     $tool = new DeleteSection();
-    $result = $tool->delete($section['sectionId']);
+    $result = $tool->__invoke($section['sectionId']);
 
     expect($result)->toHaveKeys(['id', 'name', 'handle', 'type', 'impact'])
         ->and($result['id'])->toBeInt()
@@ -263,7 +263,7 @@ test('handles sections created with different settings', function () {
 
     // Create section with custom settings
     $tool = new CreateSection();
-    $section = $tool->create(
+    $section = $tool->__invoke(
         name: 'Custom Settings Section',
         type: 'structure',
         entryTypeIds: [$entryType['entryTypeId']],
@@ -273,7 +273,7 @@ test('handles sections created with different settings', function () {
     );
 
     $deleteJob = new DeleteSection();
-    $result = $deleteJob->delete($section['sectionId']);
+    $result = ($deleteJob)($section['sectionId']);
 
     expect($result['name'])->toBe('Custom Settings Section')
         ->and($result['handle'])->toBe('customSettingsSection')
@@ -292,11 +292,11 @@ test('impact assessment counts are accurate', function () {
 
     $tool = new DeleteSection();
 
-    expect(fn() => $tool->delete($section['sectionId']))
+    expect(fn() => $tool->__invoke($section['sectionId']))
         ->toThrow(RuntimeException::class)
         ->and(function () use ($tool, $section) {
             try {
-                $tool->delete($section['sectionId']);
+                $tool->__invoke($section['sectionId']);
             } catch (\RuntimeException $e) {
                 $message = $e->getMessage();
                 expect($message)->toContain('Entries: 3');

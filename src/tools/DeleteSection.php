@@ -19,7 +19,7 @@ class DeleteSection
      *
      * @return array<string, mixed>
      */
-    public function delete(
+    public function __invoke(
         /** The ID of the section to delete */
         int $sectionId,
 

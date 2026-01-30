@@ -13,24 +13,24 @@ class AssetsController extends Controller
     public function actionCreate(): Response
     {
         $tool = \Craft::$container->get(CreateAsset::class);
-        return $this->callTool($tool->create(...));
+        return $this->callTool($tool);
     }
 
     public function actionUpdate(int $id): Response
     {
         $tool = \Craft::$container->get(UpdateAsset::class);
-        return $this->callTool($tool->update(...), ['assetId' => $id]);
+        return $this->callTool($tool, ['assetId' => $id]);
     }
 
     public function actionDelete(int $id): Response
     {
         $tool = \Craft::$container->get(DeleteAsset::class);
-        return $this->callTool($tool->delete(...), ['assetId' => $id]);
+        return $this->callTool($tool, ['assetId' => $id]);
     }
 
     public function actionVolumes(): Response
     {
         $tool = \Craft::$container->get(GetVolumes::class);
-        return $this->callTool($tool->get(...), useQueryParams: true);
+        return $this->callTool($tool, useQueryParams: true);
     }
 }

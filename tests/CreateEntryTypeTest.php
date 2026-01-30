@@ -24,7 +24,7 @@ beforeEach(function () {
     $this->createEntryType = function (string $name, array $options = []) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
-        $result = $createEntryType->create(
+        $result = $createEntryType->__invoke(
             name: $name,
             handle: $options['handle'] ?? null,
             description: $options['description'] ?? null,

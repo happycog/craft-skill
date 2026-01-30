@@ -23,7 +23,7 @@ beforeEach(function () {
     $this->createEntryType = function (string $name, array $options = []) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
         
-        $result = $createEntryType->create(
+        $result = $createEntryType->__invoke(
             name: $name,
             handle: $options['handle'] ?? null,
             hasTitleField: $options['hasTitleField'] ?? true,
@@ -40,7 +40,7 @@ beforeEach(function () {
     $this->deleteEntryType = function (int $entryTypeId, bool $force = false) {
         $deleteEntryType = Craft::$container->get(DeleteEntryType::class);
         
-        return $deleteEntryType->delete(
+        return $deleteEntryType->__invoke(
             entryTypeId: $entryTypeId,
             force: $force
         );

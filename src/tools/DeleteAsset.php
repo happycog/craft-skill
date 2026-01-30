@@ -26,7 +26,7 @@ class DeleteAsset
      *
      * @return array<string, mixed>
      */
-    public function delete(
+    public function __invoke(
         /** The ID of the asset to delete */
         int $assetId,
     ): array

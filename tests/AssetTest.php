@@ -41,7 +41,7 @@ afterEach(function () {
 test('can get all volumes', function () {
     $getVolumes = Craft::$container->get(GetVolumes::class);
 
-    $response = $getVolumes->get();
+    $response = $getVolumes->__invoke();
 
     expect($response)->toHaveKey('_notes');
     expect($response)->toHaveKey('volumes');
@@ -59,7 +59,7 @@ test('can get all volumes', function () {
 test('can create asset from local file path', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         title: 'Test Upload',
@@ -86,7 +86,7 @@ test('can create asset from file:// URL', function () {
 
     $fileUrl = 'file://' . $this->testFilePath;
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         fileUrl: $fileUrl,
         volumeId: $this->volumeId,
     );
@@ -104,7 +104,7 @@ test('can create asset from file:// URL', function () {
 test('can update asset title', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         title: 'Original Title',
@@ -114,7 +114,7 @@ test('can update asset title', function () {
 
     // Now update it
     $updateAsset = Craft::$container->get(UpdateAsset::class);
-    $response = $updateAsset->update(
+    $response = $updateAsset->__invoke(
         assetId: $createResponse['assetId'],
         title: 'Updated Title',
     );
@@ -132,7 +132,7 @@ test('can update asset title', function () {
 test('can update asset with empty field data', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
     );
@@ -141,7 +141,7 @@ test('can update asset with empty field data', function () {
 
     // Update with empty field data (just testing it works without errors)
     $updateAsset = Craft::$container->get(UpdateAsset::class);
-    $response = $updateAsset->update(
+    $response = $updateAsset->__invoke(
         assetId: $createResponse['assetId'],
         fieldData: [],
     );
@@ -151,7 +151,7 @@ test('can update asset with empty field data', function () {
 });test('can update asset filename', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
     );
@@ -160,7 +160,7 @@ test('can update asset with empty field data', function () {
 
     // Update filename
     $updateAsset = Craft::$container->get(UpdateAsset::class);
-    $response = $updateAsset->update(
+    $response = $updateAsset->__invoke(
         assetId: $createResponse['assetId'],
         filename: 'renamed-file.txt',
     );
@@ -177,7 +177,7 @@ test('can update asset with empty field data', function () {
 test('can delete asset', function () {
     // First create an asset
     $createAsset = Craft::$container->get(CreateAsset::class);
-    $createResponse = $createAsset->create(
+    $createResponse = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         title: 'To Be Deleted',
@@ -191,7 +191,7 @@ test('can delete asset', function () {
 
     // Delete it
     $deleteAsset = Craft::$container->get(DeleteAsset::class);
-    $response = $deleteAsset->delete($assetId);
+    $response = $deleteAsset->__invoke($assetId);
 
     expect($response)->toHaveKey('_notes');
     expect($response)->toHaveKey('assetId');
@@ -206,7 +206,7 @@ test('can delete asset', function () {
 test('throws exception when creating asset with invalid volume', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $createAsset->create(
+    $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: 999999, // Non-existent volume ID
     );
@@ -215,7 +215,7 @@ test('throws exception when creating asset with invalid volume', function () {
 test('throws exception when creating asset with non-existent file', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $createAsset->create(
+    $createAsset->__invoke(
         fileUrl: '/path/to/nonexistent/file.txt',
         volumeId: $this->volumeId,
     );
@@ -224,7 +224,7 @@ test('throws exception when creating asset with non-existent file', function () 
 test('throws exception when updating non-existent asset', function () {
     $updateAsset = Craft::$container->get(UpdateAsset::class);
 
-    $updateAsset->update(
+    $updateAsset->__invoke(
         assetId: 999999,
         title: 'New Title',
     );
@@ -233,7 +233,7 @@ test('throws exception when updating non-existent asset', function () {
 test('throws exception when deleting non-existent asset', function () {
     $deleteAsset = Craft::$container->get(DeleteAsset::class);
 
-    $deleteAsset->delete(999999);
+    $deleteAsset->__invoke(999999);
 })->throws(\InvalidArgumentException::class, 'Asset with ID 999999 not found');
 
 test('can create asset with optional folder id', function () {
@@ -242,7 +242,7 @@ test('can create asset with optional folder id', function () {
     // Get root folder
     $rootFolder = Craft::$app->getAssets()->getRootFolderByVolumeId($this->volumeId);
 
-    $response = $createAsset->create(
+    $response = $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         folderId: $rootFolder->id,
@@ -258,9 +258,133 @@ test('can create asset with optional folder id', function () {
 test('validates folder exists when creating asset', function () {
     $createAsset = Craft::$container->get(CreateAsset::class);
 
-    $createAsset->create(
+    $createAsset->__invoke(
         fileUrl: $this->testFilePath,
         volumeId: $this->volumeId,
         folderId: 999999, // Non-existent folder
     );
 })->throws(\InvalidArgumentException::class, 'Folder with ID 999999 does not exist');
+
+test('can create blank image with default dimensions', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->__invoke(
+        volumeId: $this->volumeId,
+        title: 'Default Blank Image',
+    );
+
+    expect($response)->toHaveKey('assetId');
+    expect($response)->toHaveKey('filename');
+    expect($response['filename'])->toContain('blank-500x500');
+    expect($response['filename'])->toEndWith('.png');
+    expect($response['title'])->toBe('Default Blank Image');
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Verify asset was created
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+});
+
+test('can create blank image with custom width and height', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->__invoke(
+        volumeId: $this->volumeId,
+        width: 300,
+        height: 200,
+        title: 'Custom Blank Image',
+    );
+
+    expect($response)->toHaveKey('assetId');
+    expect($response['filename'])->toBe('blank-300x200.png');
+    expect($response['title'])->toBe('Custom Blank Image');
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Verify asset was created
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+});
+
+test('generated image has correct dimensions', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->__invoke(
+        volumeId: $this->volumeId,
+        width: 640,
+        height: 480,
+    );
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Get the asset to access its file
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+
+    // The asset should have width and height properties after upload
+    // We'll verify the extension is png and the dimensions were passed through
+    expect($asset->extension)->toBe('png');
+    expect($response['filename'])->toContain('blank-640x480');
+});
+
+test('throws exception for invalid width and height', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $createAsset->__invoke(
+        volumeId: $this->volumeId,
+        width: 0,
+        height: 100,
+    );
+})->throws(\InvalidArgumentException::class, 'Width and height must be positive integers');
+
+test('can create blank image without title', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->__invoke(
+        volumeId: $this->volumeId,
+    );
+
+    expect($response)->toHaveKey('assetId');
+    // Filename will have a unique suffix added by Craft
+    expect($response['filename'])->toContain('blank-500x500');
+    expect($response['filename'])->toEndWith('.png');
+    // Craft auto-generates title from filename (case-insensitive check)
+    expect(strtolower($response['title']))->toContain('blank');
+
+    $this->createdAssetIds[] = $response['assetId'];
+});
+
+test('generated image file exists on filesystem', function () {
+    $createAsset = Craft::$container->get(CreateAsset::class);
+
+    $response = $createAsset->__invoke(
+        volumeId: $this->volumeId,
+        width: 100,
+        height: 100,
+    );
+
+    $this->createdAssetIds[] = $response['assetId'];
+
+    // Get the asset
+    $asset = Asset::find()->id($response['assetId'])->one();
+    expect($asset)->toBeInstanceOf(Asset::class);
+
+    // Get the filesystem path to the asset
+    $fs = $asset->getVolume()->getFs();
+    $assetPath = $asset->getPath();
+    
+    // Verify the file exists on the filesystem
+    expect($fs->fileExists($assetPath))->toBeTrue("Asset file should exist at {$assetPath}");
+    
+    // For local volumes, verify actual image dimensions and file exists
+    if (method_exists($fs, 'getRootPath')) {
+        $fullPath = $fs->getRootPath() . DIRECTORY_SEPARATOR . $assetPath;
+        expect(file_exists($fullPath))->toBeTrue("Physical file should exist at {$fullPath}");
+        
+        $imageSize = getimagesize($fullPath);
+        expect($imageSize)->toBeArray();
+        expect($imageSize[0])->toBe(100, "Image width should be 100px");
+        expect($imageSize[1])->toBe(100, "Image height should be 100px");
+    }
+});

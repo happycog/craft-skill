@@ -27,7 +27,7 @@ class AddFieldToFieldLayout
      * @param array<string, mixed> $position
      * @return array<string, mixed>
      */
-    public function add(
+    public function __invoke(
         /** The ID of the field layout to modify */
         int $fieldLayoutId,
 

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace happycog\craftmcp\actions;
 
+use Craft;
 use craft\base\FieldInterface;
-use craft\errors\FieldNotFoundException;
 use craft\fields\Matrix;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
@@ -14,11 +14,46 @@ use craft\fieldlayoutelements\CustomField as CustomFieldElement;
 class FieldFormatter
 {
     /**
+     * Static cache of all fields indexed by UID for performance.
+     *
+     * @var array<string, FieldInterface>|null
+     */
+    private static ?array $fieldCache = null;
+
+    /**
+     * Initialize the static field cache by loading all fields once.
+     */
+    private function ensureFieldCache(): void
+    {
+        if (self::$fieldCache !== null) {
+            return;
+        }
+
+        self::$fieldCache = [];
+        $allFields = Craft::$app->getFields()->getAllFields('global');
+
+        foreach ($allFields as $field) {
+            if ($field->uid !== null) {
+                self::$fieldCache[$field->uid] = $field;
+            }
+        }
+    }
+
+    /**
+     * Get a field by UID from the static cache.
+     */
+    private function getFieldByUid(string $fieldUid): ?FieldInterface
+    {
+        $this->ensureFieldCache();
+        return self::$fieldCache[$fieldUid] ?? null;
+    }
+
+    /**
      * Format fields for a given FieldLayout preserving order, tabs, and required/width context.
      *
      * @return array<int, array<string, mixed>>
      */
-    public function formatFieldsForLayout(FieldLayout $layout): array
+    public function formatFieldsForLayout(FieldLayout $layout, int $depth = 0): array
     {
         $results = [];
         foreach ($layout->getTabs() as $tab) {
@@ -26,20 +61,20 @@ class FieldFormatter
                 if (!$el instanceof CustomFieldElement) {
                     continue;
                 }
-                try {
-                    $field = $el->getField();
-                    if (!$field instanceof FieldInterface) {
-                        continue;
-                    }
-                    $results[] = $this->formatField($field, $el, $tab);
-                }
 
-                // If Craft (internally) can't find the field then we can't possibly format it
-                // so we'll just continue on. It's probably an old field in a layout that needs
-                // to be re-saved.
-                catch (FieldNotFoundException $e) {
+                // Get field UID without hitting the database
+                $fieldUid = $el->getFieldUid();
+                if (!$fieldUid) {
                     continue;
                 }
+
+                // Retrieve field from static cache (no database query)
+                $field = $this->getFieldByUid($fieldUid);
+                if (!$field instanceof FieldInterface) {
+                    continue;
+                }
+
+                $results[] = $this->formatField($field, $el, $tab, $depth);
             }
         }
         return $results;
@@ -52,11 +87,11 @@ class FieldFormatter
      * @param FieldLayoutTab|null $tab
      * @return array<string, mixed>
      */
-    public function formatField(FieldInterface $field, ?CustomFieldElement $layoutEl = null, ?FieldLayoutTab $tab = null): array
+    public function formatField(FieldInterface $field, ?CustomFieldElement $layoutEl = null, ?FieldLayoutTab $tab = null, int $depth = 0): array
     {
         $fieldData = [
             'id' => $field->id,
-            'handle' => $field->handle,
+            'handle' => $layoutEl?->handle ?? $field->handle,
             'name' => $field->name,
             'type' => get_class($field),
             'instructions' => $field->instructions,
@@ -66,20 +101,24 @@ class FieldFormatter
             'tab' => $tab ? $tab->name : null,
         ];
 
-        // Nested fields (Matrix)
+        // Nested fields (Matrix) - but only up to 3 levels deep
         if ($field instanceof Matrix) {
-            $blockTypes = [];
-            foreach ($field->getEntryTypes() as $blockType) {
-                $blockLayout = $blockType->getFieldLayout();
-                $blockFields = $this->formatFieldsForLayout($blockLayout);
-                $blockTypes[] = [
-                    'id' => $blockType->id,
-                    'handle' => $blockType->handle,
-                    'name' => $blockType->name,
-                    'fields' => $blockFields,
-                ];
+            if ($depth >= 3) {
+                $fieldData['blockTypes'] = 'Maximum nesting depth reached';
+            } else {
+                $blockTypes = [];
+                foreach ($field->getEntryTypes() as $blockType) {
+                    $blockLayout = $blockType->getFieldLayout();
+                    $blockFields = $this->formatFieldsForLayout($blockLayout, $depth + 1);
+                    $blockTypes[] = [
+                        'id' => $blockType->id,
+                        'handle' => $blockType->handle,
+                        'name' => $blockType->name,
+                        'fields' => $blockFields,
+                    ];
+                }
+                $fieldData['blockTypes'] = $blockTypes;
             }
-            $fieldData['blockTypes'] = $blockTypes;
         }
 
         return $fieldData;

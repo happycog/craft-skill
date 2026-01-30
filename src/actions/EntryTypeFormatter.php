@@ -21,36 +21,45 @@ class EntryTypeFormatter
      *
      * @return array<string, mixed>
      */
-    public function formatEntryType(EntryType $entryType, bool $includeUsedBy): array
+    public function formatEntryType(EntryType $entryType, bool $includeUsedBy, bool $includeFields = true): array
     {
-        // Fields via layout with context
-        $layout = $entryType->getFieldLayout();
-        $fields = $this->fieldFormatter->formatFieldsForLayout($layout);
+        // Fields via layout with context (only if requested)
+        $fields = null;
+        if ($includeFields) {
+            $layout = $entryType->getFieldLayout();
+            $fields = $this->fieldFormatter->formatFieldsForLayout($layout);
+        }
 
         // Generate control panel URL
         $editUrl = UrlHelper::cpUrl('settings/entry-types/' . $entryType->id);
 
-        // Build entry type data
-        return array_merge([
-            'id' => $entryType->id,
-            'name' => $entryType->name,
-            'handle' => $entryType->handle,
-            'description' => $entryType->description,
-            'hasTitleField' => $entryType->hasTitleField,
-            'titleTranslationMethod' => $entryType->titleTranslationMethod,
-            'titleTranslationKeyFormat' => $entryType->titleTranslationKeyFormat,
-            'titleFormat' => $entryType->titleFormat,
-            'icon' => $entryType->icon,
-            'color' => $entryType->color?->value,
-            'showSlugField' => $entryType->showSlugField,
-            'showStatusField' => $entryType->showStatusField,
-            'fieldLayoutId' => $entryType->fieldLayoutId,
-            'uid' => $entryType->uid,
-            'fields' => $fields,
-            'editUrl' => $editUrl,
-        ], array_filter([
-            'usedBy' => $includeUsedBy ? $this->findEntryTypeUsage($entryType) : null,
-        ]));
+         // Build entry type data
+         $data = [
+             'id' => $entryType->id,
+             'name' => $entryType->name,
+             'handle' => $entryType->handle,
+             'hasTitleField' => $entryType->hasTitleField,
+             'titleTranslationMethod' => $entryType->titleTranslationMethod,
+             'titleTranslationKeyFormat' => $entryType->titleTranslationKeyFormat,
+             'titleFormat' => $entryType->titleFormat,
+             'icon' => $entryType->icon,
+             'color' => $entryType->color?->value,
+             'showSlugField' => $entryType->showSlugField,
+             'showStatusField' => $entryType->showStatusField,
+             'fieldLayoutId' => $entryType->fieldLayoutId,
+             'uid' => $entryType->uid,
+             'editUrl' => $editUrl,
+         ];
+
+         // Only include fields if they were requested
+         if ($includeFields) {
+             $data['fields'] = $fields;
+         }
+
+         // Merge optional properties
+         return array_merge($data, array_filter([
+             'usedBy' => $includeUsedBy ? $this->findEntryTypeUsage($entryType) : null,
+         ]));
     }
 
     /**

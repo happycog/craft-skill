@@ -9,7 +9,7 @@ it('can update entry title', function () {
         ->title('Original Title')
         ->create();
 
-    $response = Craft::$container->get(UpdateEntry::class)->update(
+    $response = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: ['title' => 'Updated Title'],
     );
@@ -27,7 +27,7 @@ it('can update custom fields', function () {
         ->body('Original body')
         ->create();
 
-    $response = Craft::$container->get(UpdateEntry::class)->update(
+    $response = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: ['body' => 'Updated body content'],
     );
@@ -43,7 +43,7 @@ it('can update multiple fields at once', function () {
         ->body('Original body')
         ->create();
 
-    $response = Craft::$container->get(UpdateEntry::class)->update(
+    $response = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: [
             'title' => 'New Title',
@@ -63,7 +63,7 @@ it('can update entry slug', function () {
         ->slug('original-slug')
         ->create();
 
-    $response = Craft::$container->get(UpdateEntry::class)->update(
+    $response = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: ['slug' => 'new-custom-slug'],
     );
@@ -80,7 +80,7 @@ it('returns proper response format after update', function () {
         ->title('Response Test')
         ->create();
 
-    $response = Craft::$container->get(UpdateEntry::class)->update(
+    $response = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: ['title' => 'Updated Response Test'],
     );
@@ -98,7 +98,7 @@ it('preserves unchanged fields when updating', function () {
         ->body('Original body')
         ->create();
 
-    Craft::$container->get(UpdateEntry::class)->update(
+    Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: ['title' => 'Updated Title Only'],
     );
@@ -115,7 +115,7 @@ it('can update with empty field data', function () {
         ->body('Some content')
         ->create();
 
-    $response = Craft::$container->get(UpdateEntry::class)->update(
+    $response = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: [],
     );
@@ -134,7 +134,7 @@ it('can clear field content', function () {
         ->body('Content to clear')
         ->create();
 
-    Craft::$container->get(UpdateEntry::class)->update(
+    Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $entry->id,
         attributeAndFieldData: ['body' => ''],
     );
@@ -154,12 +154,12 @@ it('updates entries from different sections', function () {
         ->title('Page Entry')
         ->create();
 
-    $newsResponse = Craft::$container->get(UpdateEntry::class)->update(
+    $newsResponse = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $newsEntry->id,
         attributeAndFieldData: ['title' => 'Updated News'],
     );
     
-    $pageResponse = Craft::$container->get(UpdateEntry::class)->update(
+    $pageResponse = Craft::$container->get(UpdateEntry::class)->__invoke(
         entryId: $pageEntry->id,
         attributeAndFieldData: ['title' => 'Updated Page'],
     );

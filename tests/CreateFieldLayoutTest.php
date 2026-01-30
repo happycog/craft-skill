@@ -39,7 +39,7 @@ beforeEach(function () {
     $this->createEntryType = function (string $name, array $options = []) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
-        $result = $createEntryType->create(
+        $result = $createEntryType->__invoke(
             name: $name,
             handle: $options['handle'] ?? null,
             hasTitleField: $options['hasTitleField'] ?? false, // Default to false for these tests
@@ -57,7 +57,7 @@ beforeEach(function () {
     $this->createField = function (string $name, array $options = []) {
         $createField = Craft::$container->get(CreateField::class);
 
-        $result = $createField->create(
+        $result = $createField->__invoke(
             name: $name,
             handle: $options['handle'] ?? null,
             type: $options['type'] ?? 'craft\\fields\\PlainText',
@@ -74,7 +74,7 @@ beforeEach(function () {
     $this->createFieldLayout = function (string $type) {
         $createFieldLayout = Craft::$container->get(CreateFieldLayout::class);
 
-        $result = $createFieldLayout->create(type: $type);
+        $result = $createFieldLayout->__invoke(type: $type);
 
         $this->createdFieldLayoutIds[] = $result['fieldLayoutId'];
         return $result;
@@ -152,7 +152,7 @@ test('complete workflow: create entry type, field layout, fields, assign layout'
 
     // Step 4: Add a tab to the field layout
     $addTab = Craft::$container->get(AddTabToFieldLayout::class);
-    $tabResult = $addTab->add(
+    $tabResult = ($addTab)(
         fieldLayoutId: $newFieldLayoutId,
         name: 'Content',
         position: ['type' => 'append']
@@ -162,7 +162,7 @@ test('complete workflow: create entry type, field layout, fields, assign layout'
 
     // Step 5: Add fields to the tab
     $addField = Craft::$container->get(AddFieldToFieldLayout::class);
-    $field1AddResult = $addField->add(
+    $field1AddResult = ($addField)(
         fieldLayoutId: $newFieldLayoutId,
         fieldId: $field1Id,
         tabName: 'Content',
@@ -173,7 +173,7 @@ test('complete workflow: create entry type, field layout, fields, assign layout'
     
     expect($field1AddResult)->toHaveKey('fieldLayout');
     
-    $field2AddResult = $addField->add(
+    $field2AddResult = ($addField)(
         fieldLayoutId: $newFieldLayoutId,
         fieldId: $field2Id,
         tabName: 'Content',
@@ -186,7 +186,7 @@ test('complete workflow: create entry type, field layout, fields, assign layout'
 
     // Step 6: Assign the field layout to the entry type
     $updateEntryType = Craft::$container->get(UpdateEntryType::class);
-    $updateEntryTypeResult = $updateEntryType->update(
+    $updateEntryTypeResult = ($updateEntryType)(
         entryTypeId: $entryTypeId,
         fieldLayoutId: $newFieldLayoutId
     );
@@ -215,7 +215,7 @@ test('update entry type with invalid field layout id throws error', function () 
 
     $updateEntryType = Craft::$container->get(UpdateEntryType::class);
 
-    expect(fn() => $updateEntryType->update(
+    expect(fn() => ($updateEntryType)(
         entryTypeId: $entryTypeId,
         fieldLayoutId: $invalidFieldLayoutId
     ))->toThrow(RuntimeException::class);

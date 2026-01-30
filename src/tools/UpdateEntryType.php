@@ -28,7 +28,7 @@ class UpdateEntryType
      *
      * @return array<string, mixed>
      */
-    public function update(
+    public function __invoke(
         /** The ID of the entry type to update */
         int $entryTypeId,
 

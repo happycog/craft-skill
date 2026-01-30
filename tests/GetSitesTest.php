@@ -4,7 +4,7 @@ use happycog\craftmcp\tools\GetSites;
 
 it('can get sites information', function () {
     $getSites = Craft::$container->get(GetSites::class);
-    $sites = $getSites->get();
+    $sites = $getSites->__invoke();
 
     expect($sites)->toBeArray();
     expect($sites)->not->toBeEmpty();
@@ -20,7 +20,7 @@ it('can get sites information', function () {
 
 it('identifies primary site correctly', function () {
     $getSites = Craft::$container->get(GetSites::class);
-    $sites = $getSites->get();
+    $sites = $getSites->__invoke();
 
     $primarySites = array_filter($sites, fn($site) => $site['primary'] === true);
     expect($primarySites)->toHaveCount(1);
@@ -28,7 +28,7 @@ it('identifies primary site correctly', function () {
 
 it('returns all enabled sites', function () {
     $getSites = Craft::$container->get(GetSites::class);
-    $sites = $getSites->get();
+    $sites = $getSites->__invoke();
     
     $craftSites = Craft::$app->getSites()->getAllSites();
     expect($sites)->toHaveCount(count($craftSites));

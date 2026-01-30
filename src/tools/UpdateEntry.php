@@ -19,20 +19,47 @@ class UpdateEntry
     /**
      * Update an entry in Craft.
      *
+     * CRITICAL - CLI USAGE REQUIREMENTS:
+     * - DO NOT use --attributeAndFieldData with JSON blobs
+     * - ALWAYS use direct field flags: --title="value" --body="content" --customField="data"
+     * - For arrays use escaped brackets: --tags\[\]=news --tags\[\]=featured
+     * - For nested data use bracket notation: --matrix[0][type]="text" --matrix[0][fields][body]="content"
+     * - This is REQUIRED for debugging and maintainability
+     *
+     * MATRIX FIELDS - IMPORTANT:
+     * - Matrix fields are ALWAYS replaced entirely (idempotent operation)
+     * - You MUST pass the WHOLE matrix field contents, not just changes
+     * - To preserve existing blocks: First get the entry, then include ALL blocks (existing + new) in the update
+     * - Each block must use keys: new1, new2, new3, etc. (NOT numeric indices, even for existing blocks)
+     * - Each block needs: [type] and [fields][fieldHandle] for each field in that block
+     * - Example: --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="content"
+     *           --matrixField\[new2\]\[type\]=image --matrixField\[new2\]\[fields\]\[image\]\[\]=123
+     *
+     * PARTIAL MATRIX BLOCK UPDATES:
+     * - Matrix blocks are entries themselves and can be updated directly!
+     * - Use entries/get to find the block's ID, then update it individually
+     * - Example workflow:
+     *   1. entries/create --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="foo"
+     *   2. entries/get <entryId> (shows matrix block has ID 123)
+     *   3. entries/update 123 --body="updated directly!" (updates just that block)
+     * - This avoids having to pass all blocks when you only need to change one
+     *
+     * Example (CORRECT):
+     * agent-craft entries/update 123 --title="Updated Title" --body="New content" --author="Jane"
+     *
+     * Example with Matrix - Replacing ALL blocks (CORRECT):
+     * agent-craft entries/update 123 --title="Test" \
+     *   --blocks\[new1\]\[type\]=textBlock --blocks\[new1\]\[fields\]\[heading\]="Intro" \
+     *   --blocks\[new2\]\[type\]=imageBlock --blocks\[new2\]\[fields\]\[image\]\[\]=456
+     *
+     * Example (INCORRECT - DO NOT DO THIS):
+     * agent-craft entries/update 123 --attributeAndFieldData='{"title":"Updated Title",...}'
+     *
+     * Entry Information:
      * - An "Entry" in Craft is a generic term. Entries could hold categories, media, and a variety of other data types.
-     * - You should query the sections to get the types of entries that can be updated. Always use the section type and
-     * section definition to determine if the user is requesting an "Entry".
-     * - When updating a new entry pass an integer `$sectionId` and an integer `$entryTypeId`. You can use other tools
-     * to determine the appropriate IDs to use.
-     * - Attribute and field data can be passed native attributes like title, slug, postDate, etc. as well as any
-     * custom fields that are associated with the entry type. You can look up custom field handles with a separate tool
-     * call.
-     * - The attribute and field data is a JSON object keyed by the field handle. For example, a body field would be
-     * set by passing {"body":"This is the body content"}. And if you pass multiple fields like a title and body field
-     * like {"title":"This is the title","body":"This is the body content"}
-     * - You should prefer creating a Draft instead of updating an entry in place. You can do this with the CreateDraft
-     * tool and its corresponding UpdateDraft tool. This way the user can reciew their changes in thr Craft UI before
-     * accepting them.
+     * - Query sections first to get the types of entries that can be updated. Use the section type and definition.
+     * - Prefer creating a Draft instead of updating an entry in place. Use CreateDraft and UpdateDraft tools so the
+     * user can review changes in the Craft UI before accepting them.
      *
      * After updating the entry always link the user back to the entry in the Craft control panel so they can review
      * the changes in the context of the Craft UI.
@@ -40,7 +67,7 @@ class UpdateEntry
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
      */
-    public function update(
+    public function __invoke(
         int $entryId,
 
         /** The attribute and field data keyed by the handle. For example, to set the body to "foo" you would pass {"body":"foo"}. This field is idempotent so setting a field here will replace all field contents with the provided field contents. If you are updating a field you must first get the field contents, update the content, and then pass the entire updated content here. */

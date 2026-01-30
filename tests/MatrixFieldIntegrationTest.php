@@ -8,13 +8,13 @@ test('complete workflow: create matrix field with nested fields', function () {
     // Step 1: Create entry types that will serve as Matrix block types
     $createEntryType = Craft::$container->get(CreateEntryType::class);
     
-    $textBlockType = $createEntryType->create(
+    $textBlockType = $createEntryType->__invoke(
         name: 'Text Block',
         handle: 'textBlock',
         description: 'A simple text content block'
     );
     
-    $imageBlockType = $createEntryType->create(
+    $imageBlockType = $createEntryType->__invoke(
         name: 'Image Block',
         handle: 'imageBlock',
         description: 'An image with optional caption'
@@ -27,7 +27,7 @@ test('complete workflow: create matrix field with nested fields', function () {
     // Step 2: Create fields to add to the Matrix block layouts
     $createField = Craft::$container->get(CreateField::class);
     
-    $textField = $createField->create(
+    $textField = $createField->__invoke(
         type: 'craft\fields\PlainText',
         name: 'Text Content',
         handle: 'textContent',
@@ -38,7 +38,7 @@ test('complete workflow: create matrix field with nested fields', function () {
         ]
     );
     
-    $captionField = $createField->create(
+    $captionField = $createField->__invoke(
         type: 'craft\fields\PlainText',
         name: 'Caption',
         handle: 'caption',
@@ -53,7 +53,7 @@ test('complete workflow: create matrix field with nested fields', function () {
     $addFieldToLayout = Craft::$container->get(AddFieldToFieldLayout::class);
     
     // Add text field to text block layout
-    $addFieldToLayout->add(
+    ($addFieldToLayout)(
         fieldLayoutId: $textBlockType['fieldLayoutId'],
         fieldId: $textField['fieldId'],
         tabName: 'Content',
@@ -62,7 +62,7 @@ test('complete workflow: create matrix field with nested fields', function () {
     );
     
     // Add caption field to image block layout
-    $addFieldToLayout->add(
+    ($addFieldToLayout)(
         fieldLayoutId: $imageBlockType['fieldLayoutId'],
         fieldId: $captionField['fieldId'],
         tabName: 'Content',
@@ -71,7 +71,7 @@ test('complete workflow: create matrix field with nested fields', function () {
     );
     
     // Step 4: Create the Matrix field with both block types
-    $matrixField = $createField->create(
+    $matrixField = $createField->__invoke(
         type: 'craft\fields\Matrix',
         name: 'Flexible Content',
         handle: 'flexibleContent',

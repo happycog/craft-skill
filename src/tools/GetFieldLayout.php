@@ -23,7 +23,7 @@ class GetFieldLayout
      *
      * @return array<string, mixed>
      */
-    public function get(
+    public function __invoke(
         /** The ID of the field layout to retrieve */
         int $fieldLayoutId,
     ): array {

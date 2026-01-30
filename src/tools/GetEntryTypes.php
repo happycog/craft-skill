@@ -21,7 +21,7 @@ class GetEntryTypes
      * @param array<int>|null $entryTypeIds
      * @return array<int, array<string, mixed>>
      */
-    public function getAll(
+    public function __invoke(
         /** Optional list of entry type IDs to limit results */
         ?array $entryTypeIds = null
     ): array

@@ -13,7 +13,7 @@ beforeEach(function () {
     // Helper to create a published entry for draft testing
     $this->createPublishedEntry = function (array $attributeAndFieldData = []) {
         $createEntry = Craft::$container->get(CreateEntry::class);
-        $response = $createEntry->create(
+        $response = $createEntry->__invoke(
             sectionId: $this->sectionId,
             entryTypeId: $this->entryTypeId,
             attributeAndFieldData: array_merge(['title' => 'Test Entry'], $attributeAndFieldData)
@@ -25,7 +25,7 @@ beforeEach(function () {
     // Helper to create a draft from an existing entry
     $this->createDraftFromEntry = function (int $canonicalId, array $attributeAndFieldData = []) {
         $createDraft = Craft::$container->get(CreateDraft::class);
-        $response = $createDraft->create(
+        $response = $createDraft->__invoke(
             canonicalId: $canonicalId,
             attributeAndFieldData: $attributeAndFieldData
         );
@@ -36,7 +36,7 @@ beforeEach(function () {
     // Helper to create a draft from scratch
     $this->createDraftFromScratch = function (array $attributeAndFieldData = []) {
         $createDraft = Craft::$container->get(CreateDraft::class);
-        $response = $createDraft->create(
+        $response = $createDraft->__invoke(
             sectionId: $this->sectionId,
             entryTypeId: $this->entryTypeId,
             attributeAndFieldData: array_merge(['title' => 'Draft Entry'], $attributeAndFieldData)
@@ -52,7 +52,7 @@ it('can apply draft from existing entry', function () {
     
     $applyDraft = Craft::$container->get(ApplyDraft::class);
     
-    $response = $applyDraft->apply($draftId);
+    $response = $applyDraft->__invoke($draftId);
 
     expect($response)->toHaveKeys(['entryId', 'title', 'slug', 'status', 'sectionId', 'entryTypeId', 'siteId', 'url', '_notes']);
     expect($response['entryId'])->toBe($canonicalId);
@@ -71,7 +71,7 @@ it('can apply draft created from scratch', function () {
     
     $applyDraft = Craft::$container->get(ApplyDraft::class);
     
-    $response = $applyDraft->apply($draftId);
+    $response = $applyDraft->__invoke($draftId);
 
     expect($response)->toHaveKeys(['entryId', 'title', 'slug', 'status', 'sectionId', 'entryTypeId', 'siteId', 'url', '_notes']);
     expect($response['entryId'])->toBe($canonicalId);
@@ -91,7 +91,7 @@ it('can apply draft with modified content', function () {
     
     // Update the draft with new content
     $updateDraft = Craft::$container->get(UpdateDraft::class);
-    $updateDraft->update(
+    $updateDraft->__invoke(
         draftId: $draftId,
         attributeAndFieldData: ['title' => 'Modified Title'],
         draftName: 'Test Modification',
@@ -100,7 +100,7 @@ it('can apply draft with modified content', function () {
     
     $applyDraft = Craft::$container->get(ApplyDraft::class);
     
-    $response = $applyDraft->apply($draftId);
+    $response = $applyDraft->__invoke($draftId);
 
     expect($response['entryId'])->toBe($canonicalId);
     expect($response['title'])->toBe('Modified Title');
@@ -116,7 +116,7 @@ it('includes all expected response fields', function () {
     
     $applyDraft = Craft::$container->get(ApplyDraft::class);
     
-    $response = $applyDraft->apply($draftId);
+    $response = $applyDraft->__invoke($draftId);
 
     expect($response)->toHaveKeys([
         '_notes',
@@ -146,7 +146,7 @@ it('includes all expected response fields', function () {
 it('throws error when draft does not exist', function () {
     $applyDraft = Craft::$container->get(ApplyDraft::class);
     
-    expect(fn() => $applyDraft->apply(99999))
+    expect(fn() => $applyDraft->__invoke(99999))
         ->toThrow(\InvalidArgumentException::class, 'Draft with ID 99999 does not exist');
 });
 
@@ -155,7 +155,7 @@ it('throws error when trying to apply published entry', function () {
     
     $applyDraft = Craft::$container->get(ApplyDraft::class);
     
-    expect(fn() => $applyDraft->apply($canonicalId))
+    expect(fn() => $applyDraft->__invoke($canonicalId))
         ->toThrow(\InvalidArgumentException::class, 'Entry with ID ' . $canonicalId . ' is not a draft');
 });
 
@@ -169,6 +169,6 @@ it('validates draft existence before application', function () {
     
     $applyDraft = Craft::$container->get(ApplyDraft::class);
     
-    expect(fn() => $applyDraft->apply($draftId))
+    expect(fn() => $applyDraft->__invoke($draftId))
         ->toThrow(\InvalidArgumentException::class, 'Draft with ID ' . $draftId . ' does not exist');
 });

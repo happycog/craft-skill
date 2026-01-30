@@ -32,7 +32,7 @@ class CreateSection
      * @param array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null $siteSettings
      * @return array<string, mixed>
      */
-    public function create(
+    public function __invoke(
         /** The display name for the section */
         string $name,
 

@@ -33,7 +33,7 @@ class ApplyDraft
      *
      * @return array<string, mixed>
      */
-    public function apply(
+    public function __invoke(
         /** The draft ID to apply to its canonical entry */
         int $draftId,
     ): array

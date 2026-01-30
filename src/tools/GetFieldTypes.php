@@ -16,7 +16,7 @@ class GetFieldTypes
      *
      * @return array<int, array<string, mixed>>
      */
-    public function get(): array
+    public function __invoke(): array
     {
         $fieldTypes = Craft::$app->getFields()->getAllFieldTypes();
         $result = [];

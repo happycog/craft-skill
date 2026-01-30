@@ -25,7 +25,7 @@ beforeEach(function () {
     $this->createField = function (string $type, string $name, array $options = []) {
         $createField = Craft::$container->get(CreateField::class);
         
-        $result = $createField->create(
+        $result = $createField->__invoke(
             type: $type,
             name: $name,
             handle: $options['handle'] ?? null,
@@ -118,7 +118,7 @@ it('can create a field with custom settings', function () {
 it('throws exception for invalid field type', function () {
     $createField = Craft::$container->get(CreateField::class);
     
-    expect(fn() => $createField->create(
+    expect(fn() => $createField->__invoke(
         type: 'InvalidFieldType',
         name: 'Test Field'
     ))->toThrow(InvalidArgumentException::class, "Field type 'InvalidFieldType' is not available.");
@@ -179,13 +179,13 @@ it('can create a matrix field with entry types', function () {
     $createEntryType = Craft::$container->get(CreateEntryType::class);
     
     // Create text block entry type
-    $textBlockResult = $createEntryType->create(
+    $textBlockResult = $createEntryType->__invoke(
         name: 'Text Block',
         handle: 'textBlock'
     );
     
     // Create image block entry type
-    $imageBlockResult = $createEntryType->create(
+    $imageBlockResult = $createEntryType->__invoke(
         name: 'Image Block',
         handle: 'imageBlock'
     );
@@ -232,7 +232,7 @@ it('can create a matrix field with entry types', function () {
 it('can create a matrix field with advanced settings', function () {
     // Create an entry type for the block
     $createEntryType = Craft::$container->get(CreateEntryType::class);
-    $blockResult = $createEntryType->create(
+    $blockResult = $createEntryType->__invoke(
         name: 'Content Block',
         handle: 'contentBlock'
     );

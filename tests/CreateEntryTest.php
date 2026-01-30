@@ -8,7 +8,7 @@ beforeEach(function () {
         $sectionId = $section->id;
         $entryTypeId = $section->getEntryTypes()[0]->id;
 
-        $response = Craft::$container->get(CreateEntry::class)->create(
+        $response = Craft::$container->get(CreateEntry::class)->__invoke(
             sectionId: $sectionId,
             entryTypeId: $entryTypeId,
             siteId: $siteId,
@@ -69,7 +69,7 @@ it('throws exception for invalid siteId', function () {
 
     $createEntry = Craft::$container->get(CreateEntry::class);
 
-    expect(fn() => $createEntry->create(
+    expect(fn() => $createEntry->__invoke(
         sectionId: $sectionId,
         entryTypeId: $entryTypeId,
         siteId: 99999, // Invalid site ID

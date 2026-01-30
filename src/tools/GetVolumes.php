@@ -16,7 +16,7 @@ class GetVolumes
      *
      * @return array<string, mixed>
      */
-    public function get(): array
+    public function __invoke(): array
     {
         $volumesService = Craft::$app->getVolumes();
         $allVolumes = $volumesService->getAllVolumes();

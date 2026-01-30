@@ -19,18 +19,25 @@ class GetSections
      *
      * Each section can be customized with a unique set of custom fields. When pulling back section information
      * you should also check the fields of that section to understand the schema of any data you send or receive.
-     * You can pass the `fieldLayoutId` to the `get_fields` tool to get a list of fields associated with that field
-     * layout.
+     *
+     * For large sites with many sections and fields, this endpoint will exclude field information to avoid
+     * overwhelming the response. In such cases, use `sections/get {id}` to retrieve detailed field information
+     * for a specific section.
      *
      * @param array<int>|null $sectionIds
      * @return array<int, array<string, mixed>>
      */
-    public function get(
+    public function __invoke(
         /** Optional list of section IDs to limit results */
         ?array $sectionIds = null
     ): array
     {
         $sections = Craft::$app->getEntries()->getAllSections();
+
+        // Determine if we should include field details based on site size
+        $totalSections = count($sections);
+        $totalFields = count(Craft::$app->getFields()->getAllFields('global'));
+        $includeFields = $totalSections <= 10 && $totalFields <= 20;
 
         $result = [];
         foreach ($sections as $section) {
@@ -40,7 +47,7 @@ class GetSections
 
             $entryTypes = [];
             foreach ($section->getEntryTypes() as $entryType) {
-                $entryTypes[] = $this->entryTypeFormatter->formatEntryType($entryType, false);
+                $entryTypes[] = $this->entryTypeFormatter->formatEntryType($entryType, false, $includeFields);
             }
 
             $result[] = [
@@ -49,6 +56,13 @@ class GetSections
                 'name' => $section->name,
                 'type' => $section->type,
                 'entryTypes' => $entryTypes,
+            ];
+        }
+
+        // Add a note if fields were excluded
+        if (!$includeFields) {
+            $result[] = [
+                'note' => 'Field information excluded for large sites. Use sections/get {id} to retrieve detailed field information for a specific section.',
             ];
         }
 

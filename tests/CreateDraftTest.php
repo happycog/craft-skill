@@ -11,7 +11,7 @@ beforeEach(function () {
     // Helper to create a published entry for draft testing
     $this->createPublishedEntry = function (array $attributeAndFieldData = []) {
         $createEntry = Craft::$container->get(CreateEntry::class);
-        $response = $createEntry->create(
+        $response = $createEntry->__invoke(
             sectionId: $this->sectionId,
             entryTypeId: $this->entryTypeId,
             attributeAndFieldData: array_merge(['title' => 'Test Entry'], $attributeAndFieldData)
@@ -24,7 +24,7 @@ beforeEach(function () {
 it('can create draft from scratch', function () {
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    $response = $createDraft->create(
+    $response = $createDraft->__invoke(
         sectionId: $this->sectionId,
         entryTypeId: $this->entryTypeId,
         attributeAndFieldData: ['title' => 'Draft Title']
@@ -42,7 +42,7 @@ it('can create draft from existing entry', function () {
     
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    $response = $createDraft->create(
+    $response = $createDraft->__invoke(
         canonicalId: $canonicalId,
         draftName: 'Test Draft',
         draftNotes: 'Test notes'
@@ -63,7 +63,7 @@ it('can create draft from existing entry', function () {
 it('can create provisional draft', function () {
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    $response = $createDraft->create(
+    $response = $createDraft->__invoke(
         sectionId: $this->sectionId,
         entryTypeId: $this->entryTypeId,
         provisional: true,
@@ -81,7 +81,7 @@ it('can override field data when creating from existing entry', function () {
     
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    $response = $createDraft->create(
+    $response = $createDraft->__invoke(
         canonicalId: $canonicalId,
         attributeAndFieldData: ['title' => 'Modified Title']
     );
@@ -94,14 +94,14 @@ it('can override field data when creating from existing entry', function () {
 it('validates required parameters', function () {
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    expect(fn() => $createDraft->create())
+    expect(fn() => $createDraft->__invoke())
         ->toThrow(\InvalidArgumentException::class, 'Must specify either canonicalId');
 });
 
 it('validates conflicting parameters', function () {
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    expect(fn() => $createDraft->create(
+    expect(fn() => $createDraft->__invoke(
         canonicalId: 1,
         sectionId: $this->sectionId,
         entryTypeId: $this->entryTypeId
@@ -111,7 +111,7 @@ it('validates conflicting parameters', function () {
 it('validates canonical entry exists', function () {
     $createDraft = Craft::$container->get(CreateDraft::class);
     
-    expect(fn() => $createDraft->create(canonicalId: 99999))
+    expect(fn() => $createDraft->__invoke(canonicalId: 99999))
         ->toThrow(\InvalidArgumentException::class, 'Entry with ID 99999 does not exist');
 });
 
@@ -119,7 +119,7 @@ it('defaults to primary site', function () {
     $createDraft = Craft::$container->get(CreateDraft::class);
     $primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
     
-    $response = $createDraft->create(
+    $response = $createDraft->__invoke(
         sectionId: $this->sectionId,
         entryTypeId: $this->entryTypeId,
         attributeAndFieldData: ['title' => 'Site Test']
