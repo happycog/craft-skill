@@ -19,42 +19,6 @@ class UpdateEntry
     /**
      * Update an entry in Craft.
      *
-     * CRITICAL - CLI USAGE REQUIREMENTS:
-     * - DO NOT use --attributeAndFieldData with JSON blobs
-     * - ALWAYS use direct field flags: --title="value" --body="content" --customField="data"
-     * - For arrays use escaped brackets: --tags\[\]=news --tags\[\]=featured
-     * - For nested data use bracket notation: --matrix[0][type]="text" --matrix[0][fields][body]="content"
-     * - This is REQUIRED for debugging and maintainability
-     *
-     * MATRIX FIELDS - IMPORTANT:
-     * - Matrix fields are ALWAYS replaced entirely (idempotent operation)
-     * - You MUST pass the WHOLE matrix field contents, not just changes
-     * - To preserve existing blocks: First get the entry, then include ALL blocks (existing + new) in the update
-     * - Each block must use keys: new1, new2, new3, etc. (NOT numeric indices, even for existing blocks)
-     * - Each block needs: [type] and [fields][fieldHandle] for each field in that block
-     * - Example: --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="content"
-     *           --matrixField\[new2\]\[type\]=image --matrixField\[new2\]\[fields\]\[image\]\[\]=123
-     *
-     * PARTIAL MATRIX BLOCK UPDATES:
-     * - Matrix blocks are entries themselves and can be updated directly!
-     * - Use entries/get to find the block's ID, then update it individually
-     * - Example workflow:
-     *   1. entries/create --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="foo"
-     *   2. entries/get <entryId> (shows matrix block has ID 123)
-     *   3. entries/update 123 --body="updated directly!" (updates just that block)
-     * - This avoids having to pass all blocks when you only need to change one
-     *
-     * Example (CORRECT):
-     * agent-craft entries/update 123 --title="Updated Title" --body="New content" --author="Jane"
-     *
-     * Example with Matrix - Replacing ALL blocks (CORRECT):
-     * agent-craft entries/update 123 --title="Test" \
-     *   --blocks\[new1\]\[type\]=textBlock --blocks\[new1\]\[fields\]\[heading\]="Intro" \
-     *   --blocks\[new2\]\[type\]=imageBlock --blocks\[new2\]\[fields\]\[image\]\[\]=456
-     *
-     * Example (INCORRECT - DO NOT DO THIS):
-     * agent-craft entries/update 123 --attributeAndFieldData='{"title":"Updated Title",...}'
-     *
      * Entry Information:
      * - An "Entry" in Craft is a generic term. Entries could hold categories, media, and a variety of other data types.
      * - Query sections first to get the types of entries that can be updated. Use the section type and definition.

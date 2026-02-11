@@ -5,14 +5,10 @@ declare(strict_types=1);
 namespace happycog\craftmcp\cli;
 
 use function count;
-use function is_array;
 use function is_numeric;
 use function json_decode;
-use function parse_str;
-use function preg_match;
 use function str_contains;
 use function str_starts_with;
-use function strlen;
 use function strpos;
 use function substr;
 
@@ -167,10 +163,8 @@ class ArgumentParser
     /**
      * Parse a flag argument and merge it into the flags array.
      *
-     * Handles various flag formats:
+     * Handles flag formats:
      * - Simple flags: --key=value
-     * - Bracket notation: --fields[body]=text
-     * - Auto-indexed arrays: --items[]=1
      * - Boolean flags: --enabled
      *
      * @param string $arg The flag argument to parse
@@ -195,13 +189,8 @@ class ArgumentParser
         // Parse the value
         $parsedValue = $this->parseValue($value);
 
-        // Handle bracket notation (e.g., fields[body]=text or items[]=1)
-        if (str_contains($key, '[')) {
-            $this->parseBracketNotation($key, $parsedValue, $flags);
-        } else {
-            // Simple key=value
-            $flags[$key] = $parsedValue;
-        }
+        // Simple key=value
+        $flags[$key] = $parsedValue;
     }
 
     /**
@@ -215,66 +204,15 @@ class ArgumentParser
      */
     private function parseFlagWithValue(string $key, string $value, array &$flags): void
     {
-        // Parse the value
-        $parsedValue = $this->parseValue($value);
-
-        // Handle bracket notation (e.g., fields[body]=text or items[]=1)
-        if (str_contains($key, '[')) {
-            $this->parseBracketNotation($key, $parsedValue, $flags);
-        } else {
-            // Simple key=value
-            $flags[$key] = $parsedValue;
-        }
-    }
-
-    /**
-     * Parse bracket notation and merge into flags array.
-     *
-     * Handles both named keys (fields[body]=text) and auto-indexed arrays (items[]=1).
-     *
-     * @param string $key The key with bracket notation
-     * @param mixed $value The parsed value
-     * @param array<string, mixed> $flags The flags array to modify (passed by reference)
-     */
-    private function parseBracketNotation(string $key, mixed $value, array &$flags): void
-    {
-        // Use parse_str to handle bracket notation
-        $parsed = [];
-        $valueStr = is_scalar($value) || $value === null ? (string) $value : '';
-        parse_str($key . '=' . urlencode($valueStr), $parsed);
-
-        // Merge the parsed structure into flags
-        /** @var array<string, mixed> $parsedTyped */
-        $parsedTyped = $parsed;
-        $flags = $this->mergeArrays($flags, $parsedTyped);
-    }
-
-    /**
-     * Recursively merge arrays, handling auto-indexed arrays correctly.
-     *
-     * @param array<string, mixed> $array1 The base array
-     * @param array<string, mixed> $array2 The array to merge in
-     * @return array<string, mixed> The merged array
-     */
-    private function mergeArrays(array $array1, array $array2): array
-    {
-        foreach ($array2 as $key => $value) {
-            if (isset($array1[$key]) && is_array($array1[$key]) && is_array($value)) {
-                // Both values are arrays, merge recursively
-                $array1[$key] = $this->mergeArrays($array1[$key], $value);
-            } else {
-                // Overwrite or set new value
-                $array1[$key] = $value;
-            }
-        }
-
-        return $array1;
+        // Parse the value and assign directly
+        $flags[$key] = $this->parseValue($value);
     }
 
     /**
      * Parse a value string and auto-detect its type.
      *
      * Handles:
+     * - File references (strings starting with @) - returns special marker array
      * - JSON objects/arrays (strings starting with { or [)
      * - Comma-separated arrays (1,2,3)
      * - Booleans (true/false)
@@ -286,6 +224,12 @@ class ArgumentParser
      */
     private function parseValue(string $value): mixed
     {
+        // Check for file reference (@filename.json)
+        // Return a marker array that will be resolved later by CommandRouter
+        if (str_starts_with($value, '@')) {
+            return ['__file__' => substr($value, 1)];
+        }
+
         // Check for JSON
         if ($this->isJson($value)) {
             $decoded = json_decode($value, true);

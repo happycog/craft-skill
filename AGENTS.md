@@ -141,28 +141,43 @@ php -d phar.readonly=0 bin/build-phar.php
 # Test with custom Craft path
 ./bin/agent-craft sections/list --path=/path/to/craft
 
-# Test entry creation with simple flags
+# Test entry creation with inline JSON
 ./bin/agent-craft entries/create \
   --sectionId=1 \
   --entryTypeId=2 \
-  --attributeAndFieldData[title]="Test Entry"
+  --attributeAndFieldData='{"title":"Test Entry","body":"<p>Content</p>"}'
 
-# Test with bracket notation for structured data
+# Test entry creation with JSON file (recommended for complex data)
+# Create data.json first:
+# {
+#   "title": "My Entry",
+#   "body": "<p>This is the body content</p>",
+#   "customField": "value"
+# }
 ./bin/agent-craft entries/create \
   --sectionId=1 \
   --entryTypeId=2 \
-  --attributeAndFieldData[title]="Test Entry" \
-  --attributeAndFieldData[fields][bodyContent]="<p>Test</p>"
+  --attributeAndFieldData=@data.json
 
 # Test positional arguments
 ./bin/agent-craft entries/get 123
 
 # Test verbose output
-./bin/agent-craft entries/create --title="Test" -vvv
+./bin/agent-craft entries/create \
+  --sectionId=1 \
+  --entryTypeId=2 \
+  --attributeAndFieldData=@entry.json \
+  -vvv
 
 # Using PHAR distribution
 ./agent-craft.phar sections/list
 ```
+
+**IMPORTANT - CLI Data Input Patterns:**
+- **Inline JSON** (simple): `--attributeAndFieldData='{"title":"Test"}'`
+- **File Reference** (recommended): `--attributeAndFieldData=@data.json`
+- **Why file references?** Avoids shell escaping issues with special characters like `!`, `$`, `[]`, etc.
+- **File path**: Relative to current working directory (not the PHAR location)
 
 ### PHPStan Configuration
 The project uses PHPStan at **level max** (strictest possible) with official Craft CMS integration:
@@ -517,12 +532,17 @@ See README.md for detailed usage examples. Key patterns:
 # Positional arguments
 ./bin/agent-craft entries/get 123
 
-# Flags with bracket notation
+# Inline JSON for simple data
 ./bin/agent-craft entries/create \
   --sectionId=1 \
   --entryTypeId=2 \
-  --attributeAndFieldData[title]="Test" \
-  --attributeAndFieldData[fields][body]="Content"
+  --attributeAndFieldData='{"title":"Test","body":"Content"}'
+
+# File reference for complex data (recommended)
+./bin/agent-craft entries/create \
+  --sectionId=1 \
+  --entryTypeId=2 \
+  --attributeAndFieldData=@data.json
 
 # Custom path
 ./bin/agent-craft --path=/path/to/craft sections/list
@@ -538,8 +558,6 @@ See README.md for detailed usage examples. Key patterns:
 - **Migration**: All HTTP endpoints have equivalent CLI commands
 
 ### CLI Implementation Notes
-- **ArgumentParser Implementation**: Uses PHP's `parse_str()` for bracket notation parsing
-- **Auto-Indexed Array Limitation**: Auto-indexed arrays (`--items[]=1 --items[]=2`) only keep the last value due to `parse_str()` behavior - use comma-separated values or numbered indices instead
 - **Command Mapping**: CommandRouter requires manual mapping for new commands in the `COMMAND_MAP` constant
 - **Exit Codes**: Standardized across all commands (0=success, 1=general error, 2=invalid args, 3=bootstrap failed)
 - **Development Mode**: Script auto-detects when running from plugin directory and adjusts paths for bootstrapping Craft

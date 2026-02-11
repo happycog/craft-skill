@@ -91,7 +91,7 @@ test('basic command execution - sections/list', function () {
 test('command with positional arguments - entries/get', function () {
     // Create a test entry via CLI (so it's in the database, not in a transaction)
     $createResult = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"Test Entry for CLI\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"Test Entry for CLI\"}'",
         true
     );
     
@@ -115,7 +115,7 @@ test('command with positional arguments - entries/get', function () {
 
 test('command with flags - entries/create', function () {
     $result = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"CLI Test Entry\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"CLI Test Entry\"}'",
         true
     );
     
@@ -136,9 +136,9 @@ test('command with flags - entries/create', function () {
     expect($entry->title)->toBe('CLI Test Entry');
 });
 
-test('command with bracket notation for field data', function () {
+test('command with JSON for field data', function () {
     $result = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"Entry with Field Data\" --attributeAndFieldData[body]=\"Test body content\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"Entry with Field Data\",\"body\":\"Test body content\"}'",
         true
     );
     
@@ -160,9 +160,9 @@ test('command with bracket notation for field data', function () {
     expect($entry->body)->toBe('Test body content');
 });
 
-test('command with nested bracket notation', function () {
+test('command with nested JSON data', function () {
     $result = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"Nested Data Test\" --attributeAndFieldData[body]=\"Content here\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"Nested Data Test\",\"body\":\"Content here\"}'",
         true
     );
     
@@ -190,7 +190,7 @@ test('invalid command returns exit code 2', function () {
 
 test('missing required arguments returns exit code 2', function () {
     // Missing sectionId and entryTypeId (required parameters)
-    $result = ($this->execCli)('entries/create --attributeAndFieldData[title]="Missing IDs"', true);
+    $result = ($this->execCli)('entries/create --attributeAndFieldData=\'{"title":"Missing IDs"}\'', true);
 
     expect($result['exitCode'])->toBe(2);
     expect($result['stderr'])->not->toBeEmpty();
@@ -277,9 +277,9 @@ test('JSON output is valid and parseable for errors', function () {
 });
 
 test('entries/update command with positional and flag arguments', function () {
-    // Create entry via CLI
+    // Create entry to update via CLI
     $createResult = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"Original Title\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"Original Title\"}'",
         true
     );
     
@@ -289,7 +289,7 @@ test('entries/update command with positional and flag arguments', function () {
     
     // Update via CLI
     $result = ($this->execCli)(
-        "entries/update {$entryId} --attributeAndFieldData[title]=\"Updated Title\"",
+        "entries/update {$entryId} --attributeAndFieldData='{\"title\":\"Updated Title\"}'",
         true
     );
     
@@ -310,7 +310,7 @@ test('entries/update command with positional and flag arguments', function () {
 test('entries/delete command with positional argument', function () {
     // Create entry to delete via CLI
     $createResult = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"Entry to Delete\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"Entry to Delete\"}'",
         true
     );
     
@@ -340,7 +340,7 @@ test('entries/search command with query parameter', function () {
     // Use a unique title to avoid conflicts with other tests
     $uniqueTitle = 'UniqueSearchableTitle' . uniqid();
     $createResult = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"{$uniqueTitle}\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"{$uniqueTitle}\"}'",
         true
     );
     
@@ -419,10 +419,10 @@ test('no command specified returns exit code 2', function () {
 
 test('command with special characters in title', function () {
     $title = "Test \"Quotes\" & Special <Chars>";
-    $escapedTitle = escapeshellarg($title);
+    $jsonData = json_encode(['title' => $title]);
     
     $result = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]={$escapedTitle}",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='" . $jsonData . "'",
         true
     );
     
@@ -435,9 +435,9 @@ test('command with special characters in title', function () {
     expect($entry->title)->toBe($title);
 });
 
-test('command with multiple fields using bracket notation', function () {
+test('command with multiple fields using JSON', function () {
     $result = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"Multi Field Test\" --attributeAndFieldData[body]=\"Body text here\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData='{\"title\":\"Multi Field Test\",\"body\":\"Body text here\"}'",
         true
     );
     
@@ -486,7 +486,7 @@ test('command execution with combined output captures both stdout and stderr', f
 test('malformed validation error returns exit code 2', function () {
     // Try to create entry with invalid sectionId type (string instead of int)
     $result = ($this->execCli)(
-        'entries/create --sectionId=invalid --entryTypeId=1 --attributeAndFieldData[title]="Test"',
+        'entries/create --sectionId=invalid --entryTypeId=1 --attributeAndFieldData=\'{"title":"Test"}\'',
         true
     );
 
@@ -552,9 +552,9 @@ test('unknown command --help shows general help as fallback', function () {
 });
 
 test('space-separated flag syntax works correctly', function () {
-    // Test with space-separated syntax: --type single
+    // Test with space-separated syntax for attributeAndFieldData
     $result = ($this->execCli)(
-        "entries/create --sectionId {$this->testSectionId} --entryTypeId {$this->testEntryTypeId} --attributeAndFieldData[title] \"Space Separated Title\"",
+        "entries/create --sectionId {$this->testSectionId} --entryTypeId {$this->testEntryTypeId} --attributeAndFieldData '{\"title\":\"Space Separated Title\"}'",
         true
     );
     
@@ -569,9 +569,9 @@ test('space-separated flag syntax works correctly', function () {
 });
 
 test('mixed equals and space-separated flag syntax works correctly', function () {
-    // Test with mixed syntax: --sectionId=X --title "Y"
+    // Test with mixed syntax: --sectionId=X --attributeAndFieldData "Y"
     $result = ($this->execCli)(
-        "entries/create --sectionId={$this->testSectionId} --entryTypeId {$this->testEntryTypeId} --attributeAndFieldData[title] \"Mixed Syntax Title\"",
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId {$this->testEntryTypeId} --attributeAndFieldData '{\"title\":\"Mixed Syntax Title\"}'",
         true
     );
     

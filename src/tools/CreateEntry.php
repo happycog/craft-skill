@@ -16,31 +16,6 @@ class CreateEntry
     /**
      * Create an entry in Craft.
      *
-     * CRITICAL - CLI USAGE REQUIREMENTS:
-     * - DO NOT use --attributeAndFieldData with JSON blobs
-     * - ALWAYS use direct field flags: --title="value" --body="content" --customField="data"
-     * - For arrays use escaped brackets: --categories\[\]=1 --categories\[\]=2
-     * - For nested data use bracket notation: --matrix[0][type]="text" --matrix[0][fields][body]="content"
-     * - This is REQUIRED for debugging and maintainability
-     *
-     * MATRIX FIELDS:
-     * - Matrix fields are ALWAYS replaced entirely (idempotent operation)
-     * - Each block must use keys: new1, new2, new3, etc. (NOT numeric indices)
-     * - Each block needs: [type] and [fields][fieldHandle] for each field in that block
-     * - Example: --matrixField\[new1\]\[type\]=text --matrixField\[new1\]\[fields\]\[body\]="content"
-     *           --matrixField\[new2\]\[type\]=image --matrixField\[new2\]\[fields\]\[image\]\[\]=123
-     *
-     * Example (CORRECT):
-     * agent-craft entries/create --sectionId=1 --entryTypeId=2 --title="My Entry" --body="Content" --author="John"
-     *
-     * Example with Matrix (CORRECT):
-     * agent-craft entries/create --sectionId=1 --entryTypeId=2 --title="Test" \
-     *   --blocks\[new1\]\[type\]=textBlock --blocks\[new1\]\[fields\]\[heading\]="Intro" \
-     *   --blocks\[new2\]\[type\]=imageBlock --blocks\[new2\]\[fields\]\[image\]\[\]=456
-     *
-     * Example (INCORRECT - DO NOT DO THIS):
-     * agent-craft entries/create --sectionId=1 --entryTypeId=2 --attributeAndFieldData='{"title":"My Entry",...}'
-     *
      * Entry Information:
      * - An "Entry" in Craft is a generic term. Entries could hold categories, media, and a variety of other data types.
      * - Query sections first to get the types of entries that can be created. Use the section type and definition to

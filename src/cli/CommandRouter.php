@@ -59,14 +59,14 @@ class CommandRouter
     /**
      * Merge positional and flag arguments into a single array keyed by parameter name.
      *
-     * Flags that don't match any method parameter are collected into the
-     * 'attributeAndFieldData' parameter if it exists, allowing field data to be
-     * passed via simple flags like --title=foo instead of --attributeAndFieldData[title]=foo
+     * Resolves file references (values like @filename.json) by reading the file contents
+     * and parsing as JSON. File references are resolved relative to the current working directory.
      *
      * @param array<int, \ReflectionParameter> $parameters
      * @param array<int, mixed> $positional
      * @param array<string, mixed> $flags
      * @return array<string, mixed>
+     * @throws \InvalidArgumentException When file cannot be read or parsed
      */
     private function mergeArguments(array $parameters, array $positional, array $flags): array
     {
@@ -82,32 +82,60 @@ class CommandRouter
         foreach ($positional as $index => $value) {
             if (isset($parameters[$index])) {
                 $paramName = $parameters[$index]->getName();
-                $merged[$paramName] = $value;
+                $merged[$paramName] = $this->resolveFileReference($value);
             }
         }
 
-        // Separate flags into direct parameters and field data
-        $fieldData = [];
+        // Resolve file references in flags
         foreach ($flags as $key => $value) {
             if (isset($paramNames[$key])) {
                 // This flag matches a method parameter directly
-                $merged[$key] = $value;
-            } else {
-                // This flag doesn't match a parameter, collect it as field data
-                $fieldData[$key] = $value;
+                $merged[$key] = $this->resolveFileReference($value);
             }
-        }
-
-        // If there's unmatched field data and an attributeAndFieldData parameter exists,
-        // merge the field data into it
-        if (!empty($fieldData) && isset($paramNames['attributeAndFieldData'])) {
-            $existing = $merged['attributeAndFieldData'] ?? [];
-            if (!is_array($existing)) {
-                $existing = [];
-            }
-            $merged['attributeAndFieldData'] = array_merge($existing, $fieldData);
         }
 
         return $merged;
+    }
+
+    /**
+     * Resolve file references in argument values.
+     *
+     * If the value is a marker array with '__file__' key (created by ArgumentParser),
+     * reads the file and parses it as JSON. Otherwise returns the value unchanged.
+     *
+     * @param mixed $value The value to potentially resolve
+     * @return mixed The resolved value
+     * @throws \InvalidArgumentException When file cannot be read or contains invalid JSON
+     */
+    private function resolveFileReference(mixed $value): mixed
+    {
+        // Check if this is a file reference marker array
+        if (is_array($value) && isset($value['__file__']) && count($value) === 1) {
+            $filename = $value['__file__'];
+            
+            // Read file relative to current working directory
+            $filepath = getcwd() . '/' . $filename;
+            
+            if (!file_exists($filepath)) {
+                throw new \InvalidArgumentException("File not found: {$filename}");
+            }
+            
+            $contents = file_get_contents($filepath);
+            if ($contents === false) {
+                throw new \InvalidArgumentException("Failed to read file: {$filename}");
+            }
+            
+            $decoded = json_decode($contents, true);
+            if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+                throw new \InvalidArgumentException(
+                    "Invalid JSON in file {$filename}: " . json_last_error_msg()
+                );
+            }
+            
+            return $decoded ?? [];
+        }
+        
+        // Not a file reference, return as-is
+        return $value;
     }
 }

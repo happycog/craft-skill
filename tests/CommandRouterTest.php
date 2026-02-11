@@ -120,3 +120,120 @@ test('supports sections list command', function () {
 
     expect($result)->toBeArray();
 });
+
+test('resolves file references in flag arguments', function () {
+    $mapper = (new MapperBuilder())
+        ->allowPermissiveTypes()
+        ->allowScalarValueCasting()
+        ->argumentsMapper();
+
+    $router = new CommandRouter($mapper);
+
+    // Create a temporary JSON file
+    $tempFile = tempnam(sys_get_temp_dir(), 'test_');
+    $jsonFile = $tempFile . '.json';
+    rename($tempFile, $jsonFile);
+    file_put_contents($jsonFile, json_encode([
+        'title' => 'Test Entry',
+        'slug' => 'test-entry'
+    ]));
+
+    try {
+        // Create section and entry type for testing
+        $section = \markhuot\craftpest\factories\Section::factory()
+            ->type('single')
+            ->create();
+        $entryType = $section->getEntryTypes()[0];
+
+        // Use basename since file is in temp dir, not cwd
+        // We'll use the actual file path by temporarily changing directory
+        $originalCwd = getcwd();
+        chdir(sys_get_temp_dir());
+
+        $result = $router->route(
+            command: 'entries/create',
+            positional: [],
+            flags: [
+                'sectionId' => $section->id,
+                'entryTypeId' => $entryType->id,
+                'attributeAndFieldData' => ['__file__' => basename($jsonFile)]
+            ]
+        );
+
+        chdir($originalCwd);
+
+        expect($result)->toBeArray();
+        expect($result)->toHaveKey('entryId');
+        expect($result['title'])->toBe('Test Entry');
+        expect($result['slug'])->toBe('test-entry');
+    } finally {
+        unlink($jsonFile);
+        if (isset($originalCwd)) {
+            chdir($originalCwd);
+        }
+    }
+});
+
+test('throws exception when file reference does not exist', function () {
+    $mapper = (new MapperBuilder())
+        ->allowPermissiveTypes()
+        ->allowScalarValueCasting()
+        ->argumentsMapper();
+
+    $router = new CommandRouter($mapper);
+
+    $section = \markhuot\craftpest\factories\Section::factory()
+        ->type('single')
+        ->create();
+    $entryType = $section->getEntryTypes()[0];
+
+    $router->route(
+        command: 'entries/create',
+        positional: [],
+        flags: [
+            'sectionId' => $section->id,
+            'entryTypeId' => $entryType->id,
+            'attributeAndFieldData' => ['__file__' => 'nonexistent.json']
+        ]
+    );
+})->throws(\InvalidArgumentException::class, 'File not found: nonexistent.json');
+
+test('throws exception when file contains invalid JSON', function () {
+    $mapper = (new MapperBuilder())
+        ->allowPermissiveTypes()
+        ->allowScalarValueCasting()
+        ->argumentsMapper();
+
+    $router = new CommandRouter($mapper);
+
+    // Create a temporary file with invalid JSON
+    $tempFile = tempnam(sys_get_temp_dir(), 'test_');
+    $jsonFile = $tempFile . '.json';
+    rename($tempFile, $jsonFile);
+    file_put_contents($jsonFile, '{invalid json}');
+
+    try {
+        $section = \markhuot\craftpest\factories\Section::factory()
+            ->type('single')
+            ->create();
+        $entryType = $section->getEntryTypes()[0];
+
+        $originalCwd = getcwd();
+        chdir(sys_get_temp_dir());
+
+        $router->route(
+            command: 'entries/create',
+            positional: [],
+            flags: [
+                'sectionId' => $section->id,
+                'entryTypeId' => $entryType->id,
+                'attributeAndFieldData' => ['__file__' => basename($jsonFile)]
+            ]
+        );
+    } finally {
+        unlink($jsonFile);
+        if (isset($originalCwd)) {
+            chdir($originalCwd);
+        }
+    }
+})->throws(\InvalidArgumentException::class);

@@ -114,65 +114,13 @@ test('parses multiple simple flags', function () {
     ]);
 });
 
-// Test group 4: Bracket notation
-test('parses simple bracket notation for nested data', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--fields[body]=text content']);
-
-    expect($result['flags'])->toHaveKey('fields');
-    expect($result['flags']['fields'])->toBe(['body' => 'text content']);
-});
-
-test('parses deeply nested bracket notation', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--data[foo][bar]=baz']);
-
-    expect($result['flags'])->toHaveKey('data');
-    expect($result['flags']['data'])->toHaveKey('foo');
-    expect($result['flags']['data']['foo'])->toBe(['bar' => 'baz']);
-});
-
-test('parses bracket notation with numeric keys', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--items[0]=a', '--items[1]=b', '--items[2]=c']);
-
-    expect($result['flags'])->toHaveKey('items');
-    expect($result['flags']['items'])->toBe(['a', 'b', 'c']);
-});
-
-test('parses multiple bracket notation parameters for same key', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--fields[title]=Test', '--fields[body]=Content']);
-
-    expect($result['flags'])->toHaveKey('fields');
-    expect($result['flags']['fields'])->toBe([
-        'title' => 'Test',
-        'body' => 'Content',
-    ]);
-});
-
-test('parses three-level deep bracket notation', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--data[level1][level2][level3]=value']);
-
-    expect($result['flags']['data']['level1']['level2']['level3'])->toBe('value');
-});
-
-// Test group 5: Array handling
+// Test group 4: Array handling (comma-separated values)
 test('parses comma-separated values as array', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--ids=1,2,3']);
 
     expect($result['flags']['ids'])->toBe([1, 2, 3]);
     expect($result['flags']['ids'])->toBeArray();
-});
-
-test('parses auto-indexed array with bracket notation', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--items[]=1', '--items[]=2', '--items[]=3']);
-
-    // Due to parse_str behavior, auto-indexed arrays only keep the last value
-    expect($result['flags']['items'])->toBe(['3']);
 });
 
 test('parses mixed types in comma-separated array', function () {
@@ -391,39 +339,16 @@ test('parses entry creation command with all parameter types', function () {
         'entries/create',
         '--sectionId=1',
         '--entryTypeId=2',
-        '--title=Test Entry',
-        '--fields[body]=<p>HTML content</p>',
-        '--tags=tag1,tag2,tag3', // Use simple flag for comma-separated arrays
+        '--attributeAndFieldData={"title":"Test Entry","body":"<p>HTML content</p>","tags":["tag1","tag2","tag3"]}',
     ]);
 
     expect($result['command'])->toBe('entries/create');
     expect($result['flags']['sectionId'])->toBe(1);
     expect($result['flags']['entryTypeId'])->toBe(2);
-    expect($result['flags']['title'])->toBe('Test Entry');
-    expect($result['flags']['fields']['body'])->toBe('<p>HTML content</p>');
-    expect($result['flags']['tags'])->toBe(['tag1', 'tag2', 'tag3']);
-});
-
-test('parses command with nested arrays in bracket notation', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse([
-        'script',
-        'cmd',
-        '--data[items][0]=first',
-        '--data[items][1]=second',
-        '--data[name]=test',
-    ]);
-
-    expect($result['flags']['data']['items'])->toBe(['first', 'second']);
-    expect($result['flags']['data']['name'])->toBe('test');
-});
-
-test('parses entry get command with positional ID', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'entries/get', '123']);
-
-    expect($result['command'])->toBe('entries/get');
-    expect($result['positional'])->toBe([123]);
+    expect($result['flags']['attributeAndFieldData'])->toBeArray();
+    expect($result['flags']['attributeAndFieldData']['title'])->toBe('Test Entry');
+    expect($result['flags']['attributeAndFieldData']['body'])->toBe('<p>HTML content</p>');
+    expect($result['flags']['attributeAndFieldData']['tags'])->toBe(['tag1', 'tag2', 'tag3']);
 });
 
 test('parses complex command with all flag types', function () {
@@ -433,10 +358,10 @@ test('parses complex command with all flag types', function () {
         'entries/update',
         '456',
         '--title=Updated Title',
-        '--enabled=true',
+        '--enabled',
         '--siteId=1',
-        '--fields[body]=New content',
-        '--relatedEntries=1,2,3', // Use simple flag for comma-separated
+        '--attributeAndFieldData={"body":"New content"}',
+        '--relatedEntries=1,2,3',
         '-vv',
         '--path=/custom/craft',
     ]);
@@ -446,10 +371,19 @@ test('parses complex command with all flag types', function () {
     expect($result['flags']['title'])->toBe('Updated Title');
     expect($result['flags']['enabled'])->toBeTrue();
     expect($result['flags']['siteId'])->toBe(1);
-    expect($result['flags']['fields']['body'])->toBe('New content');
+    expect($result['flags']['attributeAndFieldData'])->toBeArray();
+    expect($result['flags']['attributeAndFieldData']['body'])->toBe('New content');
     expect($result['flags']['relatedEntries'])->toBe([1, 2, 3]);
     expect($result['verbosity'])->toBe(2);
     expect($result['path'])->toBe('/custom/craft');
+});
+
+test('parses entry get command with positional ID', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'entries/get', '123']);
+
+    expect($result['command'])->toBe('entries/get');
+    expect($result['positional'])->toBe([123]);
 });
 
 // Test group 10: Edge cases
@@ -638,13 +572,6 @@ test('parses space-separated flag with comma-separated value', function () {
     expect($result['flags']['ids'])->toBe([1, 2, 3]);
 });
 
-test('parses space-separated flag with bracket notation', function () {
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--fields[title]', 'Test']);
-
-    expect($result['flags']['fields']['title'])->toBe('Test');
-});
-
 test('space-separated flags with special characters in value', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--url', 'https://example.com/path']);
@@ -665,16 +592,6 @@ test('handles standalone path flag without value', function () {
 
     expect($result['path'])->toBeNull();
     expect($result['flags'])->not->toHaveKey('path');
-});
-
-test('bracket notation with comma-separated values produces empty string', function () {
-    // This documents current behavior - bracket notation doesn't support comma-separated arrays
-    // Use simple flags (without brackets) for comma-separated values instead
-    $parser = new ArgumentParser();
-    $result = $parser->parse(['script', 'cmd', '--fields[tags]=a,b,c']);
-
-    // Current behavior: array values cannot be used with bracket notation (produces empty string)
-    expect($result['flags']['fields']['tags'])->toBe('');
 });
 
 // Test group 11: Public properties for early access
@@ -705,4 +622,36 @@ test('properties have default values before parsing', function () {
     expect($parser->verbosity)->toBe(0);
     expect($parser->path)->toBeNull();
     expect($parser->help)->toBeFalse();
+});
+
+// Test group 13: File reference syntax (@filename)
+test('parses file reference with @ prefix', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--data=@test.json']);
+
+    expect($result['flags']['data'])->toBeArray();
+    expect($result['flags']['data'])->toHaveKey('__file__');
+    expect($result['flags']['data']['__file__'])->toBe('test.json');
+});
+
+test('parses file reference with path', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--config=@path/to/config.json']);
+
+    expect($result['flags']['config']['__file__'])->toBe('path/to/config.json');
+});
+
+test('parses file reference with space-separated syntax', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--data', '@test.json']);
+
+    expect($result['flags']['data']['__file__'])->toBe('test.json');
+});
+
+test('does not treat @ in middle of string as file reference', function () {
+    $parser = new ArgumentParser();
+    $result = $parser->parse(['script', 'cmd', '--email=user@example.com']);
+
+    expect($result['flags']['email'])->toBe('user@example.com');
+    expect($result['flags']['email'])->toBeString();
 });
