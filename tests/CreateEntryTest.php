@@ -1,10 +1,22 @@
 <?php
 
 use happycog\craftmcp\tools\CreateEntry;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use Composer\Semver\Semver;
+use function happycog\craftmcp\helpers\service;
 
 beforeEach(function () {
+    // Bind SectionsServiceInterface if not already bound
+    if (!Craft::$container->has(SectionsServiceInterface::class)) {
+        Craft::$container->set(SectionsServiceInterface::class, function () {
+            return Semver::satisfies(Craft::$app->version, '~5.0')
+                ? Craft::$app->getEntries()    // @phpstan-ignore-line
+                : Craft::$app->getSections();  // @phpstan-ignore-line
+        });
+    }
+
     $this->createEntry = function (array $attributeAndFieldData, ?int $siteId = null) {
-        $section = Craft::$app->getEntries()->getSectionByHandle('news');
+        $section = service(SectionsServiceInterface::class)->getSectionByHandle('news');
         $sectionId = $section->id;
         $entryTypeId = $section->getEntryTypes()[0]->id;
 
@@ -63,7 +75,7 @@ it('creates entry for specified site when siteId is provided', function () {
 });
 
 it('throws exception for invalid siteId', function () {
-    $section = Craft::$app->getEntries()->getAllSections()[0];
+    $section = service(SectionsServiceInterface::class)->getAllSections()[0];
     $sectionId = $section->id;
     $entryTypeId = $section->getEntryTypes()[0]->id;
 
@@ -76,3 +88,4 @@ it('throws exception for invalid siteId', function () {
         attributeAndFieldData: ['title' => 'Test'],
     ))->toThrow(InvalidArgumentException::class, 'Site with ID 99999 does not exist.');
 });
+

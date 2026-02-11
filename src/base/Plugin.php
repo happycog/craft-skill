@@ -26,6 +26,13 @@ class Plugin extends BasePlugin
 
         \Craft::setAlias('@happycog/craftmcp', $this->getBasePath());
 
+        // Bind SectionsServiceInterface to appropriate service based on Craft version
+        \Craft::$container->set(\happycog\craftmcp\interfaces\SectionsServiceInterface::class, function () {
+            return \Composer\Semver\Semver::satisfies(\Craft::$app->version, '~5.0')
+                ? \Craft::$app->getEntries()    // @phpstan-ignore-line
+                : \Craft::$app->getSections();  // @phpstan-ignore-line
+        });
+
         $methods = (new \ReflectionClass($this))->getMethods();
         foreach ($methods as $method) {
             foreach ($method->getAttributes() as $attribute) {

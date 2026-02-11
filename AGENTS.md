@@ -1,5 +1,9 @@
 # AGENTS.md - Project Documentation for LLMs
 
+## Project Directory
+
+Do not write outside of this project directory. If you need temporary storage space use the `storage/runtime/temp/` directory as that is a Craft-standard place to place temporary files.4
+
 ## Project Overview
 
 This is a standalone CLI tool that provides programmatic access to Craft CMS content management capabilities. The tool is distributed as a self-contained PHAR executable that bootstraps Craft CMS and exposes all CMS functionality through a clean command-line interface designed specifically for AI agents and automation workflows.

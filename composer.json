@@ -11,7 +11,8 @@
             "happycog\\craftmcp\\": "src/"
         },
         "files": [
-            "src/helpers/functions.php"
+            "src/helpers/functions.php",
+            "src/helpers/service.php"
         ]
     },
     "authors": [

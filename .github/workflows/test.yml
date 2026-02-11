@@ -13,6 +13,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        craft:
+          - version: '4'
+            constraint: '~4.16.0'
+          - version: '5'
+            constraint: '~5.8.8'
+
     env:
       CRAFT_APP_ID: craftmcp
       CRAFT_ENVIRONMENT: dev
@@ -58,17 +66,17 @@ jobs:
           path: |
             composer.lock
             vendor
-          key: ${{ runner.os }}-craft-${{ matrix.version.constraint }}-vendor-${{ hashFiles('composer.json') }}
+          key: ${{ runner.os }}-craft-${{ matrix.craft.constraint }}-vendor-${{ hashFiles('composer.json') }}
 
       - name: Install dependencies
         if: steps.composer-cache.outputs.cache-hit != 'true'
         run: |
-          composer require "craftcms/cms:~5.8.8" --prefer-dist --no-progress
+          composer require "craftcms/cms:${{ matrix.craft.constraint }}" --prefer-dist --no-progress
 
       - name: Copy config files
         run: |
           mkdir -p ./config/
-          cp -r ./stubs/project/ ./config/project/
+          cp -r ./stubs/project-${{ matrix.craft.version }}/ ./config/project/
 
       - name: Run PHPStan
         run: ./vendor/bin/phpstan analyse src

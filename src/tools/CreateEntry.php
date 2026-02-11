@@ -2,6 +2,7 @@
 
 namespace happycog\craftmcp\tools;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\helpers\ElementHelper;
 use happycog\craftmcp\actions\UpsertEntry;
@@ -28,7 +29,7 @@ class CreateEntry
      * the changes in the context of the Craft UI.
      *
      * @param array<string, mixed> $attributeAndFieldData
-     * @return array{_notes: string, entryId: int|null, title: string|null, slug: string|null, postDate: string|null, url: string}
+     * @return array{_notes: string, entryId: int|null, title: string|null, slug: string|null, postDate: string|null, url: string|null}
      */
     public function __invoke(
         int $sectionId,
@@ -56,13 +57,19 @@ class CreateEntry
             attributeAndFieldData: $attributeAndFieldData,
         );
 
+        // Get CP edit URL (method differs between Craft 4 and 5)
+        $cpEditUrl = Semver::satisfies(Craft::$app->version, '~5.0')
+            ? ElementHelper::elementEditorUrl($entry)  // @phpstan-ignore-line
+            : $entry->getCpEditUrl();                  // @phpstan-ignore-line
+
         return [
             '_notes' => 'The entry was successfully created.',
             'entryId' => $entry->id,
             'title' => $entry->title,
             'slug' => $entry->slug,
             'postDate' => $entry->postDate?->format('c'),
-            'url' => ElementHelper::elementEditorUrl($entry),
+            'url' => $cpEditUrl,
         ];
     }
 }
+
