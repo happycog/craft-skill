@@ -1,0 +1,19 @@
+columnSuffix: tldihdsi
+contentColumnType: text
+fieldGroup: 480f0c74-bca2-4c77-a6b6-6555956f7206 # Common
+handle: heading
+instructions: null
+name: Heading
+searchable: false
+settings:
+  byteLimit: null
+  charLimit: null
+  code: false
+  columnType: null
+  initialRows: 4
+  multiline: false
+  placeholder: null
+  uiMode: normal
+translationKeyFormat: null
+translationMethod: none
+type: craft\fields\PlainText

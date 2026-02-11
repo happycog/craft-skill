@@ -31,7 +31,7 @@
         "class": "happycog\\craftmcp\\Plugin"
     },
     "require-dev": {
-        "markhuot/craft-pest-core": "dev-main",
+        "markhuot/craft-pest-core": "^3.2",
         "phpstan/phpstan": "*",
         "craftcms/phpstan": "dev-main"
     },

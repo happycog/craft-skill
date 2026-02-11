@@ -1,0 +1,8 @@
+baseUrl: $PRIMARY_SITE_URL
+handle: default
+hasUrls: true
+language: en
+name: 'Craft 4'
+primary: true
+siteGroup: b94c1f5a-1077-4fb6-a3cf-6e73d9cc3024 # Craft 4
+sortOrder: 1

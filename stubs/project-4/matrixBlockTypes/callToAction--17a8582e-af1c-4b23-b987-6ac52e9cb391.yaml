@@ -1,0 +1,78 @@
+field: eb70f7c1-9acd-4d36-908c-39e0b8b08df1 # Content Builder
+fieldLayouts:
+  d0b6a482-5643-44e9-abad-718d50e81177:
+    tabs:
+      -
+        elementCondition: null
+        elements:
+          -
+            elementCondition: null
+            fieldUid: d9f82ec5-790f-4452-8152-e6bce9d7d9be # Heading
+            instructions: null
+            label: null
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: df861101-ec03-4e3c-82b6-04be69e03590
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            elementCondition: null
+            fieldUid: d35bcfab-aea1-4f87-acd9-7ba0d5364600 # Body
+            instructions: null
+            label: null
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: ac3d78b9-8509-455c-8cad-17d7a44cd04e
+            userCondition: null
+            warning: null
+            width: 100
+        name: Content
+        uid: ac1305ab-33c1-46fd-a4c3-4a3d4ffb9235
+        userCondition: null
+fields:
+  d9f82ec5-790f-4452-8152-e6bce9d7d9be: # Heading
+    columnSuffix: leybrzht
+    contentColumnType: text
+    fieldGroup: null
+    handle: heading
+    instructions: null
+    name: Heading
+    searchable: false
+    settings:
+      byteLimit: null
+      charLimit: null
+      code: false
+      columnType: null
+      initialRows: 4
+      multiline: false
+      placeholder: null
+      uiMode: normal
+    translationKeyFormat: null
+    translationMethod: none
+    type: craft\fields\PlainText
+  d35bcfab-aea1-4f87-acd9-7ba0d5364600: # Body
+    columnSuffix: swbondlm
+    contentColumnType: text
+    fieldGroup: null
+    handle: body
+    instructions: null
+    name: Body
+    searchable: false
+    settings:
+      byteLimit: null
+      charLimit: null
+      code: false
+      columnType: null
+      initialRows: 4
+      multiline: true
+      placeholder: null
+      uiMode: normal
+    translationKeyFormat: null
+    translationMethod: none
+    type: craft\fields\PlainText
+handle: callToAction
+name: 'Call to Action'
+sortOrder: 2

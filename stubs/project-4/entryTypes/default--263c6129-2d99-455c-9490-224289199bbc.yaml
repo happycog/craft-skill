@@ -1,0 +1,59 @@
+fieldLayouts:
+  5bf64db0-9a41-42fb-9eae-1538d1577cd4:
+    tabs:
+      -
+        elementCondition: null
+        elements:
+          -
+            autocapitalize: true
+            autocomplete: false
+            autocorrect: true
+            class: null
+            disabled: false
+            elementCondition: null
+            id: null
+            inputType: null
+            instructions: null
+            label: null
+            max: null
+            min: null
+            name: null
+            orientation: null
+            placeholder: null
+            readonly: false
+            requirable: false
+            size: null
+            step: null
+            tip: null
+            title: null
+            type: craft\fieldlayoutelements\entries\EntryTitleField
+            uid: c5199656-293b-4675-81b8-32185a93936d
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            elementCondition: null
+            fieldUid: ea68a84b-e6e9-4aba-9c5d-8ff22e6d2ce3 # Body
+            instructions: null
+            label: null
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 487aeddc-5641-4080-a655-d7c9c00aee80
+            userCondition: null
+            warning: null
+            width: 100
+        name: Content
+        uid: 1807e920-493e-4e13-8928-3ff719dc5aa6
+        userCondition: null
+handle: default
+hasTitleField: true
+name: Default
+section: 6737f9f3-b2cf-4233-ae79-19334018d30d # News
+showStatusField: true
+slugTranslationKeyFormat: null
+slugTranslationMethod: site
+sortOrder: 1
+titleFormat: null
+titleTranslationKeyFormat: null
+titleTranslationMethod: site

@@ -1,0 +1,43 @@
+dateModified: 1770834952
+email:
+  fromEmail: mark@happycog.com
+  fromName: 'Craft 4'
+  transportType: craft\mail\transportadapters\Sendmail
+fs:
+  local:
+    hasUrls: true
+    name: Local
+    settings:
+      path: '@webroot/uploads'
+    type: craft\fs\Local
+    url: /uploads
+meta:
+  __names__:
+    9e04749c-f12d-42df-b47c-8606f079106a: 'Plain Text' # Plain Text
+    17a8582e-af1c-4b23-b987-6ac52e9cb391: 'Call to Action' # Call to Action
+    43cac348-8907-47ac-a252-72795b95bea8: 'Craft 4' # Craft 4
+    263c6129-2d99-455c-9490-224289199bbc: Default # Default
+    480f0c74-bca2-4c77-a6b6-6555956f7206: Common # Common
+    6737f9f3-b2cf-4233-ae79-19334018d30d: News # News
+    69664ca9-0fb9-4714-b1c7-e16ea77a1b7a: Pages # Pages
+    a62d4477-d3d0-4e08-b648-5978098bf1bc: Uploads # Uploads
+    b94c1f5a-1077-4fb6-a3cf-6e73d9cc3024: 'Craft 4' # Craft 4
+    d3af0d0c-434e-4bbb-b937-6d6b94a9d1e8: Default # Default
+    d9f82ec5-790f-4452-8152-e6bce9d7d9be: Heading # Heading
+    d35bcfab-aea1-4f87-acd9-7ba0d5364600: Body # Body
+    df5cdfcb-3238-421c-bfdd-a32bc9171eae: Heading # Heading
+    ea68a84b-e6e9-4aba-9c5d-8ff22e6d2ce3: Body # Body
+    eb70f7c1-9acd-4d36-908c-39e0b8b08df1: 'Content Builder' # Content Builder
+    ff219b3e-2af1-416a-953b-d55f1b065175: Body # Body
+system:
+  edition: solo
+  live: true
+  name: 'Craft 4'
+  schemaVersion: 4.17.0.3
+  timeZone: America/Los_Angeles
+users:
+  allowPublicRegistration: false
+  defaultGroup: null
+  photoSubpath: null
+  photoVolumeUid: null
+  requireEmailVerification: true
