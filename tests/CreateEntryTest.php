@@ -6,15 +6,6 @@ use Composer\Semver\Semver;
 use function happycog\craftmcp\helpers\service;
 
 beforeEach(function () {
-    // Bind SectionsServiceInterface if not already bound
-    if (!Craft::$container->has(SectionsServiceInterface::class)) {
-        Craft::$container->set(SectionsServiceInterface::class, function () {
-            return Semver::satisfies(Craft::$app->version, '~5.0')
-                ? Craft::$app->getEntries()    // @phpstan-ignore-line
-                : Craft::$app->getSections();  // @phpstan-ignore-line
-        });
-    }
-
     $this->createEntry = function (array $attributeAndFieldData, ?int $siteId = null) {
         $section = service(SectionsServiceInterface::class)->getSectionByHandle('news');
         $sectionId = $section->id;

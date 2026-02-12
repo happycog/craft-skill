@@ -11,6 +11,8 @@
 |
 */
 
+use Composer\Semver\Semver;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
 use markhuot\craftpest\test\RefreshesDatabase;
 use markhuot\craftpest\test\TestCase;
 
@@ -18,6 +20,17 @@ pest()->extend(
     TestCase::class,
     RefreshesDatabase::class,
 )->in('./');
+
+pest()->beforeEach(function () {
+    // Bind SectionsServiceInterface if not already bound
+    if (!Craft::$container->has(SectionsServiceInterface::class)) {
+        Craft::$container->set(SectionsServiceInterface::class, function () {
+            return Semver::satisfies(Craft::$app->version, '~5.0')
+                ? Craft::$app->getEntries()    // @phpstan-ignore-line
+                : Craft::$app->getSections();  // @phpstan-ignore-line
+        });
+    }
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -6,6 +6,8 @@ namespace happycog\craftmcp\tools;
 
 use Craft;
 use happycog\craftmcp\actions\EntryTypeFormatter;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\service;
 
 class GetEntryTypes
 {
@@ -26,7 +28,7 @@ class GetEntryTypes
         ?array $entryTypeIds = null
     ): array
     {
-        $entriesService = Craft::$app->getEntries();
+        $entriesService = service(SectionsServiceInterface::class);
 
         $results = [];
         foreach ($entriesService->getAllEntryTypes() as $entryType) {

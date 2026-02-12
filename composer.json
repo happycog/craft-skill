@@ -12,7 +12,8 @@
         },
         "files": [
             "src/helpers/functions.php",
-            "src/helpers/service.php"
+            "src/helpers/service.php",
+            "src/helpers/matrix.php"
         ]
     },
     "authors": [

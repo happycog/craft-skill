@@ -2,6 +2,7 @@
 
 use happycog\craftmcp\tools\CreateField;
 use happycog\craftmcp\tools\CreateEntryType;
+use function happycog\craftmcp\helpers\getMatrixSubTypes;
 
 beforeEach(function () {
     // Clean up any existing test fields before each test
@@ -223,7 +224,7 @@ it('can create a matrix field with entry types', function () {
     expect($field->viewMode)->toBe('cards');
     
     // Verify entry types are attached
-    $entryTypes = $field->getEntryTypes();
+    $entryTypes = getMatrixSubTypes($field);
     expect($entryTypes)->toHaveCount(2);
     expect($entryTypes[0]->handle)->toBe('textBlock');
     expect($entryTypes[1]->handle)->toBe('imageBlock');
@@ -273,7 +274,7 @@ it('can create a matrix field with advanced settings', function () {
     expect($field->createButtonLabel)->toBe('Add New Block');
     
     // Verify entry type is attached
-    $entryTypes = $field->getEntryTypes();
+    $entryTypes = getMatrixSubTypes($field);
     expect($entryTypes)->toHaveCount(1);
     expect($entryTypes[0]->handle)->toBe('contentBlock');
 });

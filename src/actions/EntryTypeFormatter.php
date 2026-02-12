@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace happycog\craftmcp\actions;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\fields\Matrix;
 use craft\helpers\UrlHelper;
 use craft\models\EntryType;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\getMatrixSubTypes;
+use function happycog\craftmcp\helpers\service;
 
 class EntryTypeFormatter
 {
@@ -42,14 +46,20 @@ class EntryTypeFormatter
              'titleTranslationMethod' => $entryType->titleTranslationMethod,
              'titleTranslationKeyFormat' => $entryType->titleTranslationKeyFormat,
              'titleFormat' => $entryType->titleFormat,
-             'icon' => $entryType->icon,
-             'color' => $entryType->color?->value,
-             'showSlugField' => $entryType->showSlugField,
              'showStatusField' => $entryType->showStatusField,
              'fieldLayoutId' => $entryType->fieldLayoutId,
              'uid' => $entryType->uid,
              'editUrl' => $editUrl,
          ];
+
+         // Add in Craft 5 fields
+        if (Semver::satisfies(Craft::$app->getVersion(), '~5.0')) {
+            $data = array_merge($data, [
+                'icon' => $entryType->icon,
+                'color' => $entryType->color?->value,
+                'showSlugField' => $entryType->showSlugField,
+            ]);
+        }
 
          // Only include fields if they were requested
          if ($includeFields) {
@@ -75,8 +85,7 @@ class EntryTypeFormatter
         ];
 
         // Find sections that contain this entry type
-        $entriesService = Craft::$app->getEntries();
-        $sections = $entriesService->getAllSections();
+        $sections = service(SectionsServiceInterface::class)->getAllSections();
 
         foreach ($sections as $section) {
             foreach ($section->getEntryTypes() as $sectionEntryType) {
@@ -99,7 +108,7 @@ class EntryTypeFormatter
         foreach ($allFields as $field) {
             // Check if this is a Matrix field
             if ($field instanceof Matrix) {
-                foreach ($field->getEntryTypes() as $blockType) {
+                foreach (getMatrixSubTypes($field) as $blockType) {
                     if ($blockType->id === $entryType->id) {
                         $usage['matrixFields'][] = [
                             'id' => $field->id,

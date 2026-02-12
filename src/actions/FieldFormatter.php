@@ -10,6 +10,7 @@ use craft\fields\Matrix;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\fieldlayoutelements\CustomField as CustomFieldElement;
+use function happycog\craftmcp\helpers\getMatrixSubTypes;
 
 class FieldFormatter
 {
@@ -107,7 +108,7 @@ class FieldFormatter
                 $fieldData['blockTypes'] = 'Maximum nesting depth reached';
             } else {
                 $blockTypes = [];
-                foreach ($field->getEntryTypes() as $blockType) {
+                foreach (getMatrixSubTypes($field) as $blockType) {
                     $blockLayout = $blockType->getFieldLayout();
                     $blockFields = $this->formatFieldsForLayout($blockLayout, $depth + 1);
                     $blockTypes[] = [

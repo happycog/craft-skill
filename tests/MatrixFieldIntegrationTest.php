@@ -3,6 +3,7 @@
 use happycog\craftmcp\tools\CreateEntryType;
 use happycog\craftmcp\tools\CreateField;
 use happycog\craftmcp\tools\AddFieldToFieldLayout;
+use function happycog\craftmcp\helpers\getMatrixSubTypes;
 
 test('complete workflow: create matrix field with nested fields', function () {
     // Step 1: Create entry types that will serve as Matrix block types
@@ -104,7 +105,7 @@ test('complete workflow: create matrix field with nested fields', function () {
     expect($field->createButtonLabel)->toBe('Add Content Block');
     
     // Verify both block types are attached
-    $entryTypes = $field->getEntryTypes();
+    $entryTypes = getMatrixSubTypes($field);
     expect($entryTypes)->toHaveCount(2);
     
     // Verify the block types have their fields
