@@ -67,6 +67,8 @@ spl_autoload_register(function ($class) {
 
 // Load helper functions
 require 'phar://agent-craft.phar/src/helpers/functions.php';
+require 'phar://agent-craft.phar/src/helpers/matrix.php';
+require 'phar://agent-craft.phar/src/helpers/service.php';
 PHP;
 
     $phar->addFromString('autoload.php', $autoloader);

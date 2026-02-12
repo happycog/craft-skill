@@ -147,6 +147,13 @@ try {
     exitWithError(3, 'Failed to bootstrap Craft CMS', $e, $parser->verbosity);
 }
 
+// Step 3: patch in Craft 4/5 support
+\Craft::$container->set(\happycog\craftmcp\interfaces\SectionsServiceInterface::class, function () {
+    return \Composer\Semver\Semver::satisfies(\Craft::$app->version, '>=5.0.0')
+            ? \Craft::$app->getEntries()    // @phpstan-ignore-line
+            : \Craft::$app->getSections();  // @phpstan-ignore-line
+});
+
 // Step 3: Extract parsed arguments
 $command = $parsed['command'];
 $positional = $parsed['positional'];
