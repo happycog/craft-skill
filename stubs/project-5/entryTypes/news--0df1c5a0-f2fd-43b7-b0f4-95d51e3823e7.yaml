@@ -1,6 +1,9 @@
+allowLineBreaksInTitles: false
 color: null
+description: null
 fieldLayouts:
-  721acb24-1d2d-477f-bc49-a7b867ba669a:
+  c41c774e-5f32-4ec8-b0d9-943f437fcaae:
+    cardThumbAlignment: end
     tabs:
       -
         elementCondition: null
@@ -10,11 +13,10 @@ fieldLayouts:
             autocomplete: false
             autocorrect: true
             class: null
-            dateAdded: '2025-06-26T11:05:39+00:00'
+            dateAdded: '2026-02-12T14:59:06+00:00'
             disabled: false
             elementCondition: null
             id: null
-            includeInCards: false
             inputType: null
             instructions: null
             label: null
@@ -23,7 +25,6 @@ fieldLayouts:
             name: null
             orientation: null
             placeholder: null
-            providesThumbs: false
             readonly: false
             required: true
             size: null
@@ -31,34 +32,34 @@ fieldLayouts:
             tip: null
             title: null
             type: craft\fieldlayoutelements\entries\EntryTitleField
-            uid: 5405744a-8b1a-4f6c-a691-1cddc2f48416
+            uid: 4a2037d0-ad87-497d-baef-abd892619a85
             userCondition: null
             warning: null
             width: 100
           -
-            dateAdded: '2025-06-26T11:06:48+00:00'
+            dateAdded: '2026-02-12T15:00:49+00:00'
             editCondition: null
             elementCondition: null
-            fieldUid: 7d37625f-d2aa-4360-b455-6d18c157e09b # Content Builder
+            elementEditCondition: null
+            fieldUid: e9a2bd3d-0130-4733-a448-2dca491bff14 # Body
             handle: null
-            includeInCards: false
             instructions: null
             label: null
-            providesThumbs: false
             required: false
             tip: null
             type: craft\fieldlayoutelements\CustomField
-            uid: 2da207d2-c5ac-4410-993a-8c52f2ebd7c3
+            uid: e92c1b39-4436-4710-a723-ee8f76143fde
             userCondition: null
             warning: null
             width: 100
         name: Content
-        uid: 65a9397d-b035-47d9-a3bc-cccdda90e485
+        uid: d8f276b1-a00b-4104-b4cf-0c6d57d4a210
         userCondition: null
-handle: pages
+    thumbFieldKey: null
+handle: news
 hasTitleField: true
 icon: null
-name: Pages
+name: News
 showSlugField: true
 showStatusField: true
 slugTranslationKeyFormat: null
@@ -66,3 +67,4 @@ slugTranslationMethod: site
 titleFormat: null
 titleTranslationKeyFormat: null
 titleTranslationMethod: site
+uiLabelFormat: '{title}'

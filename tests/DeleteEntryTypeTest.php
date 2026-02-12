@@ -1,11 +1,13 @@
 <?php
 
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
 use happycog\craftmcp\tools\CreateEntryType;
 use happycog\craftmcp\tools\DeleteEntryType;
+use function happycog\craftmcp\helpers\service;
 
 beforeEach(function () {
     // Clean up any existing test entry types
-    $entriesService = Craft::$app->getEntries();
+    $entriesService = service(SectionsServiceInterface::class);
     $testHandles = [
         'testDeleteEntryType', 'entryTypeWithEntries', 'emptyEntryType'
     ];
@@ -49,7 +51,7 @@ beforeEach(function () {
 
 afterEach(function () {
     // Clean up any remaining entry types
-    $entriesService = Craft::$app->getEntries();
+    $entriesService = service(SectionsServiceInterface::class);
     
     foreach ($this->createdEntryTypeIds ?? [] as $entryTypeId) {
         $entryType = $entriesService->getEntryTypeById($entryTypeId);

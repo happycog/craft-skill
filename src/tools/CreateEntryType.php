@@ -2,6 +2,7 @@
 
 namespace happycog\craftmcp\tools;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\enums\Color;
 use craft\fieldlayoutelements\entries\EntryTitleField;
@@ -9,6 +10,8 @@ use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\EntryType;
 use happycog\craftmcp\exceptions\ModelSaveException;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\service;
 
 class CreateEntryType
 {
@@ -59,7 +62,7 @@ class CreateEntryType
         bool $showStatusField = true,
     ): array
     {
-        $entriesService = Craft::$app->getEntries();
+        $entriesService = service(SectionsServiceInterface::class);
 
         // Generate handle if not provided
         $handle ??= StringHelper::toHandle($name);
@@ -71,15 +74,19 @@ class CreateEntryType
         $entryType = new EntryType();
         $entryType->name = $name;
         $entryType->handle = $handle;
-        $entryType->description = $description;
         $entryType->hasTitleField = $hasTitleField;
         $entryType->titleTranslationMethod = $titleTranslationMethodConstant;
         $entryType->titleTranslationKeyFormat = $titleTranslationKeyFormat;
         $entryType->titleFormat = $titleFormat;
-        $entryType->icon = $icon;
-        $entryType->color = $color ? Color::tryFrom($color) : null;
-        $entryType->showSlugField = $showSlugField;
         $entryType->showStatusField = $showStatusField;
+
+        // Set Craft 5 fields
+        if (Semver::satisfies(Craft::$app->getVersion(), '~5.0')) {
+            $entryType->description = $description;
+            $entryType->icon = $icon;
+            $entryType->color = $color ? Color::tryFrom($color) : null;
+            $entryType->showSlugField = $showSlugField;
+        }
 
         // If hasTitleField is true, ensure the field layout includes the title field
         if ($hasTitleField) {

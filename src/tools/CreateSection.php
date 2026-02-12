@@ -2,12 +2,15 @@
 
 namespace happycog\craftmcp\tools;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
 use happycog\craftmcp\exceptions\ModelSaveException;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\service;
 
 class CreateSection
 {
@@ -40,7 +43,7 @@ class CreateSection
         string $type,
 
         /** Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first. */
-        array $entryTypeIds,
+        ?array $entryTypeIds,
 
         /** The section handle (machine-readable name). Auto-generated from name if not provided. */
         ?string $handle = null,
@@ -57,7 +60,7 @@ class CreateSection
         /** Where new entries are placed by default (only for structure sections) */
         string $defaultPlacement = 'end',
 
-        /** Maximum number of authors that can be assigned to entries in this section */
+        /** Maximum number of authors that can be assigned to entries in this section. Craft 5 only */
         ?int $maxAuthors = null,
 
         /**
@@ -75,8 +78,8 @@ class CreateSection
                     'Section type must be single, channel, or structure');
 
         // Validate entry types exist
-        $entriesService = Craft::$app->getEntries();
-        foreach ($entryTypeIds as $entryTypeId) {
+        $entriesService = service(SectionsServiceInterface::class);
+        foreach ($entryTypeIds ?? [] as $entryTypeId) {
             $entryType = $entriesService->getEntryTypeById($entryTypeId);
             throw_unless($entryType, "Entry type with ID {$entryTypeId} not found");
         }
@@ -100,7 +103,7 @@ class CreateSection
 
         // Set entry types
         $entryTypes = [];
-        foreach ($entryTypeIds as $entryTypeId) {
+        foreach ($entryTypeIds ?? [] as $entryTypeId) {
             $entryType = $entriesService->getEntryTypeById($entryTypeId);
             throw_unless($entryType, "Entry type with ID {$entryTypeId} not found");
             $entryTypes[] = $entryType;
@@ -156,22 +159,29 @@ class CreateSection
         $section->setSiteSettings($siteSettingsObjects);
 
         // Save the section
-        $sectionsService = Craft::$app->getEntries();
+        $sectionsService = service(SectionsServiceInterface::class);
 
         throw_unless($sectionsService->saveSection($section), ModelSaveException::class, $section);
 
         // Generate control panel URL
         $editUrl = UrlHelper::cpUrl('settings/sections/' . $section->id);
 
-        return [
+        $result = [
             'sectionId' => $section->id,
             'name' => $section->name,
             'handle' => $section->handle,
             'type' => $section->type,
-            'propagationMethod' => $section->propagationMethod->value,
             'maxLevels' => $section->type === Section::TYPE_STRUCTURE ? ($section->maxLevels ?: null) : null,
-            'maxAuthors' => $section->maxAuthors,
             'editUrl' => $editUrl,
         ];
+
+        if (Semver::satisfies(Craft::$app->getVersion(), '~5.0.0')) {
+            $result = array_merge($result, [
+                'propagationMethod' => $section->propagationMethod->value,
+                'maxAuthors' => $section->maxAuthors,
+            ]);
+        }
+
+        return $result;
     }
 }

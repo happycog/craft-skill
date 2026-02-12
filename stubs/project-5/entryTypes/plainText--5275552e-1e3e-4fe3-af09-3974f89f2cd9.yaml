@@ -1,38 +1,42 @@
+allowLineBreaksInTitles: false
 color: null
+description: null
 fieldLayouts:
-  1d01f562-f3da-42a4-afc2-a13607569daa:
+  4f332cb1-ba78-4940-9223-cdc0e1d55b8e:
+    cardThumbAlignment: end
     tabs:
       -
         elementCondition: null
         elements:
           -
-            dateAdded: '2025-06-26T10:56:10+00:00'
+            dateAdded: '2026-02-12T15:02:27+00:00'
             editCondition: null
             elementCondition: null
-            fieldUid: df0b8488-6354-4289-8d3d-ba10a9650e2e # Body
+            elementEditCondition: null
+            fieldUid: e9a2bd3d-0130-4733-a448-2dca491bff14 # Body
             handle: null
-            includeInCards: false
             instructions: null
             label: null
-            providesThumbs: false
             required: false
             tip: null
             type: craft\fieldlayoutelements\CustomField
-            uid: ddf08241-be2f-457b-980f-03933d799f81
+            uid: ccbc3f8c-f062-4252-8774-9467f83d8157
             userCondition: null
             warning: null
             width: 100
         name: Content
-        uid: c6d499bc-8b58-4884-b58a-822247b59b12
+        uid: 0b407dc0-e2ab-4521-830b-0a0fe7092974
         userCondition: null
+    thumbFieldKey: null
 handle: plainText
 hasTitleField: false
-icon: align-left
+icon: null
 name: 'Plain Text'
-showSlugField: false
-showStatusField: false
+showSlugField: true
+showStatusField: true
 slugTranslationKeyFormat: null
 slugTranslationMethod: site
-titleFormat: '{body}'
+titleFormat: null
 titleTranslationKeyFormat: null
 titleTranslationMethod: site
+uiLabelFormat: '{title}'

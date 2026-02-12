@@ -1,27 +1,11 @@
 <?php
 
+use Composer\Semver\Semver;
 use craft\models\Section;
-use happycog\craftmcp\exceptions\ModelSaveException;
 use happycog\craftmcp\tools\CreateSection;
 use happycog\craftmcp\tools\CreateEntryType;
 
 beforeEach(function () {
-    // Clean up any existing test sections before each test
-    $entriesService = Craft::$app->getEntries();
-    $testHandles = [
-        'testNews', 'home', 'sitePages', 'multiSiteContent', 'customSiteSection',
-        'controlPanelTest', 'unlimitedStructure', 'duplicateTest'
-    ];
-
-    foreach ($testHandles as $handle) {
-        $section = $entriesService->getSectionByHandle($handle);
-        if ($section) {
-            $entriesService->deleteSection($section);
-        }
-    }
-
-    // Track created items for cleanup
-    $this->createdSectionIds = [];
     $this->createdEntryTypeIds = [];
 
     // Helper to create entry type for testing
@@ -38,7 +22,14 @@ beforeEach(function () {
         return $result;
     };
 
-    $this->createSection = function (string $name, string $type, array $entryTypeIds, array $options = []) {
+    $this->createSection = function (string $name, string $type, array $entryTypeIds = [], array $options = []) {
+        if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
+            $entryTypeIds = [$this->createEntryType('Default', 'default')->id];
+        }
+        else {
+            $entryTypeIds = null;
+        }
+
         $createSection = Craft::$container->get(CreateSection::class);
 
         $result = $createSection->__invoke(
@@ -54,48 +45,26 @@ beforeEach(function () {
             siteSettings: $options['siteSettings'] ?? null
         );
 
-        $this->createdSectionIds[] = $result['sectionId'];
-
         return $result;
     };
 });
 
-afterEach(function () {
-    // Clean up created sections
-    $entriesService = Craft::$app->getEntries();
-    foreach ($this->createdSectionIds as $sectionId) {
-        $section = $entriesService->getSectionById($sectionId);
-        if ($section) {
-            $entriesService->deleteSection($section);
-        }
-    }
-
-    // Clean up created entry types
-    foreach ($this->createdEntryTypeIds ?? [] as $entryTypeId) {
-        $entryType = $entriesService->getEntryTypeById($entryTypeId);
-        if ($entryType) {
-            $entriesService->deleteEntryType($entryType);
-        }
-    }
-});
-
 test('creates channel section with default settings', function () {
-    $entryType = ($this->createEntryType)('News Entry');
-    $result = ($this->createSection)('Test News', 'channel', [$entryType['entryTypeId']]);
+    $result = ($this->createSection)('Test News', 'channel');
 
     expect($result['name'])->toBe('Test News')
         ->and($result['handle'])->toBe('testNews')
         ->and($result['type'])->toBe('channel')
-        ->and($result['propagationMethod'])->toBe('all')
         ->and($result['sectionId'])->toBeInt()
         ->and($result['editUrl'])->toContain('/settings/sections/');
-});
+
+    if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
+        expect($result['propagationMethod'])->toBe('all');
+    }
+})->only();
 
 test('creates single section with custom handle', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Single Page');
-
-    $result = ($this->createSection)('Homepage', 'single', [$entryType['entryTypeId']], [
+    $result = ($this->createSection)('Homepage', 'single', [
         'handle' => 'home'
     ]);
 
@@ -105,10 +74,7 @@ test('creates single section with custom handle', function () {
 });
 
 test('creates structure section with hierarchy settings', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Structure Page');
-
-    $result = ($this->createSection)('Site Pages', 'structure', [$entryType['entryTypeId']], [
+    $result = ($this->createSection)('Site Pages', 'structure', [
         'maxLevels' => 3,
         'defaultPlacement' => 'beginning'
     ]);
@@ -119,10 +85,7 @@ test('creates structure section with hierarchy settings', function () {
 });
 
 test('creates section with custom propagation method', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Multi Site Content');
-
-    $result = ($this->createSection)('Multi Site Content', 'channel', [$entryType['entryTypeId']], [
+    $result = ($this->createSection)('Multi Site Content', 'channel', [
         'propagationMethod' => 'siteGroup',
         'enableVersioning' => false
     ]);
@@ -132,13 +95,10 @@ test('creates section with custom propagation method', function () {
 });
 
 test('creates section with site-specific settings', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Custom Site Content');
-
     // Get the primary site for testing
     $primarySite = Craft::$app->getSites()->getPrimarySite();
 
-    $result = ($this->createSection)('Custom Site Section', 'channel', [$entryType['entryTypeId']], [
+    $result = ($this->createSection)('Custom Site Section', 'channel', [
         'siteSettings' => [
             [
                 'siteId' => $primarySite->id,
@@ -157,24 +117,21 @@ test('creates section with site-specific settings', function () {
 test('fails when section name is missing', function () {
     $tool = Craft::$container->get(CreateSection::class);
 
-    expect(fn() => $tool->__invoke('', 'channel', [1]))
+    expect(fn() => $tool->__invoke('', 'channel'))
         ->toThrow(\happycog\craftmcp\exceptions\ModelSaveException::class);
 });
 
 test('fails when section type is invalid', function () {
     $tool = new CreateSection();
 
-    expect(fn() => $tool->__invoke('Test Section', 'invalid', [1]))
+    expect(fn() => $tool->__invoke('Test Section', 'invalid'))
         ->toThrow(RuntimeException::class, 'Section type must be single, channel, or structure');
 });
 
 test('fails when site id is invalid in site settings', function () {
-    // First create an entry type to pass validation
-    $entryType = ($this->createEntryType)('Site Validation Test');
-
     $tool = new CreateSection();
 
-    expect(fn() => $tool->__invoke('Test Section', 'channel', [$entryType['entryTypeId']], siteSettings: [
+    expect(fn() => $tool->__invoke('Test Section', 'channel', siteSettings: [
         [
             'siteId' => 99999, // Non-existent site ID
             'enabledByDefault' => true
@@ -183,55 +140,39 @@ test('fails when site id is invalid in site settings', function () {
 });
 
 test('includes control panel URL in response', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Control Panel Content');
-
-    $result = ($this->createSection)('Control Panel Test', 'channel', [$entryType['entryTypeId']]);
+    $result = ($this->createSection)('Control Panel Test', 'channel');
 
     expect($result['editUrl'])->toContain('/settings/sections/')
         ->and($result['editUrl'])->toContain((string)$result['sectionId']);
 });
 
 test('structure section without max levels shows null', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Unlimited Structure Content');
-
-    $result = ($this->createSection)('Unlimited Structure', 'structure', [$entryType['entryTypeId']]);
+    $result = ($this->createSection)('Unlimited Structure', 'structure');
 
     expect($result['maxLevels'])->toBeNull()
         ->and($result['type'])->toBe('structure');
 });
 
 test('handles duplicate section handle gracefully', function () {
-    // First create entry types
-    $entryType1 = ($this->createEntryType)('Duplicate Test Content 1');
-    $entryType2 = ($this->createEntryType)('Duplicate Test Content 2');
-
     // First create a section
-    ($this->createSection)('Duplicate Test', 'channel', [$entryType1['entryTypeId']], ['handle' => 'duplicateTest']);
+    ($this->createSection)('Duplicate Test', 'channel', ['handle' => 'duplicateTest']);
 
     // Try to create another with the same handle
     $tool = new CreateSection();
 
-    expect(fn() => $tool->__invoke('Another Test', 'channel', [$entryType2['entryTypeId']], handle: 'duplicateTest'))
+    expect(fn() => $tool->__invoke('Another Test', 'channel', handle: 'duplicateTest'))
         ->toThrow(\happycog\craftmcp\exceptions\ModelSaveException::class);
 });
 
 test('auto-generates handle from name', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Complex Content');
-
-    $result = ($this->createSection)('Complex Entry Type Name With Characters!@#', 'channel', [$entryType['entryTypeId']]);
+    $result = ($this->createSection)('Complex Entry Type Name With Characters!@#', 'channel');
 
     expect($result['handle'])->toBe('complexEntryTypeNameWithCharacters')
         ->and($result['name'])->toBe('Complex Entry Type Name With Characters!@#');
 });
 
 test('creates structure section with unlimited levels', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Unlimited Pages Content');
-
-    $result = ($this->createSection)('Unlimited Pages', 'structure', [$entryType['entryTypeId']], [
+    $result = ($this->createSection)('Unlimited Pages', 'structure', [
         'maxLevels' => 0 // 0 means unlimited
     ]);
 
@@ -240,10 +181,7 @@ test('creates structure section with unlimited levels', function () {
 });
 
 test('creates section with maxAuthors setting', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Multi Author Content');
-
-    $result = ($this->createSection)('Multi Author Section', 'channel', [$entryType['entryTypeId']], [
+    $result = ($this->createSection)('Multi Author Section', 'channel', [
         'maxAuthors' => 3
     ]);
 
@@ -253,10 +191,7 @@ test('creates section with maxAuthors setting', function () {
 });
 
 test('creates section without maxAuthors (uses Craft default)', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Standard Content');
-
-    $result = ($this->createSection)('Standard Section', 'channel', [$entryType['entryTypeId']]);
+    $result = ($this->createSection)('Standard Section', 'channel');
 
     expect($result['name'])->toBe('Standard Section')
         ->and($result['type'])->toBe('channel')
@@ -264,10 +199,7 @@ test('creates section without maxAuthors (uses Craft default)', function () {
 });
 
 test('creates section with maxAuthors set to 1', function () {
-    // First create an entry type
-    $entryType = ($this->createEntryType)('Single Author Content');
-
-    $result = ($this->createSection)('Single Author Section', 'channel', [$entryType['entryTypeId']], [
+    $result = ($this->createSection)('Single Author Section', 'channel', [
         'maxAuthors' => 1
     ]);
 

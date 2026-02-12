@@ -1,23 +1,11 @@
 <?php
 
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
 use happycog\craftmcp\tools\CreateEntryType;
 use happycog\craftmcp\exceptions\ModelSaveException;
+use function happycog\craftmcp\helpers\service;
 
 beforeEach(function () {
-    // Clean up any existing test entry types before each test
-    $entriesService = Craft::$app->getEntries();
-    $testHandles = [
-        'testEntryType', 'customHandle', 'blogPost', 'productListing',
-        'duplicateHandle', 'complexEntryTypeNameWithCharacters', 'entryType123NumericType'
-    ];
-
-    foreach ($testHandles as $handle) {
-        $entryType = $entriesService->getEntryTypeByHandle($handle);
-        if ($entryType) {
-            $entriesService->deleteEntryType($entryType);
-        }
-    }
-
     // Track created entry types for cleanup
     $this->createdEntryTypeIds = [];
 

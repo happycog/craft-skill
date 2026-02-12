@@ -23,6 +23,8 @@ interface SectionsServiceInterface
 
     public function getSectionByHandle(string $handle): ?Section;
 
+    public function deleteEntryType(EntryType $entryType): bool;
+
     /**
      * @return array<Section>
      */

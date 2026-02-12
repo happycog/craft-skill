@@ -2,7 +2,7 @@ columnSuffix: null
 handle: body
 instructions: null
 name: Body
-searchable: true
+searchable: false
 settings:
   byteLimit: null
   charLimit: null

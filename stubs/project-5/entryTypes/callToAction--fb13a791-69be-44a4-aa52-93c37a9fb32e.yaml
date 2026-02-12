@@ -1,55 +1,58 @@
+allowLineBreaksInTitles: false
 color: null
+description: null
 fieldLayouts:
-  67bb277f-ddc0-48a6-b53b-84d74213d754:
+  ea2324e0-1267-406b-a6b7-c494741bf917:
+    cardThumbAlignment: end
     tabs:
       -
         elementCondition: null
         elements:
           -
-            dateAdded: '2025-06-26T10:58:07+00:00'
+            dateAdded: '2026-02-12T15:04:12+00:00'
             editCondition: null
             elementCondition: null
-            fieldUid: 382d8072-8308-439f-9afd-b875b7ee9ecd # Heading
+            elementEditCondition: null
+            fieldUid: 416fcc94-20bc-4fda-a860-febe8ad45482 # Heading
             handle: null
-            includeInCards: false
             instructions: null
             label: null
-            providesThumbs: false
             required: false
             tip: null
             type: craft\fieldlayoutelements\CustomField
-            uid: 694d1cef-0cb6-4e1e-b2e9-2cd3e98c69fd
+            uid: e11fe10e-5096-48a9-b492-4f2e9a6eb52d
             userCondition: null
             warning: null
             width: 100
           -
-            dateAdded: '2025-06-26T10:58:07+00:00'
+            dateAdded: '2026-02-12T15:04:12+00:00'
             editCondition: null
             elementCondition: null
-            fieldUid: df0b8488-6354-4289-8d3d-ba10a9650e2e # Body
+            elementEditCondition: null
+            fieldUid: e9a2bd3d-0130-4733-a448-2dca491bff14 # Body
             handle: null
-            includeInCards: false
             instructions: null
             label: null
-            providesThumbs: false
             required: false
             tip: null
             type: craft\fieldlayoutelements\CustomField
-            uid: a10273d9-2c1d-432e-8dc2-e0b259cb2e94
+            uid: e7fae21c-e4cd-4fb9-a55b-8ac4ed310854
             userCondition: null
             warning: null
             width: 100
         name: Content
-        uid: e7cdb442-dd90-4619-b79f-430be1559999
+        uid: 34f8cd6d-6aab-496b-91ba-d65b4863aef6
         userCondition: null
+    thumbFieldKey: null
 handle: callToAction
 hasTitleField: false
-icon: flag-pennant
+icon: null
 name: 'Call to Action'
-showSlugField: false
-showStatusField: false
+showSlugField: true
+showStatusField: true
 slugTranslationKeyFormat: null
 slugTranslationMethod: site
-titleFormat: '{heading}'
+titleFormat: null
 titleTranslationKeyFormat: null
 titleTranslationMethod: site
+uiLabelFormat: '{title}'

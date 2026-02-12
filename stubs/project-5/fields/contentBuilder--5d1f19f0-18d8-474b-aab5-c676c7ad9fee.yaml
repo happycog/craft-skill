@@ -12,12 +12,18 @@ settings:
       __assoc__:
         -
           - uid
-          - 20570e66-f61c-404f-943f-84834172db54 # Plain Text
+          - 5275552e-1e3e-4fe3-af09-3974f89f2cd9 # Plain Text
+        -
+          - group
+          - General
     -
       __assoc__:
         -
           - uid
-          - 1f9526e6-4d44-4be8-92cd-a0cfb70068d7 # Call to Action
+          - fb13a791-69be-44a4-aa52-93c37a9fb32e # Call to Action
+        -
+          - group
+          - General
   includeTableView: false
   maxEntries: null
   minEntries: null

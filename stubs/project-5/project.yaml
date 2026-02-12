@@ -1,7 +1,7 @@
-dateModified: 1755877515
+dateModified: 1770908690
 email:
   fromEmail: mark@markhuot.com
-  fromName: 'Craft MCP'
+  fromName: 'Craft 5'
   transportType: craft\mail\transportadapters\Sendmail
 fs:
   local:
@@ -13,28 +13,23 @@ fs:
     url: /uploads
 meta:
   __names__:
-    1f9526e6-4d44-4be8-92cd-a0cfb70068d7: 'Call to Action' # Call to Action
-    7d37625f-d2aa-4360-b455-6d18c157e09b: 'Content Builder' # Content Builder
-    08cf53bc-9c73-4602-aad2-ce7a0f84c80a: 'Craft MCP' # Craft MCP
-    335d438b-81cf-4ec9-ad33-c9b7ba132834: Pages # Pages
-    382d8072-8308-439f-9afd-b875b7ee9ecd: Heading # Heading
-    892e4ee8-6251-45a9-9ad9-04d29a9373e2: 'Craft MCP' # Craft MCP
-    7790cda1-f85b-4b5c-89c0-f8e238766abf: Pages # Pages
-    13160d5b-88a8-44a7-b6d0-4c2c68ec8ca1: Uploads # Uploads
-    20570e66-f61c-404f-943f-84834172db54: 'Plain Text' # Plain Text
-    becc7b32-bddb-48a6-baa7-187821980912: News # News
-    c719c9ad-801a-4271-99c8-b44760c4e5f6: News # News
-    df0b8488-6354-4289-8d3d-ba10a9650e2e: Body # Body
-plugins:
-  skills:
-    edition: standard
-    enabled: true
-    schemaVersion: 1.0.0
+    0df1c5a0-f2fd-43b7-b0f4-95d51e3823e7: News # News
+    1ab796d1-aa8e-4bba-9231-712406fed18f: Pages # Pages
+    5d1f19f0-18d8-474b-aab5-c676c7ad9fee: 'Content Builder' # Content Builder
+    8e93f202-c69f-4b89-89e5-cd19d66bcc31: Pages # Pages
+    23c47a1d-84e6-42e8-aa88-822d42392852: News # News
+    416fcc94-20bc-4fda-a860-febe8ad45482: Heading # Heading
+    03034b8d-617d-4062-a124-76ac48ad6ceb: 'Craft 5' # Craft 5
+    5275552e-1e3e-4fe3-af09-3974f89f2cd9: 'Plain Text' # Plain Text
+    ca510033-f66c-4cd3-9577-bc4ed6a74c2a: Uploads # Uploads
+    dff954b5-6c1a-4334-8981-f325121886fd: 'Craft 5' # Craft 5
+    e9a2bd3d-0130-4733-a448-2dca491bff14: Body # Body
+    fb13a791-69be-44a4-aa52-93c37a9fb32e: 'Call to Action' # Call to Action
 system:
   edition: solo
   live: true
-  name: 'Craft MCP'
-  schemaVersion: 5.8.0.3
+  name: 'Craft 5'
+  schemaVersion: 5.9.0.8
   timeZone: America/Los_Angeles
 users:
   allowPublicRegistration: false
