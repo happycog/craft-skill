@@ -31,7 +31,7 @@ beforeEach(function () {
 
         return $result;
     };
-});
+})->skip(\Composer\Semver\Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'), 'Entry type creation requires Craft 5.0+');
 
 afterEach(function () {
     // Clean up any entry types that weren't deleted during the test
