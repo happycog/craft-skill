@@ -29,7 +29,7 @@ class CreateSection
      * so they can review and further configure the section in the context of the Craft UI.
      *
      * @param 'single'|'channel'|'structure' $type
-     * @param array<int> $entryTypeIds
+     * @param ?array<int> $entryTypeIds
      * @param 'all'|'siteGroup'|'language'|'custom'|'none' $propagationMethod
      * @param 'beginning'|'end' $defaultPlacement
      * @param array<int, array{siteId: int, enabledByDefault?: bool, hasUrls?: bool, uriFormat?: string, template?: string}>|null $siteSettings
