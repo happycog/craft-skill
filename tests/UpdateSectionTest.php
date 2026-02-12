@@ -38,7 +38,7 @@ beforeEach(function () {
         // In Craft 5, create entry types first; in Craft 4, pass null (auto-creates)
         $entryTypeIds = null;
         if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
-            $entryType = ($this->createEntryType)($name, \craft\helpers\StringHelper::slugify($name));
+            $entryType = ($this->createEntryType)($name, \craft\helpers\StringHelper::toHandle($name));
             $entryTypeIds = [$entryType['entryTypeId']];
         }
 
@@ -347,58 +347,41 @@ test('fails when invalid section type provided', function () {
     // Create a test section (entry types created automatically)
     $section = ($this->createSection)('Validation Test', 'channel', ['handle' => 'validationTest']);
 
-    // Try to update with invalid type through API
-    $response = $this->post('/api/sections/' . $section['sectionId'], [
-        '_method' => 'PUT',
-        'type' => 'invalid'
-    ]);
+    $tool = Craft::$container->get(UpdateSection::class);
 
-    $response->assertStatus(400);
-    $data = json_decode($response->json()->json, true);
-
-    expect($data)->toHaveKey('error');
-    expect($data)->toHaveKey('errors');
-    expect($data['errors'])->toHaveKey('type');
-    expect($data['errors']['type'][0])->toContain("'single'|'channel'|'structure'");
-})->skip('HTTP API not set up for Craft 4');
+    // Tool expects valid type values, invalid values will cause type errors
+    // This test verifies that only valid section types are accepted
+    expect(fn() => $tool->__invoke(
+        sectionId: $section['sectionId'],
+        type: 'invalid' // @phpstan-ignore-line - intentionally invalid for test
+    ))->toThrow(UnhandledMatchError::class);
+});
 
 test('fails when invalid propagation method provided', function () {
     // Create a test section (entry types created automatically)
     $section = ($this->createSection)('Propagation Validation', 'channel');
 
-    // Try to update with invalid propagation method through API
-    $response = $this->post('/api/sections/' . $section['sectionId'], [
-        '_method' => 'PUT',
-        'propagationMethod' => 'invalid'
-    ]);
+    $tool = Craft::$container->get(UpdateSection::class);
 
-    $response->assertStatus(400);
-    $data = json_decode($response->json()->json, true);
-
-    expect($data)->toHaveKey('error');
-    expect($data)->toHaveKey('errors');
-    expect($data['errors'])->toHaveKey('propagationMethod');
-    expect($data['errors']['propagationMethod'][0])->toContain("'all'|'siteGroup'|'language'|'custom'|'none'");
-})->skip('HTTP API not set up for Craft 4');
+    // Tool expects valid propagation method values, invalid values will cause type errors
+    expect(fn() => $tool->__invoke(
+        sectionId: $section['sectionId'],
+        propagationMethod: 'invalid' // @phpstan-ignore-line - intentionally invalid for test
+    ))->toThrow(UnhandledMatchError::class);
+});
 
 test('fails when invalid default placement provided', function () {
     // Create a test structure section (entry types created automatically)
     $section = ($this->createSection)('Placement Validation', 'structure');
 
-    // Try to update with invalid default placement through API
-    $response = $this->post('/api/sections/' . $section['sectionId'], [
-        '_method' => 'PUT',
-        'defaultPlacement' => 'invalid'
-    ]);
+    $tool = Craft::$container->get(UpdateSection::class);
 
-    $response->assertStatus(400);
-    $data = json_decode($response->json()->json, true);
-
-    expect($data)->toHaveKey('error');
-    expect($data)->toHaveKey('errors');
-    expect($data['errors'])->toHaveKey('defaultPlacement');
-    expect($data['errors']['defaultPlacement'][0])->toContain("'beginning'|'end'");
-})->skip('HTTP API not set up for Craft 4');
+    // Tool expects valid default placement values, invalid values will cause type errors
+    expect(fn() => $tool->__invoke(
+        sectionId: $section['sectionId'],
+        defaultPlacement: 'invalid' // @phpstan-ignore-line - intentionally invalid for test
+    ))->toThrow(UnhandledMatchError::class);
+});
 
 test('fails when non-existent entry type ID provided', function () {
     // Create a test section (entry types created automatically)
