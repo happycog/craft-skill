@@ -19,7 +19,7 @@ jobs:
           - version: '4'
             constraint: '~4.17.0'
           - version: '5'
-            constraint: '~5.9.0'
+            constraint: '~5.8.0'
 
     env:
       CRAFT_APP_ID: craftmcp
