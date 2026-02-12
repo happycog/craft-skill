@@ -1,6 +1,8 @@
 <?php
 
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
 use happycog\craftmcp\tools\GetSections;
+use function happycog\craftmcp\helpers\service;
 
 it('gets all sections and entry types', function () {
     $response = Craft::$container->get(GetSections::class)->__invoke();
@@ -79,7 +81,7 @@ it('returns sections that can be used for creating entries', function () {
     expect($sectionId)->toBeInt();
     expect($entryTypeId)->toBeInt();
     
-    $section = Craft::$app->getEntries()->getSectionById($sectionId);
+    $section = service(SectionsServiceInterface::class)->getSectionById($sectionId);
     expect($section)->not->toBeNull();
     
     $entryType = $section->getEntryTypes()[0];

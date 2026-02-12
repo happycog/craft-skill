@@ -5,6 +5,8 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\models\Section;
 use happycog\craftmcp\actions\EntryTypeFormatter;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\service;
 
 class GetSection
 {
@@ -30,8 +32,8 @@ class GetSection
         int $sectionId
     ): array
     {
-        $entriesService = Craft::$app->getEntries();
-        $section = $entriesService->getSectionById($sectionId);
+        $sectionsService = service(SectionsServiceInterface::class);
+        $section = $sectionsService->getSectionById($sectionId);
 
         if (!$section instanceof Section) {
             throw new \InvalidArgumentException("Section with ID {$sectionId} not found");

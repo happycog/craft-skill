@@ -4,6 +4,8 @@ namespace happycog\craftmcp\tools;
 
 use Craft;
 use happycog\craftmcp\actions\EntryTypeFormatter;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\service;
 
 class GetSections
 {
@@ -32,7 +34,7 @@ class GetSections
         ?array $sectionIds = null
     ): array
     {
-        $sections = Craft::$app->getEntries()->getAllSections();
+        $sections = service(SectionsServiceInterface::class)->getAllSections();
 
         // Determine if we should include field details based on site size
         $totalSections = count($sections);
