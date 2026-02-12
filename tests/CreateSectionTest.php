@@ -61,7 +61,7 @@ test('creates channel section with default settings', function () {
     if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
         expect($result['propagationMethod'])->toBe('all');
     }
-})->only();
+});
 
 test('creates single section with custom handle', function () {
     $result = ($this->createSection)('Homepage', 'single', [

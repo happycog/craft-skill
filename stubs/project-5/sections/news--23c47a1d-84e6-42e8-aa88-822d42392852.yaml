@@ -1,0 +1,21 @@
+defaultPlacement: end
+enableVersioning: true
+entryTypes:
+  -
+    uid: 0df1c5a0-f2fd-43b7-b0f4-95d51e3823e7 # News
+handle: news
+maxAuthors: 1
+name: News
+previewTargets:
+  -
+    label: 'Primary entry page'
+    refresh: '1'
+    urlFormat: '{url}'
+propagationMethod: all
+siteSettings:
+  dff954b5-6c1a-4334-8981-f325121886fd: # Craft 5
+    enabledByDefault: true
+    hasUrls: true
+    template: news/_entry.twig
+    uriFormat: 'news/{slug}'
+type: channel
