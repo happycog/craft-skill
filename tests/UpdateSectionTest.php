@@ -38,7 +38,7 @@ beforeEach(function () {
         // In Craft 5, create entry types first; in Craft 4, pass null (auto-creates)
         $entryTypeIds = null;
         if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
-            $entryType = ($this->createEntryType)('Default', 'default');
+            $entryType = ($this->createEntryType)($name, \craft\helpers\StringHelper::slugify($name));
             $entryTypeIds = [$entryType['entryTypeId']];
         }
 
