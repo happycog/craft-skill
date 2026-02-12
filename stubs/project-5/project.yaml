@@ -25,6 +25,11 @@ meta:
     dff954b5-6c1a-4334-8981-f325121886fd: 'Craft 5' # Craft 5
     e9a2bd3d-0130-4733-a448-2dca491bff14: Body # Body
     fb13a791-69be-44a4-aa52-93c37a9fb32e: 'Call to Action' # Call to Action
+plugins:
+  skills:
+    edition: standard
+    enabled: true
+    schemaVersion: 1.0.0
 system:
   edition: solo
   live: true
