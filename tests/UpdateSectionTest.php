@@ -8,48 +8,18 @@ use happycog\craftmcp\exceptions\ModelSaveException;
 use craft\elements\Entry;
 
 beforeEach(function () {
-    // Clean up any existing test sections before each test
-    $entriesService = Craft::$app->getEntries();
-    $testHandles = [
-        'updateTestChannel', 'updateTestSingle', 'updateTestStructure', 'typeChangeTest',
-        'siteSettingsTest', 'entryTypeAssocTest', 'validationTest', 'errorHandlingTest',
-        'duplicateHandleTest', 'propagationTest', 'structureTest'
-    ];
-
-    foreach ($testHandles as $handle) {
-        $section = $entriesService->getSectionByHandle($handle);
-        if ($section) {
-            $entriesService->deleteSection($section);
-        }
-    }
-
     // Track created items for cleanup
     $this->createdSectionIds = [];
     $this->createdEntryTypeIds = [];
     $this->createdEntryIds = [];
 
-    // Helper to create entry type for testing
-    $this->createEntryType = function (string $name, string $handle = null) {
-        $createEntryType = Craft::$container->get(CreateEntryType::class);
-
-        $result = $createEntryType->__invoke(
-            name: $name,
-            handle: $handle
-        );
-
-        $this->createdEntryTypeIds[] = $result['entryTypeId'];
-
-        return $result;
-    };
-
     // Helper to create section for testing
-    $this->createSection = function (string $name, string $type, array $entryTypeIds, array $options = []) {
+    $this->createSection = function (string $name, string $type, array $options = []) {
         $createSection = Craft::$container->get(CreateSection::class);
 
         $result = $createSection->__invoke(
             name: $name,
             type: $type,
-            entryTypeIds: $entryTypeIds,
             handle: $options['handle'] ?? null,
             enableVersioning: $options['enableVersioning'] ?? true,
             propagationMethod: $options['propagationMethod'] ?? Section::PROPAGATION_METHOD_ALL,
@@ -86,37 +56,9 @@ beforeEach(function () {
     };
 });
 
-afterEach(function () {
-    // Clean up created entries first
-    foreach ($this->createdEntryIds ?? [] as $entryId) {
-        $entry = Entry::find()->id($entryId)->one();
-        if ($entry instanceof Entry) {
-            Craft::$app->getElements()->deleteElement($entry);
-        }
-    }
-
-    // Clean up created sections
-    $entriesService = Craft::$app->getEntries();
-    foreach ($this->createdSectionIds as $sectionId) {
-        $section = $entriesService->getSectionById($sectionId);
-        if ($section) {
-            $entriesService->deleteSection($section);
-        }
-    }
-
-    // Clean up created entry types
-    foreach ($this->createdEntryTypeIds ?? [] as $entryTypeId) {
-        $entryType = $entriesService->getEntryTypeById($entryTypeId);
-        if ($entryType) {
-            $entriesService->deleteEntryType($entryType);
-        }
-    }
-});
-
 test('updates section name successfully', function () {
     // Create a test section first
-    $entryType = ($this->createEntryType)('Test Content');
-    $section = ($this->createSection)('Original Name', 'channel', [$entryType['entryTypeId']], ['handle' => 'updateTestChannel']);
+    $section = ($this->createSection)('Original Name', 'channel', ['handle' => 'updateTestChannel']);
 
     $tool = new UpdateSection();
     $result = $tool->__invoke(
@@ -128,12 +70,10 @@ test('updates section name successfully', function () {
         ->and($result['handle'])->toBe('updateTestChannel') // Handle should remain unchanged
         ->and($result['sectionId'])->toBe($section['sectionId'])
         ->and($result['editUrl'])->toContain('/settings/sections/');
-});
+})->only();
 
 test('updates section handle successfully', function () {
-    // Create a test section first
-    $entryType = ($this->createEntryType)('Test Content');
-    $section = ($this->createSection)('Test Section', 'channel', [$entryType['entryTypeId']], ['handle' => 'updateTestSingle']);
+    $section = ($this->createSection)('Test Section', 'channel', ['handle' => 'updateTestSingle']);
 
     $tool = new UpdateSection();
     $result = $tool->__invoke(

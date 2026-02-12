@@ -2,12 +2,15 @@
 
 namespace happycog\craftmcp\tools;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\enums\PropagationMethod;
 use craft\helpers\UrlHelper;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
 use happycog\craftmcp\exceptions\ModelSaveException;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\service;
 
 class UpdateSection
 {
@@ -72,7 +75,7 @@ class UpdateSection
          */
         ?array $siteSettingsData = null
     ): array {
-        $sectionsService = Craft::$app->getEntries();
+        $sectionsService = service(SectionsServiceInterface::class);
 
         // Get existing section
         $section = $sectionsService->getSectionById($sectionId);
@@ -177,16 +180,23 @@ class UpdateSection
         // Generate control panel URL
         $editUrl = UrlHelper::cpUrl('settings/sections/' . $section->id);
 
-        return [
+        $result = [
             'sectionId' => $section->id,
             'name' => $section->name,
             'handle' => $section->handle,
             'type' => $section->type,
-            'propagationMethod' => $section->propagationMethod->value,
             'maxLevels' => $section->type === Section::TYPE_STRUCTURE ? ($section->maxLevels ?: null) : null,
-            'maxAuthors' => $section->maxAuthors,
             'editUrl' => $editUrl,
         ];
+
+        if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
+            $result = array_merge($result, [
+                'propagationMethod' => $section->propagationMethod->value,
+                'maxAuthors' => $section->maxAuthors,
+            ]);
+        }
+
+        return $result;
     }
 
     /**

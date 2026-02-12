@@ -9,7 +9,7 @@ beforeEach(function () {
     $this->createdEntryTypeIds = [];
 
     // Helper to create entry type for testing
-    $createEntryType = function (string $name, string $handle = null) {
+    $createEntryType = function (string $name, ?string $handle = null) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
         $result = $createEntryType->__invoke(

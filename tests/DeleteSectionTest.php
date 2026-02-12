@@ -20,7 +20,7 @@ beforeEach(function () {
     };
 
     // Helper to create a test section
-    $this->createTestSection = function (string $name = 'Test Section', string $type = 'channel', array $entryTypeIds = null): array {
+    $this->createTestSection = function (string $name = 'Test Section', string $type = 'channel', ?array $entryTypeIds = null): array {
         $entryTypes = [];
         if ($entryTypeIds === null) {
             $entryType = ($this->createTestEntryType)();
