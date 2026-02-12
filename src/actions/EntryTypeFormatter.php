@@ -53,7 +53,7 @@ class EntryTypeFormatter
          ];
 
          // Add in Craft 5 fields
-        if (Semver::satisfies(Craft::$app->getVersion(), '~5.0')) {
+        if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
             $data = array_merge($data, [
                 'icon' => $entryType->icon,
                 'color' => $entryType->color?->value,

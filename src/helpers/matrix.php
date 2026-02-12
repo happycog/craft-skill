@@ -16,7 +16,7 @@ use craft\models\EntryType;
  */
 function getMatrixSubTypes(Matrix $field): array
 {
-    if (\Composer\Semver\Semver::satisfies(Craft::$app->version, '~5.0')) {
+    if (\Composer\Semver\Semver::satisfies(Craft::$app->version, '>=5.0.0')) {
         return $field->getEntryTypes();  // @phpstan-ignore-line
     }
 
