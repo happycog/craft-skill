@@ -70,7 +70,7 @@ test('updates section name successfully', function () {
         ->and($result['handle'])->toBe('updateTestChannel') // Handle should remain unchanged
         ->and($result['sectionId'])->toBe($section['sectionId'])
         ->and($result['editUrl'])->toContain('/settings/sections/');
-})->only();
+});
 
 test('updates section handle successfully', function () {
     $section = ($this->createSection)('Test Section', 'channel', ['handle' => 'updateTestSingle']);
