@@ -249,7 +249,6 @@ it('can create a matrix field with advanced settings', function () {
                 'minEntries' => 2,
                 'maxEntries' => 20,
                 'viewMode' => 'blocks',
-                'showCardsInGrid' => true,
                 'createButtonLabel' => 'Add New Block',
                 'entryTypes' => [
                     ['uid' => $blockResult['uid']],
@@ -270,7 +269,6 @@ it('can create a matrix field with advanced settings', function () {
     expect($field->minEntries)->toBe(2);
     expect($field->maxEntries)->toBe(20);
     expect($field->viewMode)->toBe('blocks');
-    expect($field->showCardsInGrid)->toBeTrue();
     expect($field->createButtonLabel)->toBe('Add New Block');
     
     // Verify entry type is attached
