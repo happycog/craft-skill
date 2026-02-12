@@ -4,7 +4,6 @@ namespace happycog\craftmcp\tools;
 
 use Composer\Semver\Semver;
 use Craft;
-use craft\enums\PropagationMethod;
 use craft\helpers\UrlHelper;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
@@ -106,18 +105,31 @@ class UpdateSection
             $section->enableVersioning = $enableVersioning;
         }
 
-        if ($maxAuthors !== null) {
+        // maxAuthors only exists in Craft 5
+        if ($maxAuthors !== null && Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
             $section->maxAuthors = $maxAuthors;
         }
 
         if ($propagationMethod !== null) {
-            $section->propagationMethod = match ($propagationMethod) {
-                'all' => PropagationMethod::All,
-                'siteGroup' => PropagationMethod::SiteGroup,
-                'language' => PropagationMethod::Language,
-                'custom' => PropagationMethod::Custom,
-                'none' => PropagationMethod::None,
-            };
+            // Craft 5 uses PropagationMethod enum, Craft 4 uses string constants
+            if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
+                $section->propagationMethod = match ($propagationMethod) {
+                    'all' => \craft\enums\PropagationMethod::All,
+                    'siteGroup' => \craft\enums\PropagationMethod::SiteGroup,
+                    'language' => \craft\enums\PropagationMethod::Language,
+                    'custom' => \craft\enums\PropagationMethod::Custom,
+                    'none' => \craft\enums\PropagationMethod::None,
+                };
+            } else {
+                // Craft 4: use string constants
+                $section->propagationMethod = match ($propagationMethod) {
+                    'all' => Section::PROPAGATION_METHOD_ALL,
+                    'siteGroup' => Section::PROPAGATION_METHOD_SITE_GROUP,
+                    'language' => Section::PROPAGATION_METHOD_LANGUAGE,
+                    'custom' => Section::PROPAGATION_METHOD_CUSTOM,
+                    'none' => Section::PROPAGATION_METHOD_NONE,
+                };
+            }
         }
 
         // Structure-specific settings
@@ -194,6 +206,10 @@ class UpdateSection
                 'propagationMethod' => $section->propagationMethod->value,
                 'maxAuthors' => $section->maxAuthors,
             ]);
+        } else {
+            // Craft 4: propagationMethod is a string, maxAuthors doesn't exist
+            $result['propagationMethod'] = $section->propagationMethod;
+            $result['maxAuthors'] = null;
         }
 
         return $result;
@@ -204,7 +220,7 @@ class UpdateSection
      */
     private function updateEntryTypeAssociations(Section $section, array $entryTypeIds): void
     {
-        $sectionsService = Craft::$app->getEntries();
+        $sectionsService = service(SectionsServiceInterface::class);
 
         // Validate all entry types exist and collect them
         $entryTypes = [];

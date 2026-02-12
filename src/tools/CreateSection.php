@@ -96,8 +96,8 @@ class CreateSection
             'propagationMethod' => $propagationMethod,
         ]);
 
-        // Set maxAuthors if provided
-        if ($maxAuthors !== null) {
+        // Set maxAuthors if provided (Craft 5+ only)
+        if ($maxAuthors !== null && Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
             $section->maxAuthors = $maxAuthors;
         }
 

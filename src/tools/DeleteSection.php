@@ -5,6 +5,8 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\elements\Entry;
 use happycog\craftmcp\exceptions\ModelSaveException;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
+use function happycog\craftmcp\helpers\service;
 
 class DeleteSection
 {
@@ -27,7 +29,7 @@ class DeleteSection
         bool $force = false
     ): array
     {
-        $sectionsService = Craft::$app->getEntries();
+        $sectionsService = service(SectionsServiceInterface::class);
 
         // Get the section
         $section = $sectionsService->getSectionById($sectionId);

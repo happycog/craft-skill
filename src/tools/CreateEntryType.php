@@ -80,13 +80,19 @@ class CreateEntryType
         $entryType->titleFormat = $titleFormat;
         $entryType->showStatusField = $showStatusField;
 
+        // Craft 4 does not support standalone entry types
+        // Entry types must be created as part of sections
+        throw_if(
+            Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'),
+            \RuntimeException::class,
+            'Creating standalone entry types is not supported in Craft 4. In Craft 4, entry types are created automatically when you create a section. Use the sections/create tool instead.'
+        );
+
         // Set Craft 5 fields
-        if (Semver::satisfies(Craft::$app->getVersion(), '~5.0')) {
-            $entryType->description = $description;
-            $entryType->icon = $icon;
-            $entryType->color = $color ? Color::tryFrom($color) : null;
-            $entryType->showSlugField = $showSlugField;
-        }
+        $entryType->description = $description;
+        $entryType->icon = $icon;
+        $entryType->color = $color ? Color::tryFrom($color) : null;
+        $entryType->showSlugField = $showSlugField;
 
         // If hasTitleField is true, ensure the field layout includes the title field
         if ($hasTitleField) {
@@ -112,7 +118,7 @@ class CreateEntryType
         $savedEntryType = $entriesService->getEntryTypeById($entryTypeId);
         throw_unless($savedEntryType instanceof EntryType, \RuntimeException::class, "Failed to retrieve saved entry type with ID {$entryTypeId}");
 
-        return [
+        $result = [
             '_notes' => 'The entry type was successfully created. You can further configure it in the Craft control panel.' . (
                 ! $hasTitleField ? ' Because the entry was created without a title field it will not have a field layout. To add fields to this entry type you must first call CreateFieldLayout and then UpdateEntryType with the associated `fieldLayoutId`.' : ''
             ),
@@ -120,18 +126,20 @@ class CreateEntryType
             'uid' => $savedEntryType->uid,
             'name' => $savedEntryType->name,
             'handle' => $savedEntryType->handle,
-            'description' => $savedEntryType->description,
             'hasTitleField' => $savedEntryType->hasTitleField,
             'titleTranslationMethod' => $savedEntryType->titleTranslationMethod,
             'titleTranslationKeyFormat' => $savedEntryType->titleTranslationKeyFormat,
             'titleFormat' => $savedEntryType->titleFormat,
+            'fieldLayoutId' => $savedEntryType->fieldLayoutId,
+            'description' => $savedEntryType->description,
             'icon' => $savedEntryType->icon,
             'color' => $savedEntryType->color?->value,
             'showSlugField' => $savedEntryType->showSlugField,
             'showStatusField' => $savedEntryType->showStatusField,
-            'fieldLayoutId' => $savedEntryType->fieldLayoutId,
             'editUrl' => $editUrl,
         ];
+
+        return $result;
     }
 
     /**

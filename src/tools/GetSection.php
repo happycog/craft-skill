@@ -2,6 +2,7 @@
 
 namespace happycog\craftmcp\tools;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\models\Section;
 use happycog\craftmcp\actions\EntryTypeFormatter;
@@ -45,15 +46,24 @@ class GetSection
             $entryTypes[] = $this->entryTypeFormatter->formatEntryType($entryType, false, true);
         }
 
-        return [
+        $result = [
             'id' => $section->id,
             'handle' => $section->handle,
             'name' => $section->name,
             'type' => $section->type,
             'enableVersioning' => $section->enableVersioning,
-            'propagationMethod' => $section->propagationMethod->value,
             'previewTargets' => $section->previewTargets,
             'entryTypes' => $entryTypes,
         ];
+
+        // In Craft 5, propagationMethod is an enum with a value property
+        // In Craft 4, it's a string
+        if (Semver::satisfies(Craft::$app->getVersion(), '~5.0')) {
+            $result['propagationMethod'] = $section->propagationMethod->value;
+        } else {
+            $result['propagationMethod'] = $section->propagationMethod;
+        }
+
+        return $result;
     }
 }

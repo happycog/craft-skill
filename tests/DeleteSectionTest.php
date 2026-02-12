@@ -1,16 +1,20 @@
 <?php
 
+use Composer\Semver\Semver;
 use happycog\craftmcp\tools\CreateSection;
 use happycog\craftmcp\tools\CreateEntryType;
 use happycog\craftmcp\tools\CreateEntry;
 use happycog\craftmcp\tools\DeleteSection;
+use happycog\craftmcp\interfaces\SectionsServiceInterface;
 use craft\models\Section;
+
+use function happycog\craftmcp\helpers\service;
 
 beforeEach(function () {
     // Use microtime to ensure unique handles across all tests
     $this->uniqueId = str_replace('.', '', microtime(true));
 
-    // Helper to create a test entry type for use in sections
+    // Helper to create entry type for Craft 5 (unused in Craft 4)
     $this->createTestEntryType = function (?string $name = null): array {
         if ($name === null) {
             $name = 'Test Entry Type ' . $this->uniqueId . mt_rand(1000, 9999);
@@ -21,15 +25,26 @@ beforeEach(function () {
 
     // Helper to create a test section
     $this->createTestSection = function (string $name = 'Test Section', string $type = 'channel', ?array $entryTypeIds = null): array {
-        $entryTypes = [];
-        if ($entryTypeIds === null) {
+        // In Craft 5, create entry types first; in Craft 4, pass null (auto-creates)
+        if ($entryTypeIds === null && Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
             $entryType = ($this->createTestEntryType)();
             $entryTypeIds = [$entryType['entryTypeId']];
-            $entryTypes = [$entryType];
+        } elseif ($entryTypeIds === null) {
+            // Craft 4: explicitly pass null to auto-create entry types
+            $entryTypeIds = null;
         }
 
         $tool = new CreateSection();
         $sectionData = $tool->__invoke($name, $type, $entryTypeIds);
+
+        // Get entry types from the created section for test convenience
+        $sectionsService = service(SectionsServiceInterface::class);
+        $section = $sectionsService->getSectionById($sectionData['sectionId']);
+        $entryTypes = array_map(fn($et) => [
+            'entryTypeId' => $et->id,
+            'name' => $et->name,
+            'handle' => $et->handle,
+        ], $section->getEntryTypes());
 
         // Merge section data with entry types for convenience
         $sectionData['entryTypes'] = $entryTypes;
@@ -178,32 +193,43 @@ test('analyzes impact correctly for empty section', function () {
 });
 
 test('includes entry type information in impact', function () {
-    $entryType = ($this->createTestEntryType)();
-    $section = ($this->createTestSection)('Impact Entry Type Test ' . $this->uniqueId, 'channel', [$entryType['entryTypeId']]);
+    // Section will have auto-created entry types
+    $section = ($this->createTestSection)('Impact Entry Type Test ' . $this->uniqueId, 'channel');
 
     $tool = new DeleteSection();
     $result = $tool->__invoke($section['sectionId']);
 
     expect($result['impact']['entryTypes'])->toBeArray()
         ->and($result['impact']['entryTypes'][0])->toHaveKeys(['id', 'name', 'handle'])
-        ->and($result['impact']['entryTypes'][0]['name'])->toBe($entryType['name']);
+        ->and($result['impact']['entryTypes'][0]['name'])->toBeString();
 });
 
 test('handles section with multiple entry types', function () {
-    // Create multiple entry types
-    $entryType1 = ($this->createTestEntryType)();
-    $entryType2 = ($this->createTestEntryType)();
+    // In Craft 5, we can create standalone entry types and add them to sections
+    // In Craft 4, sections come with one entry type by default
+    if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
+        $entryType1 = ($this->createTestEntryType)();
+        $entryType2 = ($this->createTestEntryType)();
+        $section = ($this->createTestSection)('Multi Type Section ' . $this->uniqueId, 'channel', [
+            $entryType1['entryTypeId'],
+            $entryType2['entryTypeId']
+        ]);
+        
+        $tool = new DeleteSection();
+        $result = $tool->__invoke($section['sectionId']);
 
-    $section = ($this->createTestSection)('Multi Type Section ' . $this->uniqueId, 'channel', [
-        $entryType1['entryTypeId'],
-        $entryType2['entryTypeId']
-    ]);
+        expect($result['impact']['entryTypeCount'])->toBe(2)
+            ->and($result['impact']['entryTypes'])->toHaveCount(2);
+    } else {
+        // Craft 4: sections have one entry type
+        $section = ($this->createTestSection)('Multi Type Section ' . $this->uniqueId, 'channel');
+        
+        $tool = new DeleteSection();
+        $result = $tool->__invoke($section['sectionId']);
 
-    $tool = new DeleteSection();
-    $result = $tool->__invoke($section['sectionId']);
-
-    expect($result['impact']['entryTypeCount'])->toBe(2)
-        ->and($result['impact']['entryTypes'])->toHaveCount(2);
+        expect($result['impact']['entryTypeCount'])->toBe(1)
+            ->and($result['impact']['entryTypes'])->toHaveCount(1);
+    }
 });
 
 test('force parameter validation', function () {
@@ -258,15 +284,19 @@ test('successful deletion includes complete information', function () {
 });
 
 test('handles sections created with different settings', function () {
-    // Test with different section configurations
-    $entryType = ($this->createTestEntryType)();
+    // In Craft 5, create entry type first; in Craft 4, pass null to auto-create
+    $entryTypeIds = null;
+    if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
+        $entryType = ($this->createTestEntryType)();
+        $entryTypeIds = [$entryType['entryTypeId']];
+    }
 
     // Create section with custom settings
     $tool = new CreateSection();
     $section = $tool->__invoke(
         name: 'Custom Settings Section',
         type: 'structure',
-        entryTypeIds: [$entryType['entryTypeId']],
+        entryTypeIds: $entryTypeIds,
         handle: 'customSettingsSection',
         enableVersioning: false,
         maxLevels: 5
