@@ -43,15 +43,13 @@ class UpdateEntry
             attributeAndFieldData: $attributeAndFieldData,
         );
 
-        $url = ElementHelper::elementEditorUrl($entry);
-
         return [
             '_notes' => 'The entry was successfully updated.',
             'entryId' => $entry->id,
             'title' => $entry->title,
             'slug' => $entry->slug,
             'postDate' => $entry->postDate?->format('c'),
-            'url' => ElementHelper::elementEditorUrl($entry),
+            'url' => $entry->getCpEditUrl(),
         ];
     }
 }
