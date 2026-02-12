@@ -29,6 +29,11 @@ meta:
     ea68a84b-e6e9-4aba-9c5d-8ff22e6d2ce3: Body # Body
     eb70f7c1-9acd-4d36-908c-39e0b8b08df1: 'Content Builder' # Content Builder
     ff219b3e-2af1-416a-953b-d55f1b065175: Body # Body
+plugins:
+  skills:
+    edition: standard
+    enabled: true
+    schemaVersion: 1.0.0
 system:
   edition: solo
   live: true
