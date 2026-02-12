@@ -27,12 +27,18 @@ class GetFieldTypes
                 continue;
             }
 
-            $result[] = [
+            $fieldTypeData = [
                 'class' => $fieldTypeClass,
                 'name' => $fieldTypeClass::displayName(),
-                'icon' => $fieldTypeClass::icon(),
                 'description' => $this->getFieldTypeDescription($fieldTypeClass),
             ];
+
+            // icon() method only exists in Craft 5+
+            if (method_exists($fieldTypeClass, 'icon')) {
+                $fieldTypeData['icon'] = $fieldTypeClass::icon();
+            }
+
+            $result[] = $fieldTypeData;
         }
 
         // Sort by display name for easier browsing

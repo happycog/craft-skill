@@ -2,6 +2,7 @@
 
 namespace happycog\craftmcp\tools;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\helpers\UrlHelper;
 use happycog\craftmcp\exceptions\ModelSaveException;
@@ -43,7 +44,10 @@ class CreateField
         string $translationMethod = 'none',
 
         /** Field type-specific settings as key-value pairs */
-        array $settings = []
+        array $settings = [],
+
+        /** The field group ID (Craft 4 only). Auto-selected from first available group if not provided. */
+        ?int $groupId = null
     ): array
     {
         $fieldsService = Craft::$app->getFields();
@@ -82,6 +86,21 @@ class CreateField
             'translationMethod' => $translationMethodConstant,
             'settings' => $settings,
         ];
+
+        // In Craft 4, groupId is required. In Craft 5, it's optional
+        if (Semver::satisfies(Craft::$app->getVersion(), '<5.0.0')) {
+            // Craft 4 requires groupId
+            if ($groupId === null) {
+                // Get the first available group
+                $groups = $fieldsService->getAllGroups();
+                throw_unless(!empty($groups), 'At least one field group must exist to create fields');
+                $groupId = $groups[0]->id;
+            }
+            $fieldConfig['groupId'] = $groupId;
+        } elseif ($groupId !== null) {
+            // Craft 5 supports groupId but it's optional
+            $fieldConfig['groupId'] = $groupId;
+        }
         
         // Create the field
         $field = $fieldsService->createField($fieldConfig);

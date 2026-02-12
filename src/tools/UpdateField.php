@@ -2,6 +2,7 @@
 
 namespace happycog\craftmcp\tools;
 
+use Composer\Semver\Semver;
 use Craft;
 use craft\base\FieldInterface;
 use craft\helpers\UrlHelper;
@@ -101,6 +102,14 @@ class UpdateField
                 array_merge($existingField->settings, $settings) : 
                 $existingField->settings,
         ];
+
+        // In Craft 4, groupId is required. Preserve the existing groupId if we have one
+        if (Semver::satisfies(Craft::$app->getVersion(), '<5.0.0')) {
+            // Craft 4 requires groupId - get it from existing field
+            if (property_exists($existingField, 'groupId') && $existingField->groupId) {
+                $fieldConfig['groupId'] = $existingField->groupId;
+            }
+        }
         
         // Create the updated field
         $field = $fieldsService->createField($fieldConfig);

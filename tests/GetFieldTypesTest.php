@@ -1,5 +1,6 @@
 <?php
 
+use Composer\Semver\Semver;
 use happycog\craftmcp\tools\GetFieldTypes;
 
 it('returns available field types', function () {
@@ -11,7 +12,14 @@ it('returns available field types', function () {
 
     // Check that each field type has required properties
     foreach ($result as $fieldType) {
-        expect($fieldType)->toHaveKeys(['class', 'name', 'icon', 'description']);
+        $requiredKeys = ['class', 'name', 'description'];
+        
+        // icon is only available in Craft 5+
+        if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
+            $requiredKeys[] = 'icon';
+        }
+        
+        expect($fieldType)->toHaveKeys($requiredKeys);
         expect($fieldType['class'])->toBeString();
         expect($fieldType['name'])->toBeString();
         expect($fieldType['description'])->toBeString();

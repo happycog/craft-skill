@@ -1,5 +1,6 @@
 <?php
 
+use Composer\Semver\Semver;
 use happycog\craftmcp\tools\CreateField;
 use happycog\craftmcp\tools\CreateEntryType;
 use function happycog\craftmcp\helpers\getMatrixSubTypes;
@@ -228,7 +229,7 @@ it('can create a matrix field with entry types', function () {
     expect($entryTypes)->toHaveCount(2);
     expect($entryTypes[0]->handle)->toBe('textBlock');
     expect($entryTypes[1]->handle)->toBe('imageBlock');
-});
+})->skip(fn () => Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'), 'Matrix with entry types is only supported in Craft 5');
 
 it('can create a matrix field with advanced settings', function () {
     // Create an entry type for the block
@@ -275,4 +276,4 @@ it('can create a matrix field with advanced settings', function () {
     $entryTypes = getMatrixSubTypes($field);
     expect($entryTypes)->toHaveCount(1);
     expect($entryTypes[0]->handle)->toBe('contentBlock');
-});
+})->skip(fn () => Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'), 'Matrix with entry types is only supported in Craft 5');
