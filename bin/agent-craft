@@ -199,7 +199,7 @@ try {
     $result = $router->route($command, $positional, $flags);
 
     // Output successful result as JSON to stdout
-    echo json_encode($result) . PHP_EOL;
+    echo \Symfony\Component\Yaml\Yaml::dump($result, 4) . PHP_EOL;
     exit(0);
 } catch (\InvalidArgumentException $e) {
     // Unknown command or invalid arguments
