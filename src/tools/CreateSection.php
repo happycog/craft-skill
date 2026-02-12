@@ -43,7 +43,7 @@ class CreateSection
         string $type,
 
         /** Array of entry type IDs to assign to this section. Use CreateEntryType tool to create entry types first. */
-        ?array $entryTypeIds,
+        ?array $entryTypeIds = null,
 
         /** The section handle (machine-readable name). Auto-generated from name if not provided. */
         ?string $handle = null,

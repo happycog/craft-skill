@@ -22,7 +22,7 @@ beforeEach(function () {
         return $result;
     };
 
-    $this->createSection = function (string $name, string $type, array $entryTypeIds = [], array $options = []) {
+    $this->createSection = function (string $name, string $type, ?array $entryTypeIds = [], array $options = []) {
         if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
             $entryTypeIds = [$this->createEntryType('Default', 'default')->id];
         }
@@ -64,7 +64,7 @@ test('creates channel section with default settings', function () {
 });
 
 test('creates single section with custom handle', function () {
-    $result = ($this->createSection)('Homepage', 'single', [
+    $result = ($this->createSection)('Homepage', 'single', null, [
         'handle' => 'home'
     ]);
 
@@ -74,7 +74,7 @@ test('creates single section with custom handle', function () {
 });
 
 test('creates structure section with hierarchy settings', function () {
-    $result = ($this->createSection)('Site Pages', 'structure', [
+    $result = ($this->createSection)('Site Pages', 'structure', null, [
         'maxLevels' => 3,
         'defaultPlacement' => 'beginning'
     ]);
@@ -92,7 +92,7 @@ test('creates section with custom propagation method', function () {
 
     expect($result['name'])->toBe('Multi Site Content')
         ->and($result['propagationMethod'])->toBe('siteGroup');
-});
+})->skip(fn () => Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'));
 
 test('creates section with site-specific settings', function () {
     // Get the primary site for testing
@@ -188,7 +188,7 @@ test('creates section with maxAuthors setting', function () {
     expect($result['name'])->toBe('Multi Author Section')
         ->and($result['type'])->toBe('channel')
         ->and($result['maxAuthors'])->toBe(3);
-});
+})->skip(fn () => Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'));
 
 test('creates section without maxAuthors (uses Craft default)', function () {
     $result = ($this->createSection)('Standard Section', 'channel');
@@ -196,7 +196,7 @@ test('creates section without maxAuthors (uses Craft default)', function () {
     expect($result['name'])->toBe('Standard Section')
         ->and($result['type'])->toBe('channel')
         ->and($result['maxAuthors'])->toBe(1); // Craft CMS default is 1
-});
+})->skip(fn () => Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'));
 
 test('creates section with maxAuthors set to 1', function () {
     $result = ($this->createSection)('Single Author Section', 'channel', [
@@ -206,4 +206,4 @@ test('creates section with maxAuthors set to 1', function () {
     expect($result['name'])->toBe('Single Author Section')
         ->and($result['type'])->toBe('channel')
         ->and($result['maxAuthors'])->toBe(1);
-});
+})->skip(fn () => Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'));
