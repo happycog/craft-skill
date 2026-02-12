@@ -57,18 +57,13 @@ class CreateEntry
             attributeAndFieldData: $attributeAndFieldData,
         );
 
-        // Get CP edit URL (method differs between Craft 4 and 5)
-        $cpEditUrl = Semver::satisfies(Craft::$app->version, '~5.0')
-            ? ElementHelper::elementEditorUrl($entry)  // @phpstan-ignore-line
-            : $entry->getCpEditUrl();                  // @phpstan-ignore-line
-
         return [
             '_notes' => 'The entry was successfully created.',
             'entryId' => $entry->id,
             'title' => $entry->title,
             'slug' => $entry->slug,
             'postDate' => $entry->postDate?->format('c'),
-            'url' => $cpEditUrl,
+            'url' => $entry->getCpEditUrl(),
         ];
     }
 }
