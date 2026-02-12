@@ -17,9 +17,9 @@ jobs:
       matrix:
         craft:
           - version: '4'
-            constraint: '~4.16.0'
+            constraint: '~4.0'
           - version: '5'
-            constraint: '~5.8.8'
+            constraint: '~5.0'
 
     env:
       CRAFT_APP_ID: craftmcp
