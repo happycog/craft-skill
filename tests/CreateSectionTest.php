@@ -9,7 +9,7 @@ beforeEach(function () {
     $this->createdEntryTypeIds = [];
 
     // Helper to create entry type for testing
-    $this->createEntryType = function (string $name, string $handle = null) {
+    $createEntryType = function (string $name, string $handle = null) {
         $createEntryType = Craft::$container->get(CreateEntryType::class);
 
         $result = $createEntryType->__invoke(
@@ -22,9 +22,9 @@ beforeEach(function () {
         return $result;
     };
 
-    $this->createSection = function (string $name, string $type, ?array $entryTypeIds = [], array $options = []) {
+    $this->createSection = function (string $name, string $type, ?array $entryTypeIds = [], array $options = []) use ($createEntryType) {
         if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
-            $entryTypeIds = [$this->createEntryType('Default', 'default')->id];
+            $entryTypeIds = [$createEntryType('Default', 'default')['entryTypeId']];
         }
         else {
             $entryTypeIds = null;
@@ -85,7 +85,7 @@ test('creates structure section with hierarchy settings', function () {
 });
 
 test('creates section with custom propagation method', function () {
-    $result = ($this->createSection)('Multi Site Content', 'channel', [
+    $result = ($this->createSection)('Multi Site Content', 'channel', null, [
         'propagationMethod' => 'siteGroup',
         'enableVersioning' => false
     ]);
@@ -181,7 +181,7 @@ test('creates structure section with unlimited levels', function () {
 });
 
 test('creates section with maxAuthors setting', function () {
-    $result = ($this->createSection)('Multi Author Section', 'channel', [
+    $result = ($this->createSection)('Multi Author Section', 'channel', null, [
         'maxAuthors' => 3
     ]);
 
@@ -199,7 +199,7 @@ test('creates section without maxAuthors (uses Craft default)', function () {
 })->skip(fn () => Semver::satisfies(Craft::$app->getVersion(), '<5.0.0'));
 
 test('creates section with maxAuthors set to 1', function () {
-    $result = ($this->createSection)('Single Author Section', 'channel', [
+    $result = ($this->createSection)('Single Author Section', 'channel', null, [
         'maxAuthors' => 1
     ]);
 

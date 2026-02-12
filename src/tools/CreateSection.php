@@ -175,7 +175,7 @@ class CreateSection
             'editUrl' => $editUrl,
         ];
 
-        if (Semver::satisfies(Craft::$app->getVersion(), '~5.0.0')) {
+        if (Semver::satisfies(Craft::$app->getVersion(), '>=5.0.0')) {
             $result = array_merge($result, [
                 'propagationMethod' => $section->propagationMethod->value,
                 'maxAuthors' => $section->maxAuthors,
