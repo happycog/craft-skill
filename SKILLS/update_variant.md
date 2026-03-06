@@ -8,7 +8,7 @@ Update an existing Commerce product variant.
 
 ## Description
 
-Updates a variant's pricing, SKU, inventory, dimensions, and custom field values. Only the provided fields are updated; all others remain unchanged.
+Updates a variant's pricing, SKU, dimensions, and custom field values. Only the provided fields are updated; all others remain unchanged.
 
 ## Parameters
 
@@ -21,7 +21,6 @@ Updates a variant's pricing, SKU, inventory, dimensions, and custom field values
 - **sku** (string, optional): Variant SKU.
 - **price** (float, optional): Variant price.
 - **title** (string, optional): Variant title.
-- **stock** (integer, optional): Current stock level.
 - **minQty** (integer, optional): Minimum purchase quantity.
 - **maxQty** (integer, optional): Maximum purchase quantity.
 - **weight** (float, optional): Variant weight.
@@ -41,7 +40,7 @@ Returns an object containing:
 - **title** (string): Updated title
 - **sku** (string): Updated SKU
 - **price** (float): Updated price
-- **stock** (integer): Updated stock level
+- **stock** (integer): Current stock level (read-only, managed via Commerce inventory system)
 - **productId** (integer|null): Parent product ID
 - **url** (string|null): Parent product's control panel edit URL
 
@@ -56,19 +55,19 @@ Returns an object containing:
 }
 ```
 
-### Update Inventory
+### Update Dimensions and Shipping
 ```json
 {
   "variantId": 99,
-  "stock": 150,
-  "inventoryTracked": true
+  "weight": 2.5,
+  "freeShipping": true
 }
 ```
 
 ### CLI Usage
 ```bash
 agent-craft variants/update 99 --price=29.99 --sku="WIDGET-LG-BLUE"
-agent-craft variants/update 99 --stock=150 --inventoryTracked=true
+agent-craft variants/update 99 --weight=2.5 --freeShipping=true
 ```
 
 ## Notes

@@ -69,6 +69,7 @@ class Plugin extends BasePlugin
         $event->rules['GET ' . $apiPrefix . '/health'] = 'skills/health/index';
 
         // Commerce: Product routes
+        $event->rules['POST ' . $apiPrefix . '/products'] = 'skills/products/create';
         $event->rules['GET ' . $apiPrefix . '/products/search'] = 'skills/products/search';
         $event->rules['GET ' . $apiPrefix . '/products/<id>'] = 'skills/products/get';
         $event->rules['PUT ' . $apiPrefix . '/products/<id>'] = 'skills/products/update';
@@ -76,12 +77,15 @@ class Plugin extends BasePlugin
         $event->rules['GET ' . $apiPrefix . '/product-types'] = 'skills/products/types';
 
         // Commerce: Variant routes
+        $event->rules['POST ' . $apiPrefix . '/variants'] = 'skills/variants/create';
         $event->rules['GET ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/get';
         $event->rules['PUT ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/update';
+        $event->rules['DELETE ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/delete';
 
         // Commerce: Order routes
         $event->rules['GET ' . $apiPrefix . '/orders/search'] = 'skills/orders/search';
         $event->rules['GET ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/get';
         $event->rules['PUT ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/update';
+        $event->rules['GET ' . $apiPrefix . '/order-statuses'] = 'skills/orders/statuses';
     }
 }

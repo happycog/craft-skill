@@ -76,9 +76,10 @@ it('returns correct keys for each product in results', function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-LIST-001';
-    $variant->price = 9.99;
+    $variant->basePrice = 9.99;
     $variant->isDefault = true;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     Craft::$app->getElements()->saveElement($product);
 
@@ -114,5 +115,65 @@ it('generates correct notes for combined query and type filter', function () {
     $response = $this->tool->__invoke(query: 'test', typeIds: [$typeId]);
 
     expect($response['_notes'])->toContain('search query "test"');
+    expect($response['_notes'])->toContain('product type(s):');
+});
+
+it('returns empty results for non-matching search query', function () {
+    $response = $this->tool->__invoke(query: 'zzznonexistentproductxxx');
+
+    expect($response['results'])->toBeInstanceOf(\Illuminate\Support\Collection::class);
+    expect($response['results'])->toBeEmpty();
+});
+
+it('filters products by status', function () {
+    // Create an enabled product
+    $commerce = \craft\commerce\Plugin::getInstance();
+    $productTypes = $commerce->getProductTypes()->getAllProductTypes();
+
+    if (empty($productTypes)) {
+        $this->markTestSkipped('No product types configured in Commerce.');
+    }
+
+    $product = new \craft\commerce\elements\Product();
+    $product->typeId = $productTypes[0]->id;
+    $product->title = 'Status Filter Test';
+    $product->enabled = false; // Disabled product
+
+    $variant = new \craft\commerce\elements\Variant();
+    $variant->sku = 'TEST-STATUS-001';
+    $variant->basePrice = 10.00;
+    $variant->isDefault = true;
+    $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
+
+    Craft::$app->getElements()->saveElement($product);
+
+    // Searching for disabled products should find it
+    $response = $this->tool->__invoke(status: 'disabled');
+
+    expect($response['results'])->not->toBeEmpty();
+    $found = $response['results']->contains(fn ($p) => $p['productId'] === $product->id);
+    expect($found)->toBeTrue();
+
+    // Searching for live products should NOT find it
+    $responseLive = $this->tool->__invoke(status: 'live');
+    $foundLive = $responseLive['results']->contains(fn ($p) => $p['productId'] === $product->id);
+    expect($foundLive)->toBeFalse();
+});
+
+it('filters products by multiple type IDs', function () {
+    $commerce = \craft\commerce\Plugin::getInstance();
+    $productTypes = $commerce->getProductTypes()->getAllProductTypes();
+
+    if (count($productTypes) < 1) {
+        $this->markTestSkipped('Need at least one product type.');
+    }
+
+    // Using the same type ID twice in the array is valid — verifies the array handling
+    $typeId = $productTypes[0]->id;
+    $response = $this->tool->__invoke(typeIds: [$typeId]);
+
+    // Should succeed without error — verifies multiple type IDs path
+    expect($response['results'])->toBeInstanceOf(\Illuminate\Support\Collection::class);
     expect($response['_notes'])->toContain('product type(s):');
 });

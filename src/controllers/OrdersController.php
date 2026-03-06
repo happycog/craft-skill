@@ -3,6 +3,7 @@
 namespace happycog\craftmcp\controllers;
 
 use happycog\craftmcp\tools\GetOrder;
+use happycog\craftmcp\tools\GetOrderStatuses;
 use happycog\craftmcp\tools\SearchOrders;
 use happycog\craftmcp\tools\UpdateOrder;
 use yii\web\Response;
@@ -25,5 +26,11 @@ class OrdersController extends Controller
     {
         $tool = \Craft::$container->get(UpdateOrder::class);
         return $this->callTool($tool, ['orderId' => $id]);
+    }
+
+    public function actionStatuses(): Response
+    {
+        $tool = \Craft::$container->get(GetOrderStatuses::class);
+        return $this->callTool($tool, useQueryParams: true);
     }
 }

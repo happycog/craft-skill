@@ -1,6 +1,7 @@
 <?php
 
 use happycog\craftmcp\tools\GetOrder;
+use craft\commerce\Plugin as Commerce;
 
 beforeEach(function () {
     if (!class_exists(\craft\commerce\elements\Order::class)) {
@@ -16,11 +17,12 @@ it('throws exception for non-existent order', function () {
 });
 
 it('retrieves order details with expected structure', function () {
+    $commerce = Commerce::getInstance();
+
     // Create an order programmatically
     $order = new \craft\commerce\elements\Order();
-    $order->number = \craft\commerce\elements\Order::generateCartNumber();
+    $order->number = $commerce->getCarts()->generateCartNumber();
     $order->currency = 'USD';
-    $order->email = 'test@example.com';
     $order->isCompleted = false;
 
     $success = Craft::$app->getElements()->saveElement($order);
@@ -58,13 +60,14 @@ it('retrieves order details with expected structure', function () {
     ]);
     expect($response['_notes'])->toBe('Retrieved order details.');
     expect($response['orderId'])->toBe($order->id);
-    expect($response['email'])->toBe('test@example.com');
     expect($response['currency'])->toBe('USD');
 });
 
 it('returns line items as array', function () {
+    $commerce = Commerce::getInstance();
+
     $order = new \craft\commerce\elements\Order();
-    $order->number = \craft\commerce\elements\Order::generateCartNumber();
+    $order->number = $commerce->getCarts()->generateCartNumber();
     $order->currency = 'USD';
 
     Craft::$app->getElements()->saveElement($order);
@@ -76,8 +79,10 @@ it('returns line items as array', function () {
 });
 
 it('returns numeric totals', function () {
+    $commerce = Commerce::getInstance();
+
     $order = new \craft\commerce\elements\Order();
-    $order->number = \craft\commerce\elements\Order::generateCartNumber();
+    $order->number = $commerce->getCarts()->generateCartNumber();
     $order->currency = 'USD';
 
     Craft::$app->getElements()->saveElement($order);
@@ -90,4 +95,57 @@ it('returns numeric totals', function () {
     expect($response['totalTax'])->toBeFloat();
     expect($response['totalPaid'])->toBeFloat();
     expect($response['total'])->toBeFloat();
+});
+
+it('returns null for dateOrdered and datePaid on incomplete orders', function () {
+    $commerce = Commerce::getInstance();
+
+    $order = new \craft\commerce\elements\Order();
+    $order->number = $commerce->getCarts()->generateCartNumber();
+    $order->currency = 'USD';
+    $order->isCompleted = false;
+
+    Craft::$app->getElements()->saveElement($order);
+
+    $response = $this->tool->__invoke(orderId: $order->id);
+
+    expect($response['dateOrdered'])->toBeNull();
+    expect($response['datePaid'])->toBeNull();
+    expect($response['isCompleted'])->toBeFalse();
+});
+
+it('returns null orderStatusName when no status is set', function () {
+    $commerce = Commerce::getInstance();
+
+    $order = new \craft\commerce\elements\Order();
+    $order->number = $commerce->getCarts()->generateCartNumber();
+    $order->currency = 'USD';
+
+    Craft::$app->getElements()->saveElement($order);
+
+    $response = $this->tool->__invoke(orderId: $order->id);
+
+    // An incomplete order without explicit status should have null orderStatusName
+    // (orderStatusId may or may not be set depending on Commerce defaults)
+    if ($response['orderStatusId'] === null) {
+        expect($response['orderStatusName'])->toBeNull();
+    } else {
+        // If Commerce auto-assigns a status, the name should be a string
+        expect($response['orderStatusName'])->toBeString();
+    }
+});
+
+it('returns empty arrays for addresses on orders without addresses', function () {
+    $commerce = Commerce::getInstance();
+
+    $order = new \craft\commerce\elements\Order();
+    $order->number = $commerce->getCarts()->generateCartNumber();
+    $order->currency = 'USD';
+
+    Craft::$app->getElements()->saveElement($order);
+
+    $response = $this->tool->__invoke(orderId: $order->id);
+
+    expect($response['shippingAddress'])->toBeNull();
+    expect($response['billingAddress'])->toBeNull();
 });

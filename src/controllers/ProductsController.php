@@ -2,6 +2,7 @@
 
 namespace happycog\craftmcp\controllers;
 
+use happycog\craftmcp\tools\CreateProduct;
 use happycog\craftmcp\tools\DeleteProduct;
 use happycog\craftmcp\tools\GetProduct;
 use happycog\craftmcp\tools\GetProducts;
@@ -11,6 +12,12 @@ use yii\web\Response;
 
 class ProductsController extends Controller
 {
+    public function actionCreate(): Response
+    {
+        $tool = \Craft::$container->get(CreateProduct::class);
+        return $this->callTool($tool);
+    }
+
     public function actionGet(int $id): Response
     {
         $tool = \Craft::$container->get(GetProduct::class);

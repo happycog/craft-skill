@@ -48,3 +48,12 @@ it('throws exception when Commerce is not installed', function () {
 
     expect($response)->toHaveKey('productTypes');
 });
+
+it('returns non-empty product types list from project config', function () {
+    // The project config includes a "general" product type, so this should never be empty
+    $response = $this->tool->__invoke();
+
+    expect($response['productTypes'])->not->toBeEmpty();
+    expect($response['productTypes'][0]['name'])->toBeString();
+    expect($response['productTypes'][0]['handle'])->toBeString();
+});

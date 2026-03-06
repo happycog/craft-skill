@@ -42,8 +42,12 @@ use happycog\craftmcp\tools\UpdateOrder;
 use happycog\craftmcp\tools\UpdateProduct;
 use happycog\craftmcp\tools\UpdateSection;
 use happycog\craftmcp\tools\UpdateVariant;
+use happycog\craftmcp\tools\CreateProduct;
+use happycog\craftmcp\tools\CreateVariant;
 use happycog\craftmcp\tools\DeleteProduct;
+use happycog\craftmcp\tools\DeleteVariant;
 use happycog\craftmcp\tools\GetOrder;
+use happycog\craftmcp\tools\GetOrderStatuses;
 use happycog\craftmcp\tools\GetProduct;
 use happycog\craftmcp\tools\GetProducts;
 use happycog\craftmcp\tools\GetProductTypes;
@@ -118,6 +122,7 @@ class CommandMap
         'health' => GetHealth::class,
 
         // Commerce: Products
+        'products/create' => CreateProduct::class,
         'products/get' => GetProduct::class,
         'products/search' => GetProducts::class,
         'products/update' => UpdateProduct::class,
@@ -125,13 +130,16 @@ class CommandMap
         'product-types/list' => GetProductTypes::class,
 
         // Commerce: Variants
+        'variants/create' => CreateVariant::class,
         'variants/get' => GetVariant::class,
         'variants/update' => UpdateVariant::class,
+        'variants/delete' => DeleteVariant::class,
 
         // Commerce: Orders
         'orders/get' => GetOrder::class,
         'orders/search' => SearchOrders::class,
         'orders/update' => UpdateOrder::class,
+        'order-statuses/list' => GetOrderStatuses::class,
     ];
 
     /**

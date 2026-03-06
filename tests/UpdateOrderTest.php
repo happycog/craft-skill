@@ -1,6 +1,7 @@
 <?php
 
 use happycog\craftmcp\tools\UpdateOrder;
+use craft\commerce\Plugin as Commerce;
 
 beforeEach(function () {
     if (!class_exists(\craft\commerce\elements\Order::class)) {
@@ -9,11 +10,12 @@ beforeEach(function () {
 
     $this->tool = Craft::$container->get(UpdateOrder::class);
 
+    $commerce = Commerce::getInstance();
+
     // Create a reusable order for update tests
     $order = new \craft\commerce\elements\Order();
-    $order->number = \craft\commerce\elements\Order::generateCartNumber();
+    $order->number = $commerce->getCarts()->generateCartNumber();
     $order->currency = 'USD';
-    $order->email = 'update-test@example.com';
 
     $success = Craft::$app->getElements()->saveElement($order);
     expect($success)->toBeTrue();

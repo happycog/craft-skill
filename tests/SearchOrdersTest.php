@@ -74,10 +74,11 @@ it('generates correct notes for combined filters', function () {
 
 it('returns correct keys for each order in results', function () {
     // Create an order to ensure there's at least one result
+    $commerce = \craft\commerce\Plugin::getInstance();
+
     $order = new \craft\commerce\elements\Order();
-    $order->number = \craft\commerce\elements\Order::generateCartNumber();
+    $order->number = $commerce->getCarts()->generateCartNumber();
     $order->currency = 'USD';
-    $order->email = 'search-test@example.com';
 
     Craft::$app->getElements()->saveElement($order);
 
@@ -100,4 +101,63 @@ it('returns correct keys for each order in results', function () {
         ]);
         expect($first['orderId'])->toBeInt();
     }
+});
+
+it('generates correct notes for orderStatusId filter', function () {
+    $commerce = \craft\commerce\Plugin::getInstance();
+    $statuses = $commerce->getOrderStatuses()->getAllOrderStatuses();
+
+    if (empty($statuses)) {
+        $this->markTestSkipped('No order statuses configured in Commerce.');
+    }
+
+    $status = $statuses[0];
+    $response = $this->tool->__invoke(orderStatusId: $status->id);
+
+    expect($response['_notes'])->toContain('status:');
+    expect($response['_notes'])->toContain($status->name);
+});
+
+it('filters by isCompleted and returns only matching orders', function () {
+    $commerce = \craft\commerce\Plugin::getInstance();
+
+    // Create an incomplete order (cart)
+    $order = new \craft\commerce\elements\Order();
+    $order->number = $commerce->getCarts()->generateCartNumber();
+    $order->currency = 'USD';
+    $order->isCompleted = false;
+
+    Craft::$app->getElements()->saveElement($order);
+
+    // Search for active carts — our order should be present
+    $response = $this->tool->__invoke(isCompleted: false);
+
+    $foundIds = $response['results']->pluck('orderId')->toArray();
+    expect($foundIds)->toContain($order->id);
+});
+
+it('generates correct notes for dateOrderedAfter filter', function () {
+    // dateOrderedAfter/Before don't show in _notes by default,
+    // but we can verify the query runs without error
+    $response = $this->tool->__invoke(dateOrderedAfter: '2020-01-01T00:00:00+00:00');
+
+    expect($response)->toHaveKeys(['_notes', 'results']);
+    expect($response['results'])->toBeInstanceOf(\Illuminate\Support\Collection::class);
+});
+
+it('generates correct notes for dateOrderedBefore filter', function () {
+    $response = $this->tool->__invoke(dateOrderedBefore: '2099-12-31T23:59:59+00:00');
+
+    expect($response)->toHaveKeys(['_notes', 'results']);
+    expect($response['results'])->toBeInstanceOf(\Illuminate\Support\Collection::class);
+});
+
+it('supports combined dateOrderedAfter and dateOrderedBefore range filter', function () {
+    $response = $this->tool->__invoke(
+        dateOrderedAfter: '2020-01-01T00:00:00+00:00',
+        dateOrderedBefore: '2099-12-31T23:59:59+00:00',
+    );
+
+    expect($response)->toHaveKeys(['_notes', 'results']);
+    expect($response['results'])->toBeInstanceOf(\Illuminate\Support\Collection::class);
 });

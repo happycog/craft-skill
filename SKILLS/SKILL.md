@@ -84,6 +84,7 @@ All API endpoints:
 - [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability
 
 ## Commerce: Products
+- [create_product](create_product.md) - `POST /api/products` - Create product with type, title, SKU, price, and custom fields
 - [get_product](get_product.md) - `GET /api/products/<id>` - Retrieve product with variants, pricing, and custom fields
 - [get_products](get_products.md) - `GET /api/products/search` - Search/filter products by type/status/query
 - [update_product](update_product.md) - `PUT /api/products/<id>` - Update product attributes and custom fields
@@ -91,10 +92,13 @@ All API endpoints:
 - [get_product_types](get_product_types.md) - `GET /api/product-types` - List available Commerce product types
 
 ## Commerce: Variants
+- [create_variant](create_variant.md) - `POST /api/variants` - Add variant to existing product with SKU, price, and attributes
 - [get_variant](get_variant.md) - `GET /api/variants/<id>` - Retrieve variant with pricing, inventory, and dimensions
 - [update_variant](update_variant.md) - `PUT /api/variants/<id>` - Update variant pricing, SKU, stock, and fields
+- [delete_variant](delete_variant.md) - `DELETE /api/variants/<id>` - Delete variant (soft/permanent)
 
 ## Commerce: Orders
 - [get_order](get_order.md) - `GET /api/orders/<id>` - Retrieve order with line items, totals, and addresses
 - [search_orders](search_orders.md) - `GET /api/orders/search` - Search/filter orders by email/status/date/payment
 - [update_order](update_order.md) - `PUT /api/orders/<id>` - Update order status or message
+- [get_order_statuses](get_order_statuses.md) - `GET /api/order-statuses` - List all order statuses with IDs/handles/colors

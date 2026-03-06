@@ -25,9 +25,10 @@ beforeEach(function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-UPD-001';
-    $variant->price = 19.99;
+    $variant->basePrice = 19.99;
     $variant->isDefault = true;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     $success = Craft::$app->getElements()->saveElement($product);
     expect($success)->toBeTrue();
@@ -109,4 +110,39 @@ it('handles empty update gracefully', function () {
 
     expect($response['productId'])->toBe($this->product->id);
     expect($response['title'])->toBe('Original Product Title');
+});
+
+it('can update product postDate', function () {
+    $response = $this->tool->__invoke(
+        productId: $this->product->id,
+        postDate: '2025-06-15T10:00:00+00:00',
+    );
+
+    $updated = Craft::$app->getElements()->getElementById($this->product->id, \craft\commerce\elements\Product::class);
+    expect($updated->postDate)->not->toBeNull();
+    expect($updated->postDate->format('Y-m-d'))->toBe('2025-06-15');
+});
+
+it('can update product expiryDate', function () {
+    $response = $this->tool->__invoke(
+        productId: $this->product->id,
+        expiryDate: '2030-12-31T23:59:59+00:00',
+    );
+
+    $updated = Craft::$app->getElements()->getElementById($this->product->id, \craft\commerce\elements\Product::class);
+    expect($updated->expiryDate)->not->toBeNull();
+    expect($updated->expiryDate->format('Y-m-d'))->toBe('2030-12-31');
+});
+
+it('can update multiple fields at once', function () {
+    $response = $this->tool->__invoke(
+        productId: $this->product->id,
+        title: 'Multi-Update Title',
+        slug: 'multi-update-slug',
+        enabled: false,
+    );
+
+    expect($response['title'])->toBe('Multi-Update Title');
+    expect($response['slug'])->toBe('multi-update-slug');
+    expect($response['status'])->toBe('disabled');
 });

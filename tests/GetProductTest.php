@@ -34,9 +34,10 @@ it('retrieves product details with expected structure', function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-GET-001';
-    $variant->price = 19.99;
+    $variant->basePrice = 19.99;
     $variant->isDefault = true;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     $success = Craft::$app->getElements()->saveElement($product);
     expect($success)->toBeTrue();
@@ -81,11 +82,11 @@ it('includes variant details in response', function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-VAR-001';
-    $variant->price = 29.99;
+    $variant->basePrice = 29.99;
     $variant->isDefault = true;
-    $variant->stock = 50;
     $variant->weight = 1.5;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     Craft::$app->getElements()->saveElement($product);
 
@@ -115,4 +116,91 @@ it('includes variant details in response', function () {
     expect($firstVariant['sku'])->toBe('TEST-VAR-001');
     expect($firstVariant['price'])->toBe(29.99);
     expect($firstVariant['isDefault'])->toBeTrue();
+});
+
+it('returns postDate and null expiryDate by default', function () {
+    $commerce = \craft\commerce\Plugin::getInstance();
+    $productTypes = $commerce->getProductTypes()->getAllProductTypes();
+
+    if (empty($productTypes)) {
+        $this->markTestSkipped('No product types configured in Commerce.');
+    }
+
+    $product = new \craft\commerce\elements\Product();
+    $product->typeId = $productTypes[0]->id;
+    $product->title = 'Date Test Product';
+    $product->enabled = true;
+
+    $variant = new \craft\commerce\elements\Variant();
+    $variant->sku = 'TEST-DATE-001';
+    $variant->basePrice = 10.00;
+    $variant->isDefault = true;
+    $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
+
+    Craft::$app->getElements()->saveElement($product);
+
+    $response = $this->tool->__invoke(productId: $product->id);
+
+    // postDate should be set automatically on save
+    expect($response['postDate'])->toBeString();
+    // expiryDate should be null unless explicitly set
+    expect($response['expiryDate'])->toBeNull();
+});
+
+it('returns product with explicit expiryDate', function () {
+    $commerce = \craft\commerce\Plugin::getInstance();
+    $productTypes = $commerce->getProductTypes()->getAllProductTypes();
+
+    if (empty($productTypes)) {
+        $this->markTestSkipped('No product types configured in Commerce.');
+    }
+
+    $product = new \craft\commerce\elements\Product();
+    $product->typeId = $productTypes[0]->id;
+    $product->title = 'Expiring Product';
+    $product->enabled = true;
+    $product->expiryDate = new \DateTime('2030-12-31T23:59:59+00:00');
+
+    $variant = new \craft\commerce\elements\Variant();
+    $variant->sku = 'TEST-EXPIRY-001';
+    $variant->basePrice = 15.00;
+    $variant->isDefault = true;
+    $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
+
+    Craft::$app->getElements()->saveElement($product);
+
+    $response = $this->tool->__invoke(productId: $product->id);
+
+    expect($response['expiryDate'])->toBeString();
+    expect($response['expiryDate'])->toContain('2030-12-31');
+});
+
+it('returns customFields key in response', function () {
+    $commerce = \craft\commerce\Plugin::getInstance();
+    $productTypes = $commerce->getProductTypes()->getAllProductTypes();
+
+    if (empty($productTypes)) {
+        $this->markTestSkipped('No product types configured in Commerce.');
+    }
+
+    $product = new \craft\commerce\elements\Product();
+    $product->typeId = $productTypes[0]->id;
+    $product->title = 'Custom Fields Test Product';
+    $product->enabled = true;
+
+    $variant = new \craft\commerce\elements\Variant();
+    $variant->sku = 'TEST-FIELDS-001';
+    $variant->basePrice = 20.00;
+    $variant->isDefault = true;
+    $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
+
+    Craft::$app->getElements()->saveElement($product);
+
+    $response = $this->tool->__invoke(productId: $product->id);
+
+    // customFields should be an array (even if empty when no custom fields are configured)
+    expect($response['customFields'])->toBeArray();
 });

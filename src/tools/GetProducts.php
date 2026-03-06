@@ -81,8 +81,8 @@ class GetProducts
                     'slug' => $product->slug,
                     'status' => $product->getStatus(),
                     'typeId' => $product->typeId,
-                    'defaultSku' => $product->getDefaultSku(),
-                    'defaultPrice' => $product->getDefaultPrice(),
+                    'defaultSku' => $product->defaultSku,
+                    'defaultPrice' => $product->defaultPrice,
                     'url' => ElementHelper::elementEditorUrl($product),
                 ];
             }),

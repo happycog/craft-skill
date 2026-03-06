@@ -31,9 +31,13 @@
         "class": "happycog\\craftmcp\\Plugin"
     },
     "require-dev": {
+        "craftcms/commerce": "^5.4",
         "markhuot/craft-pest-core": "dev-main",
         "phpstan/phpstan": "*",
         "craftcms/phpstan": "dev-main"
+    },
+    "replace": {
+        "ibericode/vat": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

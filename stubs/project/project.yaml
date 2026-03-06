@@ -1,31 +1,133 @@
+commerce:
+  gateways:
+    a1b2c3d4-0001-4000-8000-000000000001:
+      billingAddressCondition:
+        class: craft\elements\conditions\addresses\AddressCondition
+        conditionRules: []
+      handle: dummy
+      isFrontendEnabled: true
+      name: Dummy
+      orderCondition:
+        class: craft\commerce\elements\conditions\orders\OrderCondition
+        conditionRules: []
+      paymentType: purchase
+      settings: []
+      shippingAddressCondition:
+        class: craft\elements\conditions\addresses\AddressCondition
+        conditionRules: []
+      sortOrder: 99
+      type: craft\commerce\gateways\Dummy
+  orderStatuses:
+    a1b2c3d4-0004-4000-8000-000000000004:
+      color: green
+      default: true
+      description: ""
+      emails: []
+      handle: new
+      name: New
+      sortOrder: 1
+      store: a1b2c3d4-0002-4000-8000-000000000002
+  productTypes:
+    a1b2c3d4-0005-4000-8000-000000000005:
+      defaultPlacement: end
+      descriptionFormat: ""
+      enableVersioning: true
+      hasDimensions: false
+      hasProductTitleField: true
+      hasVariantTitleField: false
+      isStructure: false
+      maxLevels: null
+      maxVariants: 1
+      name: General
+      handle: general
+      productFieldLayouts:
+        a1b2c3d4-0006-4000-8000-000000000006:
+          tabs:
+            - elements: []
+              name: Content
+              uid: a1b2c3d4-0008-4000-8000-000000000008
+      productTitleFormat: ""
+      productTitleTranslationKeyFormat: null
+      productTitleTranslationMethod: site
+      propagationMethod: all
+      showSlugField: true
+      siteSettings:
+        08cf53bc-9c73-4602-aad2-ce7a0f84c80a:
+          enabledByDefault: true
+          hasUrls: true
+          template: ""
+          uriFormat: "products/{slug}"
+      skuFormat: ""
+      slugTranslationKeyFormat: null
+      slugTranslationMethod: site
+      variantFieldLayouts:
+        a1b2c3d4-0007-4000-8000-000000000007:
+          tabs:
+            - elements: []
+              name: Content
+              uid: a1b2c3d4-0009-4000-8000-000000000009
+      variantTitleFormat: "{product.title}"
+      variantTitleTranslationKeyFormat: null
+      variantTitleTranslationMethod: site
+  sitestores:
+    08cf53bc-9c73-4602-aad2-ce7a0f84c80a:
+      store: a1b2c3d4-0002-4000-8000-000000000002
+  stores:
+    a1b2c3d4-0002-4000-8000-000000000002:
+      allowCheckoutWithoutPayment: false
+      allowEmptyCartOnCheckout: false
+      allowPartialPaymentOnCheckout: false
+      autoSetCartShippingMethodOption: false
+      autoSetNewCartAddresses: false
+      autoSetPaymentSource: false
+      currency: USD
+      freeOrderPaymentStrategy: complete
+      handle: primary
+      minimumTotalPriceStrategy: default
+      name: Primary
+      orderReferenceFormat: "{{number[:7]}}"
+      primary: true
+      requireBillingAddressAtCheckout: false
+      requireShippingAddressAtCheckout: false
+      requireShippingMethodSelectionAtCheckout: false
+      sortOrder: 1
+      useBillingAddressForTax: false
+      validateOrganizationTaxIdAsVatId: false
 dateModified: 1755877515
 email:
   fromEmail: mark@markhuot.com
-  fromName: 'Craft MCP'
+  fromName: "Craft MCP"
   transportType: craft\mail\transportadapters\Sendmail
 fs:
   local:
     hasUrls: true
     name: Local
     settings:
-      path: '@webroot/uploads'
+      path: "@webroot/uploads"
     type: craft\fs\Local
     url: /uploads
 meta:
   __names__:
-    1f9526e6-4d44-4be8-92cd-a0cfb70068d7: 'Call to Action' # Call to Action
-    7d37625f-d2aa-4360-b455-6d18c157e09b: 'Content Builder' # Content Builder
-    08cf53bc-9c73-4602-aad2-ce7a0f84c80a: 'Craft MCP' # Craft MCP
+    1f9526e6-4d44-4be8-92cd-a0cfb70068d7: "Call to Action" # Call to Action
+    7d37625f-d2aa-4360-b455-6d18c157e09b: "Content Builder" # Content Builder
+    08cf53bc-9c73-4602-aad2-ce7a0f84c80a: "Craft MCP" # Craft MCP
     335d438b-81cf-4ec9-ad33-c9b7ba132834: Pages # Pages
     382d8072-8308-439f-9afd-b875b7ee9ecd: Heading # Heading
-    892e4ee8-6251-45a9-9ad9-04d29a9373e2: 'Craft MCP' # Craft MCP
+    892e4ee8-6251-45a9-9ad9-04d29a9373e2: "Craft MCP" # Craft MCP
     7790cda1-f85b-4b5c-89c0-f8e238766abf: Pages # Pages
     13160d5b-88a8-44a7-b6d0-4c2c68ec8ca1: Uploads # Uploads
-    20570e66-f61c-404f-943f-84834172db54: 'Plain Text' # Plain Text
+    20570e66-f61c-404f-943f-84834172db54: "Plain Text" # Plain Text
     becc7b32-bddb-48a6-baa7-187821980912: News # News
     c719c9ad-801a-4271-99c8-b44760c4e5f6: News # News
     df0b8488-6354-4289-8d3d-ba10a9650e2e: Body # Body
+    a1b2c3d4-0001-4000-8000-000000000001: Dummy # Dummy gateway
+    a1b2c3d4-0002-4000-8000-000000000002: Primary # Primary store
+    a1b2c3d4-0005-4000-8000-000000000005: General # General product type
 plugins:
+  commerce:
+    edition: pro
+    enabled: true
+    schemaVersion: 5.5.0.5
   skills:
     edition: standard
     enabled: true
@@ -33,8 +135,8 @@ plugins:
 system:
   edition: solo
   live: true
-  name: 'Craft MCP'
-  schemaVersion: 5.8.0.3
+  name: "Craft MCP"
+  schemaVersion: 5.9.0.8
   timeZone: America/Los_Angeles
 users:
   allowPublicRegistration: false

@@ -27,9 +27,10 @@ it('can soft delete a product (default behavior)', function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-DEL-SOFT';
-    $variant->price = 9.99;
+    $variant->basePrice = 9.99;
     $variant->isDefault = true;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     Craft::$app->getElements()->saveElement($product);
 
@@ -59,9 +60,10 @@ it('can permanently delete a product', function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-DEL-PERM';
-    $variant->price = 9.99;
+    $variant->basePrice = 9.99;
     $variant->isDefault = true;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     Craft::$app->getElements()->saveElement($product);
 
@@ -92,9 +94,10 @@ it('returns proper response format after deletion', function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-DEL-FMT';
-    $variant->price = 9.99;
+    $variant->basePrice = 9.99;
     $variant->isDefault = true;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     Craft::$app->getElements()->saveElement($product);
 
@@ -127,9 +130,10 @@ it('includes product type information in response', function () {
 
     $variant = new \craft\commerce\elements\Variant();
     $variant->sku = 'TEST-DEL-TYPE';
-    $variant->price = 9.99;
+    $variant->basePrice = 9.99;
     $variant->isDefault = true;
     $product->setVariants([$variant]);
+    $product->setDirtyAttributes(['variants']);
 
     Craft::$app->getElements()->saveElement($product);
 

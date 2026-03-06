@@ -31,9 +31,6 @@ class UpdateVariant
         /** Variant title. */
         ?string $title = null,
 
-        /** Current stock level. */
-        ?int $stock = null,
-
         /** Minimum purchase quantity. */
         ?int $minQty = null,
 
@@ -69,13 +66,10 @@ class UpdateVariant
             $variant->sku = $sku;
         }
         if ($price !== null) {
-            $variant->price = $price;
+            $variant->basePrice = $price;
         }
         if ($title !== null) {
             $variant->title = $title;
-        }
-        if ($stock !== null) {
-            $variant->stock = $stock;
         }
         if ($minQty !== null) {
             $variant->minQty = $minQty;
@@ -109,6 +103,9 @@ class UpdateVariant
             Craft::$app->getElements()->saveElement($variant),
             "Failed to save variant: " . implode(', ', $variant->getFirstErrors()),
         );
+
+        // Re-fetch to get fresh values (price getter uses cached _price that may be stale)
+        $variant = Craft::$app->getElements()->getElementById($variantId, Variant::class);
 
         $product = $variant->getOwner();
 
