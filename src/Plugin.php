@@ -67,5 +67,21 @@ class Plugin extends BasePlugin
 
         // Health check route
         $event->rules['GET ' . $apiPrefix . '/health'] = 'skills/health/index';
+
+        // Commerce: Product routes
+        $event->rules['GET ' . $apiPrefix . '/products/search'] = 'skills/products/search';
+        $event->rules['GET ' . $apiPrefix . '/products/<id>'] = 'skills/products/get';
+        $event->rules['PUT ' . $apiPrefix . '/products/<id>'] = 'skills/products/update';
+        $event->rules['DELETE ' . $apiPrefix . '/products/<id>'] = 'skills/products/delete';
+        $event->rules['GET ' . $apiPrefix . '/product-types'] = 'skills/products/types';
+
+        // Commerce: Variant routes
+        $event->rules['GET ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/get';
+        $event->rules['PUT ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/update';
+
+        // Commerce: Order routes
+        $event->rules['GET ' . $apiPrefix . '/orders/search'] = 'skills/orders/search';
+        $event->rules['GET ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/get';
+        $event->rules['PUT ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/update';
     }
 }

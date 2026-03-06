@@ -38,7 +38,17 @@ use happycog\craftmcp\tools\UpdateDraft;
 use happycog\craftmcp\tools\UpdateEntry;
 use happycog\craftmcp\tools\UpdateEntryType;
 use happycog\craftmcp\tools\UpdateField;
+use happycog\craftmcp\tools\UpdateOrder;
+use happycog\craftmcp\tools\UpdateProduct;
 use happycog\craftmcp\tools\UpdateSection;
+use happycog\craftmcp\tools\UpdateVariant;
+use happycog\craftmcp\tools\DeleteProduct;
+use happycog\craftmcp\tools\GetOrder;
+use happycog\craftmcp\tools\GetProduct;
+use happycog\craftmcp\tools\GetProducts;
+use happycog\craftmcp\tools\GetProductTypes;
+use happycog\craftmcp\tools\GetVariant;
+use happycog\craftmcp\tools\SearchOrders;
 
 /**
  * Centralized command-to-tool mapping.
@@ -106,6 +116,22 @@ class CommandMap
 
         // Health
         'health' => GetHealth::class,
+
+        // Commerce: Products
+        'products/get' => GetProduct::class,
+        'products/search' => GetProducts::class,
+        'products/update' => UpdateProduct::class,
+        'products/delete' => DeleteProduct::class,
+        'product-types/list' => GetProductTypes::class,
+
+        // Commerce: Variants
+        'variants/get' => GetVariant::class,
+        'variants/update' => UpdateVariant::class,
+
+        // Commerce: Orders
+        'orders/get' => GetOrder::class,
+        'orders/search' => SearchOrders::class,
+        'orders/update' => UpdateOrder::class,
     ];
 
     /**

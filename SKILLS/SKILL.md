@@ -1,6 +1,6 @@
 ---
 name: Craft CMS Skills
-description: Complete skill suite for managing Craft CMS content including sections, entry types, fields, entries, drafts, field layouts, and sites.
+description: Complete skill suite for managing Craft CMS content including sections, entry types, fields, entries, drafts, field layouts, sites, and Commerce products, variants, and orders.
 ---
 
 ## Important: Use this plugin, Not YAML Files
@@ -82,3 +82,19 @@ All API endpoints:
 
 ## System
 - [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability
+
+## Commerce: Products
+- [get_product](get_product.md) - `GET /api/products/<id>` - Retrieve product with variants, pricing, and custom fields
+- [get_products](get_products.md) - `GET /api/products/search` - Search/filter products by type/status/query
+- [update_product](update_product.md) - `PUT /api/products/<id>` - Update product attributes and custom fields
+- [delete_product](delete_product.md) - `DELETE /api/products/<id>` - Delete product (soft/permanent)
+- [get_product_types](get_product_types.md) - `GET /api/product-types` - List available Commerce product types
+
+## Commerce: Variants
+- [get_variant](get_variant.md) - `GET /api/variants/<id>` - Retrieve variant with pricing, inventory, and dimensions
+- [update_variant](update_variant.md) - `PUT /api/variants/<id>` - Update variant pricing, SKU, stock, and fields
+
+## Commerce: Orders
+- [get_order](get_order.md) - `GET /api/orders/<id>` - Retrieve order with line items, totals, and addresses
+- [search_orders](search_orders.md) - `GET /api/orders/search` - Search/filter orders by email/status/date/payment
+- [update_order](update_order.md) - `PUT /api/orders/<id>` - Update order status or message
