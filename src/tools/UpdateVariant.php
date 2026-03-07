@@ -9,6 +9,11 @@ use craft\helpers\ElementHelper;
 
 class UpdateVariant
 {
+    private function getVariantStock(Variant $variant): int
+    {
+        return $variant->getStock();
+    }
+
     /**
      * Update an existing Commerce product variant.
      *
@@ -106,6 +111,7 @@ class UpdateVariant
 
         // Re-fetch to get fresh values (price getter uses cached _price that may be stale)
         $variant = Craft::$app->getElements()->getElementById($variantId, Variant::class);
+        throw_unless($variant instanceof Variant, \RuntimeException::class, "Failed to reload variant with ID {$variantId} after update");
 
         $product = $variant->getOwner();
 
@@ -115,7 +121,7 @@ class UpdateVariant
             'title' => $variant->title,
             'sku' => $variant->sku,
             'price' => (float) $variant->price,
-            'stock' => $variant->stock,
+            'stock' => $this->getVariantStock($variant),
             'productId' => $product instanceof Product ? $product->id : null,
             'url' => $product instanceof Product ? ElementHelper::elementEditorUrl($product) : null,
         ];

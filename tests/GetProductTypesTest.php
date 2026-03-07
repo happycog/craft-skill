@@ -28,15 +28,38 @@ it('returns correct keys for each product type', function () {
             'id',
             'name',
             'handle',
+            'fieldLayoutId',
+            'variantFieldLayoutId',
             'hasDimensions',
+            'hasProductTitleField',
+            'productTitleFormat',
             'hasVariantTitleField',
+            'variantTitleFormat',
+            'skuFormat',
             'maxVariants',
+            'siteSettings',
         ]);
         expect($type['id'])->toBeInt();
         expect($type['name'])->toBeString();
         expect($type['handle'])->toBeString();
         expect($type['hasDimensions'])->toBeBool();
         expect($type['maxVariants'])->toBeInt();
+        expect($type['siteSettings'])->toBeArray();
+    }
+});
+
+it('returns site settings for each product type', function () {
+    $response = $this->tool->__invoke();
+
+    if (!empty($response['productTypes'])) {
+        $type = $response['productTypes'][0];
+        expect($type['siteSettings'])->not->toBeEmpty();
+
+        $siteSetting = $type['siteSettings'][0];
+        expect($siteSetting)->toHaveKeys(['siteId', 'hasUrls', 'uriFormat', 'template', 'enabledByDefault']);
+        expect($siteSetting['siteId'])->toBeInt();
+        expect($siteSetting['hasUrls'])->toBeBool();
+        expect($siteSetting['enabledByDefault'])->toBeBool();
     }
 });
 

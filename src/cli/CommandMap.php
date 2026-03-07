@@ -40,16 +40,20 @@ use happycog\craftmcp\tools\UpdateEntryType;
 use happycog\craftmcp\tools\UpdateField;
 use happycog\craftmcp\tools\UpdateOrder;
 use happycog\craftmcp\tools\UpdateProduct;
+use happycog\craftmcp\tools\UpdateProductType;
 use happycog\craftmcp\tools\UpdateSection;
 use happycog\craftmcp\tools\UpdateVariant;
 use happycog\craftmcp\tools\CreateProduct;
+use happycog\craftmcp\tools\CreateProductType;
 use happycog\craftmcp\tools\CreateVariant;
 use happycog\craftmcp\tools\DeleteProduct;
+use happycog\craftmcp\tools\DeleteProductType;
 use happycog\craftmcp\tools\DeleteVariant;
 use happycog\craftmcp\tools\GetOrder;
 use happycog\craftmcp\tools\GetOrderStatuses;
 use happycog\craftmcp\tools\GetProduct;
 use happycog\craftmcp\tools\GetProducts;
+use happycog\craftmcp\tools\GetProductType;
 use happycog\craftmcp\tools\GetProductTypes;
 use happycog\craftmcp\tools\GetVariant;
 use happycog\craftmcp\tools\GetStore;
@@ -131,6 +135,10 @@ class CommandMap
         'products/update' => UpdateProduct::class,
         'products/delete' => DeleteProduct::class,
         'product-types/list' => GetProductTypes::class,
+        'product-types/get' => GetProductType::class,
+        'product-types/create' => CreateProductType::class,
+        'product-types/update' => UpdateProductType::class,
+        'product-types/delete' => DeleteProductType::class,
 
         // Commerce: Variants
         'variants/create' => CreateVariant::class,

@@ -90,6 +90,10 @@ All API endpoints:
 - [update_product](update_product.md) - `PUT /api/products/<id>` - Update product attributes and custom fields
 - [delete_product](delete_product.md) - `DELETE /api/products/<id>` - Delete product (soft/permanent)
 - [get_product_types](get_product_types.md) - `GET /api/product-types` - List available Commerce product types
+- [get_product_type](get_product_type.md) - `GET /api/product-types/<id>` - Retrieve product type with field layouts and site settings
+- [create_product_type](create_product_type.md) - `POST /api/product-types` - Create product type with title, variant, layout, and site settings
+- [update_product_type](update_product_type.md) - `PUT /api/product-types/<id>` - Update product type configuration and site settings
+- [delete_product_type](delete_product_type.md) - `DELETE /api/product-types/<id>` - Delete product type with impact analysis and force protection
 
 ## Commerce: Variants
 - [create_variant](create_variant.md) - `POST /api/variants` - Add variant to existing product with SKU, price, and attributes

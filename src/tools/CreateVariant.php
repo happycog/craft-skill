@@ -114,8 +114,12 @@ class CreateVariant
 
         // Re-fetch to get the saved variant with its ID
         $freshProduct = Craft::$app->getElements()->getElementById($productId, Product::class);
+        throw_unless($freshProduct instanceof Product, \RuntimeException::class, "Failed to reload product with ID {$productId} after creating variant");
+
         $savedVariants = $freshProduct->getVariants()->all();
         $newVariant = end($savedVariants);
+
+        throw_unless($newVariant instanceof Variant, \RuntimeException::class, 'Failed to determine the saved variant after creating it');
 
         return [
             '_notes' => 'The variant was successfully created.',
@@ -123,7 +127,7 @@ class CreateVariant
             'title' => $newVariant->title,
             'sku' => $newVariant->sku,
             'price' => (float) $newVariant->price,
-            'stock' => $newVariant->stock,
+            'stock' => $newVariant->getStock(),
             'productId' => $freshProduct->id,
             'productTitle' => $freshProduct->title,
             'url' => ElementHelper::elementEditorUrl($freshProduct),

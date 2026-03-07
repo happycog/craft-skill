@@ -270,6 +270,10 @@ All tools from the HTTP API are available via CLI. Common operations include:
 - `products/update <id>` - Update product
 - `products/delete <id>` - Delete product
 - `product-types/list` - List product types
+- `product-types/get <id>` - Get product type by ID with field layouts
+- `product-types/create` - Create product type
+- `product-types/update <id>` - Update product type
+- `product-types/delete <id>` - Delete product type
 
 ### Commerce: Variants
 - `variants/create` - Create variant for a product

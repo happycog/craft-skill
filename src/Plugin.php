@@ -75,6 +75,10 @@ class Plugin extends BasePlugin
         $event->rules['PUT ' . $apiPrefix . '/products/<id>'] = 'skills/products/update';
         $event->rules['DELETE ' . $apiPrefix . '/products/<id>'] = 'skills/products/delete';
         $event->rules['GET ' . $apiPrefix . '/product-types'] = 'skills/products/types';
+        $event->rules['POST ' . $apiPrefix . '/product-types'] = 'skills/products/create-type';
+        $event->rules['GET ' . $apiPrefix . '/product-types/<id>'] = 'skills/products/get-type';
+        $event->rules['PUT ' . $apiPrefix . '/product-types/<id>'] = 'skills/products/update-type';
+        $event->rules['DELETE ' . $apiPrefix . '/product-types/<id>'] = 'skills/products/delete-type';
 
         // Commerce: Variant routes
         $event->rules['POST ' . $apiPrefix . '/variants'] = 'skills/variants/create';

@@ -5,6 +5,7 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
+use craft\commerce\models\ProductType;
 use craft\commerce\Plugin as Commerce;
 use craft\helpers\ElementHelper;
 
@@ -55,7 +56,7 @@ class CreateProduct
         throw_unless($commerce, 'Craft Commerce is not installed or enabled.');
 
         $productType = $commerce->getProductTypes()->getProductTypeById($typeId);
-        throw_unless($productType, \InvalidArgumentException::class, "Product type with ID {$typeId} not found");
+        throw_unless($productType instanceof ProductType, \InvalidArgumentException::class, "Product type with ID {$typeId} not found");
 
         $product = new Product();
         $product->typeId = $typeId;

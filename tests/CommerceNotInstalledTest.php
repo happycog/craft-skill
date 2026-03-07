@@ -12,14 +12,18 @@
  */
 
 use happycog\craftmcp\tools\CreateProduct;
+use happycog\craftmcp\tools\CreateProductType;
+use happycog\craftmcp\tools\DeleteProductType;
 use happycog\craftmcp\tools\GetOrder;
 use happycog\craftmcp\tools\GetOrderStatuses;
 use happycog\craftmcp\tools\GetProducts;
+use happycog\craftmcp\tools\GetProductType;
 use happycog\craftmcp\tools\GetProductTypes;
 use happycog\craftmcp\tools\GetStore;
 use happycog\craftmcp\tools\GetStores;
 use happycog\craftmcp\tools\SearchOrders;
 use happycog\craftmcp\tools\UpdateOrder;
+use happycog\craftmcp\tools\UpdateProductType;
 use happycog\craftmcp\tools\UpdateStore;
 
 beforeEach(function () {
@@ -69,6 +73,19 @@ it('GetProductTypes works when Commerce is installed', function () {
     expect($response)->toHaveKey('productTypes');
 });
 
+it('GetProductType works when Commerce is installed', function () {
+    $tool = Craft::$container->get(GetProductType::class);
+    $commerce = \craft\commerce\Plugin::getInstance();
+    $productTypes = $commerce->getProductTypes()->getAllProductTypes();
+
+    if (empty($productTypes)) {
+        $this->markTestSkipped('No product types configured in Commerce.');
+    }
+
+    $response = $tool->__invoke(productTypeId: $productTypes[0]->id);
+    expect($response)->toHaveKey('id');
+});
+
 it('GetOrderStatuses works when Commerce is installed', function () {
     $tool = Craft::$container->get(GetOrderStatuses::class);
     $response = $tool->__invoke();
@@ -105,6 +122,42 @@ it('CreateProduct does not throw Commerce guard when Commerce is installed', fun
     }
 });
 
+it('CreateProductType does not throw Commerce guard when Commerce is installed', function () {
+    $tool = Craft::$container->get(CreateProductType::class);
+
+    try {
+        $tool->__invoke(name: 'Guard Test Type', handle: 'guardTestType' . random_int(10000, 99999));
+    } catch (\RuntimeException $e) {
+        expect($e->getMessage())->not->toBe('Craft Commerce is not installed or enabled.');
+    } catch (\Throwable $e) {
+        expect(true)->toBeTrue();
+    }
+});
+
+it('UpdateProductType does not throw Commerce guard when Commerce is installed', function () {
+    $tool = Craft::$container->get(UpdateProductType::class);
+
+    try {
+        $tool->__invoke(productTypeId: 99999);
+    } catch (\RuntimeException $e) {
+        expect($e->getMessage())->not->toBe('Craft Commerce is not installed or enabled.');
+    } catch (\Throwable $e) {
+        expect(true)->toBeTrue();
+    }
+});
+
+it('DeleteProductType does not throw Commerce guard when Commerce is installed', function () {
+    $tool = Craft::$container->get(DeleteProductType::class);
+
+    try {
+        $tool->__invoke(productTypeId: 99999);
+    } catch (\RuntimeException $e) {
+        expect($e->getMessage())->not->toBe('Craft Commerce is not installed or enabled.');
+    } catch (\Throwable $e) {
+        expect(true)->toBeTrue();
+    }
+});
+
 it('GetOrder does not throw Commerce guard when Commerce is installed', function () {
     $tool = Craft::$container->get(GetOrder::class);
 
@@ -136,6 +189,10 @@ it('all Commerce tool classes are resolvable from container', function () {
         GetStore::class,
         UpdateStore::class,
         GetProductTypes::class,
+        GetProductType::class,
+        CreateProductType::class,
+        UpdateProductType::class,
+        DeleteProductType::class,
         GetOrderStatuses::class,
         GetProducts::class,
         SearchOrders::class,

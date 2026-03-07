@@ -50,7 +50,7 @@ class GetOrder
 
         // Build adjustments (discounts, shipping, tax, etc.)
         $adjustments = [];
-        foreach ($order->getAdjustments() as $adjustment) {
+        foreach ($order->getAdjustments() ?? [] as $adjustment) {
             $adjustments[] = [
                 'id' => $adjustment->id,
                 'type' => $adjustment->type,

@@ -9,6 +9,11 @@ use craft\helpers\ElementHelper;
 
 class GetVariant
 {
+    private function getVariantStock(Variant $variant): int
+    {
+        return $variant->getStock();
+    }
+
     /**
      * Get detailed information about a single Commerce product variant by ID.
      *
@@ -34,7 +39,7 @@ class GetVariant
             'price' => (float) $variant->price,
             'isDefault' => $variant->isDefault,
             'sortOrder' => $variant->sortOrder,
-            'stock' => $variant->stock,
+            'stock' => $this->getVariantStock($variant),
             'minQty' => $variant->minQty,
             'maxQty' => $variant->maxQty,
             'weight' => $variant->weight,
