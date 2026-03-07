@@ -6,7 +6,6 @@ namespace happycog\craftmcp\cli;
 
 use function count;
 use function is_array;
-use function is_numeric;
 use function json_decode;
 use function parse_str;
 use function preg_match;
@@ -309,12 +308,17 @@ class ArgumentParser
     }
 
     /**
-     * Parse a scalar value (bool, int, or string).
+     * Parse a scalar value (bool or string).
+     *
+     * Numeric strings are intentionally kept as strings. Valinor's
+     * allowScalarValueCasting() handles string-to-int conversion when
+     * the target parameter expects an int, which avoids type mismatches
+     * when a numeric string is passed to a parameter expecting string|null.
      *
      * @param string $value The value to parse
-     * @return bool|int|string The parsed scalar value
+     * @return bool|string The parsed scalar value
      */
-    private function parseScalar(string $value): bool|int|string
+    private function parseScalar(string $value): bool|string
     {
         // Check for boolean
         if ($value === 'true') {
@@ -324,12 +328,7 @@ class ArgumentParser
             return false;
         }
 
-        // Check for integer
-        if (is_numeric($value) && (string) (int) $value === $value) {
-            return (int) $value;
-        }
-
-        // Return as string
+        // Return as string — Valinor handles int casting when needed
         return $value;
     }
 
