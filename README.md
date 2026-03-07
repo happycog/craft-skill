@@ -25,6 +25,10 @@ By adding this skill to Claude, you transform your Craft CMS site into an AI-acc
 - **Draft Support**: Create, update, and apply drafts for content workflows
 - **Asset Management**: Upload, update, and manage assets and volumes
 - **Site Information**: Access multi-site configuration details
+- **Commerce: Products**: Create, read, update, and delete products with variant support
+- **Commerce: Variants**: Manage product variants with pricing, inventory, and dimensions
+- **Commerce: Orders**: Search and manage orders with status updates
+- **Commerce: Stores**: View and configure store settings, checkout behavior, and pricing strategies
 
 ## Installation
 
@@ -258,6 +262,31 @@ All tools from the HTTP API are available via CLI. Common operations include:
 - `field-layouts/create` - Create field layout
 - `field-layouts/get` - Get field layout
 - `field-layouts/update <id>` - Update field layout
+
+### Commerce: Products
+- `products/create` - Create new product
+- `products/get <id>` - Get product by ID
+- `products/search` - Search/filter products
+- `products/update <id>` - Update product
+- `products/delete <id>` - Delete product
+- `product-types/list` - List product types
+
+### Commerce: Variants
+- `variants/create` - Create variant for a product
+- `variants/get <id>` - Get variant by ID
+- `variants/update <id>` - Update variant
+- `variants/delete <id>` - Delete variant
+
+### Commerce: Orders
+- `orders/get <id>` - Get order by ID
+- `orders/search` - Search/filter orders
+- `orders/update <id>` - Update order status
+- `order-statuses/list` - List order statuses
+
+### Commerce: Stores
+- `stores/list` - List all stores with configuration
+- `stores/get <id>` - Get store by ID
+- `stores/update <id>` - Update store settings
 
 For detailed documentation on each tool, see the [SKILLS documentation](./SKILLS/).
 
