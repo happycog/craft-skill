@@ -87,5 +87,10 @@ class Plugin extends BasePlugin
         $event->rules['GET ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/get';
         $event->rules['PUT ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/update';
         $event->rules['GET ' . $apiPrefix . '/order-statuses'] = 'skills/orders/statuses';
+
+        // Commerce: Store routes
+        $event->rules['GET ' . $apiPrefix . '/stores'] = 'skills/stores/list';
+        $event->rules['GET ' . $apiPrefix . '/stores/<id>'] = 'skills/stores/get';
+        $event->rules['PUT ' . $apiPrefix . '/stores/<id>'] = 'skills/stores/update';
     }
 }

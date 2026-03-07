@@ -52,7 +52,10 @@ use happycog\craftmcp\tools\GetProduct;
 use happycog\craftmcp\tools\GetProducts;
 use happycog\craftmcp\tools\GetProductTypes;
 use happycog\craftmcp\tools\GetVariant;
+use happycog\craftmcp\tools\GetStore;
+use happycog\craftmcp\tools\GetStores;
 use happycog\craftmcp\tools\SearchOrders;
+use happycog\craftmcp\tools\UpdateStore;
 
 /**
  * Centralized command-to-tool mapping.
@@ -140,6 +143,11 @@ class CommandMap
         'orders/search' => SearchOrders::class,
         'orders/update' => UpdateOrder::class,
         'order-statuses/list' => GetOrderStatuses::class,
+
+        // Commerce: Stores
+        'stores/list' => GetStores::class,
+        'stores/get' => GetStore::class,
+        'stores/update' => UpdateStore::class,
     ];
 
     /**

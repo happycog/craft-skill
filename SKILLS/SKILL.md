@@ -102,3 +102,8 @@ All API endpoints:
 - [search_orders](search_orders.md) - `GET /api/orders/search` - Search/filter orders by email/status/date/payment
 - [update_order](update_order.md) - `PUT /api/orders/<id>` - Update order status or message
 - [get_order_statuses](get_order_statuses.md) - `GET /api/order-statuses` - List all order statuses with IDs/handles/colors
+
+## Commerce: Stores
+- [get_stores](get_stores.md) - `GET /api/stores` - List all stores with checkout/payment/tax configuration
+- [get_store](get_store.md) - `GET /api/stores/<id>` - Retrieve store with full configuration details
+- [update_store](update_store.md) - `PUT /api/stores/<id>` - Update store checkout, payment, and pricing settings

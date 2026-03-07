@@ -183,7 +183,8 @@ try {
     // Create Valinor mapper for parameter validation
     $mapperBuilder = (new \CuyZ\Valinor\MapperBuilder())
         ->allowPermissiveTypes()
-        ->allowSuperfluousKeys();
+        ->allowSuperfluousKeys()
+        ->allowScalarValueCasting();
 
     $mapper = $mapperBuilder->argumentsMapper();
 
