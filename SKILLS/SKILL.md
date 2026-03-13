@@ -1,6 +1,6 @@
 ---
 name: Craft CMS Skills
-description: Complete skill suite for managing Craft CMS content including sections, entry types, fields, entries, drafts, field layouts, sites, and Commerce products, variants, and orders.
+description: Complete skill suite for managing Craft CMS content including users, addresses, sections, entry types, fields, entries, drafts, field layouts, sites, and Commerce products, variants, and orders.
 ---
 
 ## Important: Use this plugin, Not YAML Files
@@ -87,6 +87,22 @@ All API endpoints:
 - [update_address](update_address.md) - `PUT /api/addresses/<id>` - Update address attributes and custom fields
 - [delete_address](delete_address.md) - `DELETE /api/addresses/<id>` - Delete address (soft/permanent)
 - [get_address_field_layout](get_address_field_layout.md) - `GET /api/addresses/field-layout` - Retrieve the single global address field layout
+
+## Users
+- [get_users](get_users.md) - `GET /api/users` - List/search users by query, identity fields, status, and optionally group
+- [get_user](get_user.md) - `GET /api/users/<id>` - Retrieve a user by ID, email, or username
+- [create_user](create_user.md) - `POST /api/users` - Create a user with native attributes and custom fields
+- [get_available_permissions](get_available_permissions.md) - `GET /api/users/permissions` - List all known permissions plus custom stored permission names
+- [update_user](update_user.md) - `PUT /api/users/<id>` - Update a user by ID, email, or username
+- [delete_user](delete_user.md) - `DELETE /api/users/<id>` - Delete a user by ID, email, or username
+- [get_user_field_layout](get_user_field_layout.md) - `GET /api/users/field-layout` - Retrieve the single global user field layout
+
+## User Groups
+- [get_user_groups](get_user_groups.md) - `GET /api/user-groups` - List user groups and their permissions
+- [get_user_group](get_user_group.md) - `GET /api/user-groups/<id>` - Retrieve a user group by ID or handle
+- [create_user_group](create_user_group.md) - `POST /api/user-groups` - Create a user group and set permissions
+- [update_user_group](update_user_group.md) - `PUT /api/user-groups/<id>` - Update a user group and its permissions
+- [delete_user_group](delete_user_group.md) - `DELETE /api/user-groups/<id>` - Delete a user group by ID or handle
 
 ## System
 - [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability

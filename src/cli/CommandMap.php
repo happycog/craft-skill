@@ -16,12 +16,16 @@ use happycog\craftmcp\tools\CreateEntryType;
 use happycog\craftmcp\tools\CreateField;
 use happycog\craftmcp\tools\CreateFieldLayout;
 use happycog\craftmcp\tools\CreateSection;
+use happycog\craftmcp\tools\CreateUser;
+use happycog\craftmcp\tools\CreateUserGroup;
 use happycog\craftmcp\tools\DeleteAsset;
 use happycog\craftmcp\tools\DeleteAddress;
 use happycog\craftmcp\tools\DeleteEntry;
 use happycog\craftmcp\tools\DeleteEntryType;
 use happycog\craftmcp\tools\DeleteField;
 use happycog\craftmcp\tools\DeleteSection;
+use happycog\craftmcp\tools\DeleteUser;
+use happycog\craftmcp\tools\DeleteUserGroup;
 use happycog\craftmcp\tools\GetEntry;
 use happycog\craftmcp\tools\GetEntryTypes;
 use happycog\craftmcp\tools\GetAddress;
@@ -34,6 +38,12 @@ use happycog\craftmcp\tools\GetHealth;
 use happycog\craftmcp\tools\GetSection;
 use happycog\craftmcp\tools\GetSections;
 use happycog\craftmcp\tools\GetSites;
+use happycog\craftmcp\tools\GetAvailablePermissions;
+use happycog\craftmcp\tools\GetUser;
+use happycog\craftmcp\tools\GetUserFieldLayout;
+use happycog\craftmcp\tools\GetUserGroup;
+use happycog\craftmcp\tools\GetUserGroups;
+use happycog\craftmcp\tools\GetUsers;
 use happycog\craftmcp\tools\GetVolumes;
 use happycog\craftmcp\tools\MoveElementInFieldLayout;
 use happycog\craftmcp\tools\RemoveElementFromFieldLayout;
@@ -48,6 +58,8 @@ use happycog\craftmcp\tools\UpdateOrder;
 use happycog\craftmcp\tools\UpdateProduct;
 use happycog\craftmcp\tools\UpdateProductType;
 use happycog\craftmcp\tools\UpdateSection;
+use happycog\craftmcp\tools\UpdateUser;
+use happycog\craftmcp\tools\UpdateUserGroup;
 use happycog\craftmcp\tools\UpdateVariant;
 use happycog\craftmcp\tools\CreateProduct;
 use happycog\craftmcp\tools\CreateProductType;
@@ -91,6 +103,22 @@ class CommandMap
         'addresses/update' => UpdateAddress::class,
         'addresses/delete' => DeleteAddress::class,
         'addresses/field-layout' => GetAddressFieldLayout::class,
+
+        // Users
+        'users/list' => GetUsers::class,
+        'users/get' => GetUser::class,
+        'users/create' => CreateUser::class,
+        'users/permissions' => GetAvailablePermissions::class,
+        'users/update' => UpdateUser::class,
+        'users/delete' => DeleteUser::class,
+        'users/field-layout' => GetUserFieldLayout::class,
+
+        // User Groups
+        'user-groups/list' => GetUserGroups::class,
+        'user-groups/get' => GetUserGroup::class,
+        'user-groups/create' => CreateUserGroup::class,
+        'user-groups/update' => UpdateUserGroup::class,
+        'user-groups/delete' => DeleteUserGroup::class,
 
         // Drafts
         'drafts/apply' => ApplyDraft::class,

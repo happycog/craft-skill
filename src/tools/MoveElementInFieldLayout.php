@@ -8,10 +8,12 @@ use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\services\Fields;
 use happycog\craftmcp\actions\NormalizeAddressFieldLayoutForSave;
+use happycog\craftmcp\actions\NormalizeUserFieldLayoutForSave;
 use happycog\craftmcp\actions\ResolveFieldLayout;
 use happycog\craftmcp\actions\SaveFieldLayout;
 use happycog\craftmcp\exceptions\ModelSaveException;
 use happycog\craftmcp\tools\GetAddressFieldLayout;
+use happycog\craftmcp\tools\GetUserFieldLayout;
 
 class MoveElementInFieldLayout
 {
@@ -19,6 +21,7 @@ class MoveElementInFieldLayout
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
         protected NormalizeAddressFieldLayoutForSave $normalizeAddressFieldLayoutForSave,
+        protected NormalizeUserFieldLayoutForSave $normalizeUserFieldLayoutForSave,
         protected ResolveFieldLayout $resolveFieldLayout,
         protected SaveFieldLayout $saveFieldLayout,
     ) {
@@ -148,9 +151,11 @@ class MoveElementInFieldLayout
 
         $fieldLayout->setTabs($finalTabs);
 
-        $fieldLayoutToSave = $fieldLayoutId === GetAddressFieldLayout::PLACEHOLDER_ID
-            ? ($this->normalizeAddressFieldLayoutForSave)($fieldLayout)
-            : $fieldLayout;
+        $fieldLayoutToSave = match ($fieldLayoutId) {
+            GetAddressFieldLayout::PLACEHOLDER_ID => ($this->normalizeAddressFieldLayoutForSave)($fieldLayout),
+            GetUserFieldLayout::PLACEHOLDER_ID => ($this->normalizeUserFieldLayoutForSave)($fieldLayout),
+            default => $fieldLayout,
+        };
 
         throw_unless(($this->saveFieldLayout)($fieldLayoutToSave), ModelSaveException::class, $fieldLayoutToSave);
 

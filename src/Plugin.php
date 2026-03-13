@@ -73,6 +73,22 @@ class Plugin extends BasePlugin
         $event->rules['DELETE ' . $apiPrefix . '/addresses/<id>'] = 'skills/addresses/delete';
         $event->rules['GET ' . $apiPrefix . '/addresses/field-layout'] = 'skills/addresses/field-layout';
 
+        // User routes
+        $event->rules['GET ' . $apiPrefix . '/users'] = 'skills/users/list';
+        $event->rules['POST ' . $apiPrefix . '/users'] = 'skills/users/create';
+        $event->rules['GET ' . $apiPrefix . '/users/permissions'] = 'skills/users/permissions';
+        $event->rules['GET ' . $apiPrefix . '/users/<id>'] = 'skills/users/get';
+        $event->rules['PUT ' . $apiPrefix . '/users/<id>'] = 'skills/users/update';
+        $event->rules['DELETE ' . $apiPrefix . '/users/<id>'] = 'skills/users/delete';
+        $event->rules['GET ' . $apiPrefix . '/users/field-layout'] = 'skills/users/field-layout';
+
+        // User group routes
+        $event->rules['GET ' . $apiPrefix . '/user-groups'] = 'skills/user-groups/list';
+        $event->rules['POST ' . $apiPrefix . '/user-groups'] = 'skills/user-groups/create';
+        $event->rules['GET ' . $apiPrefix . '/user-groups/<id>'] = 'skills/user-groups/get';
+        $event->rules['PUT ' . $apiPrefix . '/user-groups/<id>'] = 'skills/user-groups/update';
+        $event->rules['DELETE ' . $apiPrefix . '/user-groups/<id>'] = 'skills/user-groups/delete';
+
         // Health check route
         $event->rules['GET ' . $apiPrefix . '/health'] = 'skills/health/index';
 

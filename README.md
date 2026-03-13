@@ -25,6 +25,8 @@ By adding this skill to Claude, you transform your Craft CMS site into an AI-acc
 - **Draft Support**: Create, update, and apply drafts for content workflows
 - **Asset Management**: Upload, update, and manage assets and volumes
 - **Address Management**: Create, read, update, and delete owner-backed addresses plus manage the global address field layout
+- **User Management**: Create, read, update, and delete users plus inspect the global user field layout
+- **User Group Management**: Manage user groups and permissions on Craft Pro installations
 - **Site Information**: Access multi-site configuration details
 - **Commerce: Products**: Create, read, update, and delete products with variant support
 - **Commerce: Variants**: Manage product variants with pricing, inventory, and dimensions
@@ -265,6 +267,22 @@ All tools from the HTTP API are available via CLI. Common operations include:
 - `addresses/update <id>` - Update address
 - `addresses/delete <id>` - Delete address
 - `addresses/field-layout` - Get the global address field layout
+
+### Users
+- `users/list` - List/search users
+- `users/get <id>` - Get user by ID
+- `users/create` - Create user
+- `users/permissions` - List available user permissions
+- `users/update <id>` - Update user
+- `users/delete <id>` - Delete user
+- `users/field-layout` - Get the global user field layout
+
+### User Groups
+- `user-groups/list` - List user groups
+- `user-groups/get <id>` - Get user group by ID
+- `user-groups/create` - Create user group
+- `user-groups/update <id>` - Update user group
+- `user-groups/delete <id>` - Delete user group
 
 ### Other
 - `sites/list` - List all sites

@@ -20,6 +20,7 @@ pest()->extend(
 )->in('./');
 
 require_once __DIR__ . '/AddressTestHelpers.php';
+require_once __DIR__ . '/UserTestHelpers.php';
 
 /*
 |--------------------------------------------------------------------------

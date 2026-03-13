@@ -60,8 +60,13 @@ function exitWithError(int $code, string|array $message, ?Throwable $exception =
         }
     }
 
-    fwrite(STDERR, json_encode($output) . PHP_EOL);
+    fwrite(STDERR, safeJsonEncode($output) . PHP_EOL);
     exit($code);
+}
+
+function safeJsonEncode(mixed $value): string
+{
+    return json_encode($value, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
 // If parsing failed completely, exit now with what verbosity we have
@@ -193,7 +198,7 @@ try {
     $result = $router->route($command, $positional, $flags);
 
     // Output successful result as JSON to stdout
-    echo json_encode($result) . PHP_EOL;
+    echo safeJsonEncode($result) . PHP_EOL;
     exit(0);
 } catch (\InvalidArgumentException $e) {
     // Unknown command or invalid arguments
