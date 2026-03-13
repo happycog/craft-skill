@@ -6,6 +6,10 @@ use Craft;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\services\Fields;
+use happycog\craftmcp\tools\GetAddressFieldLayout;
+use happycog\craftmcp\actions\NormalizeAddressFieldLayoutForSave;
+use happycog\craftmcp\actions\ResolveFieldLayout;
+use happycog\craftmcp\actions\SaveFieldLayout;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class AddTabToFieldLayout
@@ -13,6 +17,9 @@ class AddTabToFieldLayout
     public function __construct(
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
+        protected NormalizeAddressFieldLayoutForSave $normalizeAddressFieldLayoutForSave,
+        protected ResolveFieldLayout $resolveFieldLayout,
+        protected SaveFieldLayout $saveFieldLayout,
     ) {
     }
 
@@ -39,7 +46,7 @@ class AddTabToFieldLayout
          */
         array $position,
     ): array {
-        $fieldLayout = $this->fieldsService->getLayoutById($fieldLayoutId);
+        $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId);
         throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
 
         $positionType = $position['type'] ?? null;
@@ -101,7 +108,14 @@ class AddTabToFieldLayout
         }
 
         $fieldLayout->setTabs($newTabs);
-        throw_unless($this->fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
+
+        $fieldLayoutToSave = $fieldLayoutId === GetAddressFieldLayout::PLACEHOLDER_ID
+            ? ($this->normalizeAddressFieldLayoutForSave)($fieldLayout)
+            : $fieldLayout;
+
+        throw_unless(($this->saveFieldLayout)($fieldLayoutToSave), ModelSaveException::class, $fieldLayoutToSave);
+
+        $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId) ?? $fieldLayout;
 
         return [
             '_notes' => ['Tab added successfully', 'Review the field layout in the control panel'],

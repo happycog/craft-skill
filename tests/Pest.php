@@ -19,6 +19,8 @@ pest()->extend(
     RefreshesDatabase::class,
 )->in('./');
 
+require_once __DIR__ . '/AddressTestHelpers.php';
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

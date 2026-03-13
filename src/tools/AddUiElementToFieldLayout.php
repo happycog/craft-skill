@@ -3,6 +3,12 @@
 namespace happycog\craftmcp\tools;
 
 use craft\base\FieldLayoutElement;
+use craft\fieldlayoutelements\addresses\AddressField as AddressLayoutField;
+use craft\fieldlayoutelements\addresses\CountryCodeField;
+use craft\fieldlayoutelements\addresses\LabelField;
+use craft\fieldlayoutelements\addresses\LatLongField;
+use craft\fieldlayoutelements\addresses\OrganizationField;
+use craft\fieldlayoutelements\addresses\OrganizationTaxIdField;
 use craft\fieldlayoutelements\entries\EntryTitleField;
 use craft\fieldlayoutelements\Heading;
 use craft\fieldlayoutelements\HorizontalRule;
@@ -10,9 +16,13 @@ use craft\fieldlayoutelements\LineBreak;
 use craft\fieldlayoutelements\Markdown;
 use craft\fieldlayoutelements\Template;
 use craft\fieldlayoutelements\Tip;
+use craft\helpers\StringHelper;
 use craft\models\FieldLayout;
 use craft\services\Fields;
 use happycog\craftmcp\actions\ManageEntryTitleField;
+use happycog\craftmcp\actions\NormalizeAddressFieldLayoutForSave;
+use happycog\craftmcp\actions\ResolveFieldLayout;
+use happycog\craftmcp\actions\SaveFieldLayout;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class AddUiElementToFieldLayout
@@ -21,6 +31,9 @@ class AddUiElementToFieldLayout
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
         protected ManageEntryTitleField $manageEntryTitleField,
+        protected NormalizeAddressFieldLayoutForSave $normalizeAddressFieldLayoutForSave,
+        protected ResolveFieldLayout $resolveFieldLayout,
+        protected SaveFieldLayout $saveFieldLayout,
     ) {
     }
 
@@ -50,6 +63,12 @@ class AddUiElementToFieldLayout
          * - craft\fieldlayoutelements\Template
          * - craft\fieldlayoutelements\HorizontalRule
          * - craft\fieldlayoutelements\LineBreak
+         * - craft\fieldlayoutelements\addresses\LabelField
+         * - craft\fieldlayoutelements\addresses\CountryCodeField
+         * - craft\fieldlayoutelements\addresses\AddressField
+         * - craft\fieldlayoutelements\addresses\OrganizationField
+         * - craft\fieldlayoutelements\addresses\OrganizationTaxIdField
+         * - craft\fieldlayoutelements\addresses\LatLongField
          */
         string $elementType,
 
@@ -78,7 +97,7 @@ class AddUiElementToFieldLayout
          */
         array $config = [],
     ): array {
-        $fieldLayout = $this->fieldsService->getLayoutById($fieldLayoutId);
+        $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId);
         throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
 
         $validTypes = [
@@ -89,6 +108,12 @@ class AddUiElementToFieldLayout
             Template::class,
             HorizontalRule::class,
             LineBreak::class,
+            LabelField::class,
+            CountryCodeField::class,
+            AddressLayoutField::class,
+            OrganizationField::class,
+            OrganizationTaxIdField::class,
+            LatLongField::class,
         ];
         throw_unless(in_array($elementType, $validTypes, true), "Invalid element type '{$elementType}'");
 
@@ -115,9 +140,11 @@ class AddUiElementToFieldLayout
             }
         }
         throw_unless($targetTab !== null, "Tab with name '{$tabName}' not found. Create the tab first using add_tab_to_field_layout");
+        $existingElementUids = array_map(fn(FieldLayoutElement $element) => $element->uid, $targetTab->getElements());
 
         /** @var FieldLayoutElement $newElement */
         $newElement = new $elementType();
+        $newElement->uid ??= StringHelper::UUID();
         $this->applyConfig($newElement, $elementType, $config);
         $width !== null && $newElement->width = $width;
 
@@ -162,7 +189,11 @@ class AddUiElementToFieldLayout
         }
         $fieldLayout->setTabs($tabs);
 
-        throw_unless($this->fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
+        $fieldLayoutToSave = $fieldLayoutId === GetAddressFieldLayout::PLACEHOLDER_ID
+            ? ($this->normalizeAddressFieldLayoutForSave)($fieldLayout)
+            : $fieldLayout;
+
+        throw_unless(($this->saveFieldLayout)($fieldLayoutToSave), ModelSaveException::class, $fieldLayoutToSave);
 
         $notes = ['UI element added successfully'];
         
@@ -175,11 +206,32 @@ class AddUiElementToFieldLayout
         
         $notes[] = 'Review the field layout in the control panel';
 
+        $refreshedFieldLayout = ($this->resolveFieldLayout)($fieldLayoutId) ?? $fieldLayoutToSave;
+        $refreshedTab = null;
+        foreach ($refreshedFieldLayout->getTabs() as $tab) {
+            if ($tab->name === $tabName) {
+                $refreshedTab = $tab;
+                break;
+            }
+        }
+
+        $persistedElement = null;
+        if ($refreshedTab !== null) {
+            foreach ($refreshedTab->getElements() as $element) {
+                if (!in_array($element->uid, $existingElementUids, true)) {
+                    $persistedElement = $element;
+                    break;
+                }
+            }
+        }
+
+        $persistedElement ??= $newElement;
+
         return [
             '_notes' => $notes,
-            'fieldLayout' => $this->getFieldLayout->formatFieldLayout($fieldLayout),
+            'fieldLayout' => $this->getFieldLayout->formatFieldLayout($refreshedFieldLayout),
             'addedElement' => [
-                'uid' => $newElement->uid,
+                'uid' => $persistedElement->uid,
                 'type' => $elementType,
             ],
         ];

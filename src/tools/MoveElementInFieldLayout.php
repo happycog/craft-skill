@@ -7,13 +7,20 @@ use craft\base\FieldLayoutElement;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\services\Fields;
+use happycog\craftmcp\actions\NormalizeAddressFieldLayoutForSave;
+use happycog\craftmcp\actions\ResolveFieldLayout;
+use happycog\craftmcp\actions\SaveFieldLayout;
 use happycog\craftmcp\exceptions\ModelSaveException;
+use happycog\craftmcp\tools\GetAddressFieldLayout;
 
 class MoveElementInFieldLayout
 {
     public function __construct(
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
+        protected NormalizeAddressFieldLayoutForSave $normalizeAddressFieldLayoutForSave,
+        protected ResolveFieldLayout $resolveFieldLayout,
+        protected SaveFieldLayout $saveFieldLayout,
     ) {
     }
 
@@ -43,7 +50,7 @@ class MoveElementInFieldLayout
          */
         array $position,
     ): array {
-        $fieldLayout = $this->fieldsService->getLayoutById($fieldLayoutId);
+        $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId);
         throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
 
         $positionType = $position['type'] ?? null;
@@ -140,7 +147,14 @@ class MoveElementInFieldLayout
         }
 
         $fieldLayout->setTabs($finalTabs);
-        throw_unless($this->fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
+
+        $fieldLayoutToSave = $fieldLayoutId === GetAddressFieldLayout::PLACEHOLDER_ID
+            ? ($this->normalizeAddressFieldLayoutForSave)($fieldLayout)
+            : $fieldLayout;
+
+        throw_unless(($this->saveFieldLayout)($fieldLayoutToSave), ModelSaveException::class, $fieldLayoutToSave);
+
+        $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId) ?? $fieldLayoutToSave;
 
         return [
             '_notes' => ['Element moved successfully', 'Review the field layout in the control panel'],

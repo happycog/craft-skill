@@ -8,6 +8,7 @@ use happycog\craftmcp\tools\AddFieldToFieldLayout;
 use happycog\craftmcp\tools\AddTabToFieldLayout;
 use happycog\craftmcp\tools\AddUiElementToFieldLayout;
 use happycog\craftmcp\tools\ApplyDraft;
+use happycog\craftmcp\tools\CreateAddress;
 use happycog\craftmcp\tools\CreateAsset;
 use happycog\craftmcp\tools\CreateDraft;
 use happycog\craftmcp\tools\CreateEntry;
@@ -16,12 +17,16 @@ use happycog\craftmcp\tools\CreateField;
 use happycog\craftmcp\tools\CreateFieldLayout;
 use happycog\craftmcp\tools\CreateSection;
 use happycog\craftmcp\tools\DeleteAsset;
+use happycog\craftmcp\tools\DeleteAddress;
 use happycog\craftmcp\tools\DeleteEntry;
 use happycog\craftmcp\tools\DeleteEntryType;
 use happycog\craftmcp\tools\DeleteField;
 use happycog\craftmcp\tools\DeleteSection;
 use happycog\craftmcp\tools\GetEntry;
 use happycog\craftmcp\tools\GetEntryTypes;
+use happycog\craftmcp\tools\GetAddress;
+use happycog\craftmcp\tools\GetAddressFieldLayout;
+use happycog\craftmcp\tools\GetAddresses;
 use happycog\craftmcp\tools\GetFieldLayout;
 use happycog\craftmcp\tools\GetFields;
 use happycog\craftmcp\tools\GetFieldTypes;
@@ -34,6 +39,7 @@ use happycog\craftmcp\tools\MoveElementInFieldLayout;
 use happycog\craftmcp\tools\RemoveElementFromFieldLayout;
 use happycog\craftmcp\tools\SearchContent;
 use happycog\craftmcp\tools\UpdateAsset;
+use happycog\craftmcp\tools\UpdateAddress;
 use happycog\craftmcp\tools\UpdateDraft;
 use happycog\craftmcp\tools\UpdateEntry;
 use happycog\craftmcp\tools\UpdateEntryType;
@@ -77,6 +83,14 @@ class CommandMap
         'assets/create' => CreateAsset::class,
         'assets/delete' => DeleteAsset::class,
         'assets/update' => UpdateAsset::class,
+
+        // Addresses
+        'addresses/list' => GetAddresses::class,
+        'addresses/get' => GetAddress::class,
+        'addresses/create' => CreateAddress::class,
+        'addresses/update' => UpdateAddress::class,
+        'addresses/delete' => DeleteAddress::class,
+        'addresses/field-layout' => GetAddressFieldLayout::class,
 
         // Drafts
         'drafts/apply' => ApplyDraft::class,

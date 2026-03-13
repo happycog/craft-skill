@@ -8,6 +8,8 @@ use craft\fieldlayoutelements\CustomField;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\services\Fields;
+use happycog\craftmcp\actions\ResolveFieldLayout;
+use happycog\craftmcp\actions\SaveFieldLayout;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class AddFieldToFieldLayout
@@ -15,6 +17,8 @@ class AddFieldToFieldLayout
     public function __construct(
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
+        protected ResolveFieldLayout $resolveFieldLayout,
+        protected SaveFieldLayout $saveFieldLayout,
     ) {
     }
 
@@ -62,7 +66,7 @@ class AddFieldToFieldLayout
         /** Field warning text */
         ?string $warning = null,
     ): array {
-        $fieldLayout = $this->fieldsService->getLayoutById($fieldLayoutId);
+        $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId);
         throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
 
         $field = $this->fieldsService->getFieldById($fieldId);
@@ -139,7 +143,7 @@ class AddFieldToFieldLayout
         }
         $fieldLayout->setTabs($tabs);
 
-        throw_unless($this->fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
+        throw_unless(($this->saveFieldLayout)($fieldLayout), ModelSaveException::class, $fieldLayout);
 
         return [
             '_notes' => ['Field added successfully', 'Review the field layout in the control panel'],

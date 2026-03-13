@@ -80,6 +80,14 @@ All API endpoints:
 - [delete_asset](delete_asset.md) - `DELETE /api/assets/<id>` - Delete asset and file
 - [get_volumes](get_volumes.md) - `GET /api/volumes` - List asset volumes with IDs/URLs
 
+## Addresses
+- [get_addresses](get_addresses.md) - `GET /api/addresses` - List/search addresses by owner, field, and location
+- [get_address](get_address.md) - `GET /api/addresses/<id>` - Retrieve address details with owner and field context
+- [create_address](create_address.md) - `POST /api/addresses` - Create generic owner-backed addresses for users or custom address fields
+- [update_address](update_address.md) - `PUT /api/addresses/<id>` - Update address attributes and custom fields
+- [delete_address](delete_address.md) - `DELETE /api/addresses/<id>` - Delete address (soft/permanent)
+- [get_address_field_layout](get_address_field_layout.md) - `GET /api/addresses/field-layout` - Retrieve the single global address field layout
+
 ## System
 - [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability
 

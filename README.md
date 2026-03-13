@@ -24,6 +24,7 @@ By adding this skill to Claude, you transform your Craft CMS site into an AI-acc
 - **Field Layout Management**: Build and modify field layouts programmatically
 - **Draft Support**: Create, update, and apply drafts for content workflows
 - **Asset Management**: Upload, update, and manage assets and volumes
+- **Address Management**: Create, read, update, and delete owner-backed addresses plus manage the global address field layout
 - **Site Information**: Access multi-site configuration details
 - **Commerce: Products**: Create, read, update, and delete products with variant support
 - **Commerce: Variants**: Manage product variants with pricing, inventory, and dimensions
@@ -256,6 +257,14 @@ All tools from the HTTP API are available via CLI. Common operations include:
 - `assets/update <id>` - Update asset
 - `assets/delete <id>` - Delete asset
 - `volumes/list` - List asset volumes
+
+### Addresses
+- `addresses/list` - List/search addresses
+- `addresses/get <id>` - Get address by ID
+- `addresses/create` - Create address for an owner or address field
+- `addresses/update <id>` - Update address
+- `addresses/delete <id>` - Delete address
+- `addresses/field-layout` - Get the global address field layout
 
 ### Other
 - `sites/list` - List all sites

@@ -65,6 +65,14 @@ class Plugin extends BasePlugin
         $event->rules['DELETE ' . $apiPrefix . '/assets/<id>'] = 'skills/assets/delete';
         $event->rules['GET ' . $apiPrefix . '/volumes'] = 'skills/assets/volumes';
 
+        // Address routes
+        $event->rules['GET ' . $apiPrefix . '/addresses'] = 'skills/addresses/list';
+        $event->rules['POST ' . $apiPrefix . '/addresses'] = 'skills/addresses/create';
+        $event->rules['GET ' . $apiPrefix . '/addresses/<id>'] = 'skills/addresses/get';
+        $event->rules['PUT ' . $apiPrefix . '/addresses/<id>'] = 'skills/addresses/update';
+        $event->rules['DELETE ' . $apiPrefix . '/addresses/<id>'] = 'skills/addresses/delete';
+        $event->rules['GET ' . $apiPrefix . '/addresses/field-layout'] = 'skills/addresses/field-layout';
+
         // Health check route
         $event->rules['GET ' . $apiPrefix . '/health'] = 'skills/health/index';
 
