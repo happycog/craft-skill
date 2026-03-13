@@ -6,7 +6,8 @@ use happycog\craftmcp\tools\CreateEntry;
 use happycog\craftmcp\tools\UpdateDraft;
 
 beforeEach(function () {
-    $this->section = Craft::$app->getEntries()->getAllSections()[0];
+    $this->section = Craft::$app->getEntries()->getSectionByHandle('news');
+    expect($this->section)->not->toBeNull();
     $this->sectionId = $this->section->id;
     $this->entryTypeId = $this->section->getEntryTypes()[0]->id;
     

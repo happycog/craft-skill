@@ -16,6 +16,8 @@ class GetHealth
      */
     public function __invoke(): array
     {
+        $primarySite = Craft::$app->getSites()->getPrimarySite();
+
         return [
             'status' => 'ok',
             'plugin' => [
@@ -28,8 +30,8 @@ class GetHealth
                 'edition' => Craft::$app->getEditionName(),
             ],
             'site' => [
-                'name' => Craft::$app->getSites()->getPrimarySite()->name,
-                'baseUrl' => Craft::$app->getSites()->getPrimarySite()->getBaseUrl(),
+                'name' => $primarySite->name,
+                'baseUrl' => $primarySite->getBaseUrl() ?? '',
             ],
         ];
     }
