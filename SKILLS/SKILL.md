@@ -1,6 +1,6 @@
 ---
 name: Craft CMS Skills
-description: Complete skill suite for managing Craft CMS content including sections, entry types, fields, entries, drafts, field layouts, and sites.
+description: Complete skill suite for managing Craft CMS content including users, addresses, sections, entry types, fields, entries, drafts, field layouts, sites, and Commerce products, variants, and orders.
 ---
 
 ## Important: Use this plugin, Not YAML Files
@@ -80,5 +80,58 @@ All API endpoints:
 - [delete_asset](delete_asset.md) - `DELETE /api/assets/<id>` - Delete asset and file
 - [get_volumes](get_volumes.md) - `GET /api/volumes` - List asset volumes with IDs/URLs
 
+## Addresses
+- [get_addresses](get_addresses.md) - `GET /api/addresses` - List/search addresses by owner, field, and location
+- [get_address](get_address.md) - `GET /api/addresses/<id>` - Retrieve address details with owner and field context
+- [create_address](create_address.md) - `POST /api/addresses` - Create generic owner-backed addresses for users or custom address fields
+- [update_address](update_address.md) - `PUT /api/addresses/<id>` - Update address attributes and custom fields
+- [delete_address](delete_address.md) - `DELETE /api/addresses/<id>` - Delete address (soft/permanent)
+- [get_address_field_layout](get_address_field_layout.md) - `GET /api/addresses/field-layout` - Retrieve the single global address field layout
+
+## Users
+- [get_users](get_users.md) - `GET /api/users` - List/search users by query, identity fields, status, and optionally group
+- [get_user](get_user.md) - `GET /api/users/<id>` - Retrieve a user by ID, email, or username
+- [create_user](create_user.md) - `POST /api/users` - Create a user with native attributes and custom fields
+- [get_available_permissions](get_available_permissions.md) - `GET /api/users/permissions` - List all known permissions plus custom stored permission names
+- [update_user](update_user.md) - `PUT /api/users/<id>` - Update a user by ID, email, or username
+- [delete_user](delete_user.md) - `DELETE /api/users/<id>` - Delete a user by ID, email, or username
+- [get_user_field_layout](get_user_field_layout.md) - `GET /api/users/field-layout` - Retrieve the single global user field layout
+
+## User Groups
+- [get_user_groups](get_user_groups.md) - `GET /api/user-groups` - List user groups and their permissions
+- [get_user_group](get_user_group.md) - `GET /api/user-groups/<id>` - Retrieve a user group by ID or handle
+- [create_user_group](create_user_group.md) - `POST /api/user-groups` - Create a user group and set permissions
+- [update_user_group](update_user_group.md) - `PUT /api/user-groups/<id>` - Update a user group and its permissions
+- [delete_user_group](delete_user_group.md) - `DELETE /api/user-groups/<id>` - Delete a user group by ID or handle
+
 ## System
 - [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability
+
+## Commerce: Products
+- [create_product](create_product.md) - `POST /api/products` - Create product with type, title, SKU, price, and custom fields
+- [get_product](get_product.md) - `GET /api/products/<id>` - Retrieve product with variants, pricing, and custom fields
+- [get_products](get_products.md) - `GET /api/products/search` - Search/filter products by type/status/query
+- [update_product](update_product.md) - `PUT /api/products/<id>` - Update product attributes and custom fields
+- [delete_product](delete_product.md) - `DELETE /api/products/<id>` - Delete product (soft/permanent)
+- [get_product_types](get_product_types.md) - `GET /api/product-types` - List available Commerce product types
+- [get_product_type](get_product_type.md) - `GET /api/product-types/<id>` - Retrieve product type with field layouts and site settings
+- [create_product_type](create_product_type.md) - `POST /api/product-types` - Create product type with title, variant, layout, and site settings
+- [update_product_type](update_product_type.md) - `PUT /api/product-types/<id>` - Update product type configuration and site settings
+- [delete_product_type](delete_product_type.md) - `DELETE /api/product-types/<id>` - Delete product type with impact analysis and force protection
+
+## Commerce: Variants
+- [create_variant](create_variant.md) - `POST /api/variants` - Add variant to existing product with SKU, price, and attributes
+- [get_variant](get_variant.md) - `GET /api/variants/<id>` - Retrieve variant with pricing, inventory, and dimensions
+- [update_variant](update_variant.md) - `PUT /api/variants/<id>` - Update variant pricing, SKU, stock, and fields
+- [delete_variant](delete_variant.md) - `DELETE /api/variants/<id>` - Delete variant (soft/permanent)
+
+## Commerce: Orders
+- [get_order](get_order.md) - `GET /api/orders/<id>` - Retrieve order with line items, totals, and addresses
+- [search_orders](search_orders.md) - `GET /api/orders/search` - Search/filter orders by email/status/date/payment
+- [update_order](update_order.md) - `PUT /api/orders/<id>` - Update order status or message
+- [get_order_statuses](get_order_statuses.md) - `GET /api/order-statuses` - List all order statuses with IDs/handles/colors
+
+## Commerce: Stores
+- [get_stores](get_stores.md) - `GET /api/stores` - List all stores with checkout/payment/tax configuration
+- [get_store](get_store.md) - `GET /api/stores/<id>` - Retrieve store with full configuration details
+- [update_store](update_store.md) - `PUT /api/stores/<id>` - Update store checkout, payment, and pricing settings

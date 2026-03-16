@@ -269,7 +269,8 @@ it('can create a matrix field with advanced settings', function () {
     expect($field->minEntries)->toBe(2);
     expect($field->maxEntries)->toBe(20);
     expect($field->viewMode)->toBe('blocks');
-    expect($field->showCardsInGrid)->toBeTrue();
+    // removed in 5.9
+    //expect($field->showCardsInGrid)->toBeTrue();
     expect($field->createButtonLabel)->toBe('Add New Block');
     
     // Verify entry type is attached

@@ -1,5 +1,15 @@
 <?php
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
+    if (in_array($severity, [E_DEPRECATED, E_USER_DEPRECATED], true)) {
+        return true;
+    }
+
+    return false;
+});
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -18,6 +28,20 @@ pest()->extend(
     TestCase::class,
     RefreshesDatabase::class,
 )->in('./');
+
+require_once __DIR__ . '/AddressTestHelpers.php';
+require_once __DIR__ . '/UserTestHelpers.php';
+
+beforeEach(function () {
+    (function (): void {
+        $this->_layouts = null;
+    })->call(Craft::$app->getFields());
+
+    (function (): void {
+        $this->_sections = null;
+        $this->_entryTypes = null;
+    })->call(Craft::$app->getEntries());
+});
 
 /*
 |--------------------------------------------------------------------------

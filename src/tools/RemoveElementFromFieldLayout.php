@@ -7,7 +7,15 @@ use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\services\Fields;
 use happycog\craftmcp\actions\ManageEntryTitleField;
+use happycog\craftmcp\actions\NormalizeAddressFieldLayoutForSave;
+use happycog\craftmcp\actions\NormalizeUserFieldLayoutForSave;
+use happycog\craftmcp\actions\ResolveFieldLayout;
+use happycog\craftmcp\actions\ResolvePersistedAddressFieldLayout;
+use happycog\craftmcp\actions\ResolvePersistedUserFieldLayout;
+use happycog\craftmcp\actions\SaveFieldLayout;
 use happycog\craftmcp\exceptions\ModelSaveException;
+use happycog\craftmcp\tools\GetAddressFieldLayout;
+use happycog\craftmcp\tools\GetUserFieldLayout;
 
 class RemoveElementFromFieldLayout
 {
@@ -15,6 +23,12 @@ class RemoveElementFromFieldLayout
         protected Fields $fieldsService,
         protected GetFieldLayout $getFieldLayout,
         protected ManageEntryTitleField $manageEntryTitleField,
+        protected NormalizeAddressFieldLayoutForSave $normalizeAddressFieldLayoutForSave,
+        protected NormalizeUserFieldLayoutForSave $normalizeUserFieldLayoutForSave,
+        protected ResolveFieldLayout $resolveFieldLayout,
+        protected ResolvePersistedAddressFieldLayout $resolvePersistedAddressFieldLayout,
+        protected ResolvePersistedUserFieldLayout $resolvePersistedUserFieldLayout,
+        protected SaveFieldLayout $saveFieldLayout,
     ) {
     }
 
@@ -36,7 +50,7 @@ class RemoveElementFromFieldLayout
         /** The UID of the element to remove */
         string $elementUid,
     ): array {
-        $fieldLayout = $this->fieldsService->getLayoutById($fieldLayoutId);
+        $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId);
         throw_unless($fieldLayout instanceof FieldLayout, "Field layout with ID {$fieldLayoutId} not found");
 
         $elementFound = false;
@@ -65,7 +79,22 @@ class RemoveElementFromFieldLayout
         throw_unless($elementFound, "Element with UID '{$elementUid}' not found in field layout");
 
         $fieldLayout->setTabs($newTabs);
-        throw_unless($this->fieldsService->saveLayout($fieldLayout), ModelSaveException::class, $fieldLayout);
+
+        $fieldLayoutToSave = match ($fieldLayoutId) {
+            GetAddressFieldLayout::PLACEHOLDER_ID => ($this->normalizeAddressFieldLayoutForSave)($fieldLayout),
+            GetUserFieldLayout::PLACEHOLDER_ID => ($this->normalizeUserFieldLayoutForSave)($fieldLayout),
+            default => $fieldLayout,
+        };
+
+        throw_unless(($this->saveFieldLayout)($fieldLayoutToSave), ModelSaveException::class, $fieldLayoutToSave);
+
+        if ($fieldLayoutId === GetAddressFieldLayout::PLACEHOLDER_ID) {
+            $fieldLayout = ($this->resolvePersistedAddressFieldLayout)();
+        } elseif ($fieldLayoutId === GetUserFieldLayout::PLACEHOLDER_ID) {
+            $fieldLayout = ($this->resolvePersistedUserFieldLayout)();
+        } else {
+            $fieldLayout = ($this->resolveFieldLayout)($fieldLayoutId) ?? $fieldLayout;
+        }
 
         $notes = ['Element removed successfully'];
         

@@ -63,7 +63,7 @@ jobs:
       - name: Install dependencies
         if: steps.composer-cache.outputs.cache-hit != 'true'
         run: |
-          composer require "craftcms/cms:~5.8.8" --prefer-dist --no-progress
+          composer require "craftcms/cms:~5.9" --prefer-dist --no-progress
 
       - name: Copy config files
         run: |

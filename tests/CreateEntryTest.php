@@ -63,7 +63,8 @@ it('creates entry for specified site when siteId is provided', function () {
 });
 
 it('throws exception for invalid siteId', function () {
-    $section = Craft::$app->getEntries()->getAllSections()[0];
+    $section = Craft::$app->getEntries()->getSectionByHandle('news');
+    expect($section)->not->toBeNull();
     $sectionId = $section->id;
     $entryTypeId = $section->getEntryTypes()[0]->id;
 

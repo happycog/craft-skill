@@ -31,7 +31,7 @@ test('parses single positional argument', function () {
     $result = $parser->parse(['script', 'entries/get', '123']);
 
     expect($result['command'])->toBe('entries/get');
-    expect($result['positional'])->toBe([123]);
+    expect($result['positional'])->toBe(['123']);
     expect($result['flags'])->toBe([]);
 });
 
@@ -43,23 +43,23 @@ test('parses multiple positional arguments', function () {
     expect($result['positional'])->toBe(['foo', 'bar', 'baz']);
 });
 
-test('detects numeric positional arguments as integers', function () {
+test('keeps numeric positional arguments as strings', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '123', '456']);
 
-    expect($result['positional'])->toBe([123, 456]);
-    expect($result['positional'][0])->toBeInt();
-    expect($result['positional'][1])->toBeInt();
+    expect($result['positional'])->toBe(['123', '456']);
+    expect($result['positional'][0])->toBeString();
+    expect($result['positional'][1])->toBeString();
 });
 
 test('handles mixed string and numeric positional arguments', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '123', 'foo', '456']);
 
-    expect($result['positional'])->toBe([123, 'foo', 456]);
-    expect($result['positional'][0])->toBeInt();
+    expect($result['positional'])->toBe(['123', 'foo', '456']);
+    expect($result['positional'][0])->toBeString();
     expect($result['positional'][1])->toBeString();
-    expect($result['positional'][2])->toBeInt();
+    expect($result['positional'][2])->toBeString();
 });
 
 // Test group 3: Simple flags
@@ -71,12 +71,12 @@ test('parses string flag with equals syntax', function () {
     expect($result['flags'])->toBe(['title' => 'Test Entry']);
 });
 
-test('parses numeric flag as integer', function () {
+test('keeps numeric flag as string', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--id=123']);
 
-    expect($result['flags'])->toBe(['id' => 123]);
-    expect($result['flags']['id'])->toBeInt();
+    expect($result['flags'])->toBe(['id' => '123']);
+    expect($result['flags']['id'])->toBeString();
 });
 
 test('parses boolean flag with true value', function () {
@@ -109,7 +109,7 @@ test('parses multiple simple flags', function () {
 
     expect($result['flags'])->toBe([
         'title' => 'Test',
-        'id' => 123,
+        'id' => '123',
         'enabled' => true,
     ]);
 });
@@ -163,7 +163,7 @@ test('parses comma-separated values as array', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--ids=1,2,3']);
 
-    expect($result['flags']['ids'])->toBe([1, 2, 3]);
+    expect($result['flags']['ids'])->toBe(['1', '2', '3']);
     expect($result['flags']['ids'])->toBeArray();
 });
 
@@ -179,8 +179,8 @@ test('parses mixed types in comma-separated array', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--values=1,foo,true,false']);
 
-    expect($result['flags']['values'])->toBe([1, 'foo', true, false]);
-    expect($result['flags']['values'][0])->toBeInt();
+    expect($result['flags']['values'])->toBe(['1', 'foo', true, false]);
+    expect($result['flags']['values'][0])->toBeString();
     expect($result['flags']['values'][1])->toBeString();
     expect($result['flags']['values'][2])->toBeTrue();
     expect($result['flags']['values'][3])->toBeFalse();
@@ -397,8 +397,8 @@ test('parses entry creation command with all parameter types', function () {
     ]);
 
     expect($result['command'])->toBe('entries/create');
-    expect($result['flags']['sectionId'])->toBe(1);
-    expect($result['flags']['entryTypeId'])->toBe(2);
+    expect($result['flags']['sectionId'])->toBe('1');
+    expect($result['flags']['entryTypeId'])->toBe('2');
     expect($result['flags']['title'])->toBe('Test Entry');
     expect($result['flags']['fields']['body'])->toBe('<p>HTML content</p>');
     expect($result['flags']['tags'])->toBe(['tag1', 'tag2', 'tag3']);
@@ -423,7 +423,7 @@ test('parses entry get command with positional ID', function () {
     $result = $parser->parse(['script', 'entries/get', '123']);
 
     expect($result['command'])->toBe('entries/get');
-    expect($result['positional'])->toBe([123]);
+    expect($result['positional'])->toBe(['123']);
 });
 
 test('parses complex command with all flag types', function () {
@@ -442,12 +442,12 @@ test('parses complex command with all flag types', function () {
     ]);
 
     expect($result['command'])->toBe('entries/update');
-    expect($result['positional'])->toBe([456]);
+    expect($result['positional'])->toBe(['456']);
     expect($result['flags']['title'])->toBe('Updated Title');
     expect($result['flags']['enabled'])->toBeTrue();
-    expect($result['flags']['siteId'])->toBe(1);
+    expect($result['flags']['siteId'])->toBe('1');
     expect($result['flags']['fields']['body'])->toBe('New content');
-    expect($result['flags']['relatedEntries'])->toBe([1, 2, 3]);
+    expect($result['flags']['relatedEntries'])->toBe(['1', '2', '3']);
     expect($result['verbosity'])->toBe(2);
     expect($result['path'])->toBe('/custom/craft');
 });
@@ -480,7 +480,7 @@ test('parses flags without command', function () {
     expect($result['command'])->toBeNull();
     expect($result['flags'])->toBe([
         'foo' => 'bar',
-        'baz' => 123,
+        'baz' => '123',
     ]);
 });
 
@@ -489,7 +489,7 @@ test('handles mixed positional and flags', function () {
     $result = $parser->parse(['script', 'cmd', '123', '--title=Test', '456', '--enabled']);
 
     expect($result['command'])->toBe('cmd');
-    expect($result['positional'])->toBe([123, 456]);
+    expect($result['positional'])->toBe(['123', '456']);
     expect($result['flags'])->toBe([
         'title' => 'Test',
         'enabled' => true,
@@ -520,20 +520,20 @@ test('handles numeric string that is not a valid integer', function () {
     expect($result['flags']['value'])->toBeString();
 });
 
-test('handles zero as numeric value', function () {
+test('handles zero as string value', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--count=0']);
 
-    expect($result['flags']['count'])->toBe(0);
-    expect($result['flags']['count'])->toBeInt();
+    expect($result['flags']['count'])->toBe('0');
+    expect($result['flags']['count'])->toBeString();
 });
 
-test('handles negative numbers', function () {
+test('handles negative numbers as strings', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--offset=-10']);
 
-    expect($result['flags']['offset'])->toBe(-10);
-    expect($result['flags']['offset'])->toBeInt();
+    expect($result['flags']['offset'])->toBe('-10');
+    expect($result['flags']['offset'])->toBeString();
 });
 
 test('handles URL as string value', function () {
@@ -570,7 +570,7 @@ test('parses space-separated flag with numeric value', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--id', '123']);
 
-    expect($result['flags']['id'])->toBe(123);
+    expect($result['flags']['id'])->toBe('123');
 });
 
 test('parses space-separated flag with boolean string value', function () {
@@ -594,7 +594,7 @@ test('parses mixed equals and space-separated flags', function () {
 
     expect($result['flags']['type'])->toBe('single');
     expect($result['flags']['name'])->toBe('Test');
-    expect($result['flags']['id'])->toBe(123);
+    expect($result['flags']['id'])->toBe('123');
 });
 
 test('treats flag without value as boolean when next arg is flag', function () {
@@ -618,8 +618,8 @@ test('parses space-separated flag before positional args', function () {
     $result = $parser->parse(['script', 'entries/get', '--siteId', '2', '123']);
 
     expect($result['command'])->toBe('entries/get');
-    expect($result['flags']['siteId'])->toBe(2);
-    expect($result['positional'])->toBe([123]);
+    expect($result['flags']['siteId'])->toBe('2');
+    expect($result['positional'])->toBe(['123']);
 });
 
 test('parses space-separated flag after positional args', function () {
@@ -627,15 +627,15 @@ test('parses space-separated flag after positional args', function () {
     $result = $parser->parse(['script', 'entries/get', '123', '--siteId', '2']);
 
     expect($result['command'])->toBe('entries/get');
-    expect($result['positional'])->toBe([123]);
-    expect($result['flags']['siteId'])->toBe(2);
+    expect($result['positional'])->toBe(['123']);
+    expect($result['flags']['siteId'])->toBe('2');
 });
 
 test('parses space-separated flag with comma-separated value', function () {
     $parser = new ArgumentParser();
     $result = $parser->parse(['script', 'cmd', '--ids', '1,2,3']);
 
-    expect($result['flags']['ids'])->toBe([1, 2, 3]);
+    expect($result['flags']['ids'])->toBe(['1', '2', '3']);
 });
 
 test('parses space-separated flag with bracket notation', function () {

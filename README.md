@@ -24,7 +24,14 @@ By adding this skill to Claude, you transform your Craft CMS site into an AI-acc
 - **Field Layout Management**: Build and modify field layouts programmatically
 - **Draft Support**: Create, update, and apply drafts for content workflows
 - **Asset Management**: Upload, update, and manage assets and volumes
+- **Address Management**: Create, read, update, and delete owner-backed addresses plus manage the global address field layout
+- **User Management**: Create, read, update, and delete users plus inspect the global user field layout
+- **User Group Management**: Manage user groups and permissions on Craft Pro installations
 - **Site Information**: Access multi-site configuration details
+- **Commerce: Products**: Create, read, update, and delete products with variant support
+- **Commerce: Variants**: Manage product variants with pricing, inventory, and dimensions
+- **Commerce: Orders**: Search and manage orders with status updates
+- **Commerce: Stores**: View and configure store settings, checkout behavior, and pricing strategies
 
 ## Installation
 
@@ -253,11 +260,64 @@ All tools from the HTTP API are available via CLI. Common operations include:
 - `assets/delete <id>` - Delete asset
 - `volumes/list` - List asset volumes
 
+### Addresses
+- `addresses/list` - List/search addresses
+- `addresses/get <id>` - Get address by ID
+- `addresses/create` - Create address for an owner or address field
+- `addresses/update <id>` - Update address
+- `addresses/delete <id>` - Delete address
+- `addresses/field-layout` - Get the global address field layout
+
+### Users
+- `users/list` - List/search users
+- `users/get <id>` - Get user by ID
+- `users/create` - Create user
+- `users/permissions` - List available user permissions
+- `users/update <id>` - Update user
+- `users/delete <id>` - Delete user
+- `users/field-layout` - Get the global user field layout
+
+### User Groups
+- `user-groups/list` - List user groups
+- `user-groups/get <id>` - Get user group by ID
+- `user-groups/create` - Create user group
+- `user-groups/update <id>` - Update user group
+- `user-groups/delete <id>` - Delete user group
+
 ### Other
 - `sites/list` - List all sites
 - `field-layouts/create` - Create field layout
 - `field-layouts/get` - Get field layout
 - `field-layouts/update <id>` - Update field layout
+
+### Commerce: Products
+- `products/create` - Create new product
+- `products/get <id>` - Get product by ID
+- `products/search` - Search/filter products
+- `products/update <id>` - Update product
+- `products/delete <id>` - Delete product
+- `product-types/list` - List product types
+- `product-types/get <id>` - Get product type by ID with field layouts
+- `product-types/create` - Create product type
+- `product-types/update <id>` - Update product type
+- `product-types/delete <id>` - Delete product type
+
+### Commerce: Variants
+- `variants/create` - Create variant for a product
+- `variants/get <id>` - Get variant by ID
+- `variants/update <id>` - Update variant
+- `variants/delete <id>` - Delete variant
+
+### Commerce: Orders
+- `orders/get <id>` - Get order by ID
+- `orders/search` - Search/filter orders
+- `orders/update <id>` - Update order status
+- `order-statuses/list` - List order statuses
+
+### Commerce: Stores
+- `stores/list` - List all stores with configuration
+- `stores/get <id>` - Get store by ID
+- `stores/update <id>` - Update store settings
 
 For detailed documentation on each tool, see the [SKILLS documentation](./SKILLS/).
 

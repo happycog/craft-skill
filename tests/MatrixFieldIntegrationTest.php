@@ -99,7 +99,7 @@ test('complete workflow: create matrix field with nested fields', function () {
     expect($field)->toBeInstanceOf(\craft\fields\Matrix::class);
     expect($field->minEntries)->toBe(1);
     expect($field->maxEntries)->toBe(20);
-    expect($field->viewMode)->toBe('cards');
+    expect($field->viewMode)->toBe('cards-grid');
     expect($field->showCardsInGrid)->toBeTrue();
     expect($field->createButtonLabel)->toBe('Add Content Block');
     

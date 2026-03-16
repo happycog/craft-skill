@@ -65,7 +65,60 @@ class Plugin extends BasePlugin
         $event->rules['DELETE ' . $apiPrefix . '/assets/<id>'] = 'skills/assets/delete';
         $event->rules['GET ' . $apiPrefix . '/volumes'] = 'skills/assets/volumes';
 
+        // Address routes
+        $event->rules['GET ' . $apiPrefix . '/addresses'] = 'skills/addresses/list';
+        $event->rules['POST ' . $apiPrefix . '/addresses'] = 'skills/addresses/create';
+        $event->rules['GET ' . $apiPrefix . '/addresses/<id>'] = 'skills/addresses/get';
+        $event->rules['PUT ' . $apiPrefix . '/addresses/<id>'] = 'skills/addresses/update';
+        $event->rules['DELETE ' . $apiPrefix . '/addresses/<id>'] = 'skills/addresses/delete';
+        $event->rules['GET ' . $apiPrefix . '/addresses/field-layout'] = 'skills/addresses/field-layout';
+
+        // User routes
+        $event->rules['GET ' . $apiPrefix . '/users'] = 'skills/users/list';
+        $event->rules['POST ' . $apiPrefix . '/users'] = 'skills/users/create';
+        $event->rules['GET ' . $apiPrefix . '/users/permissions'] = 'skills/users/permissions';
+        $event->rules['GET ' . $apiPrefix . '/users/<id>'] = 'skills/users/get';
+        $event->rules['PUT ' . $apiPrefix . '/users/<id>'] = 'skills/users/update';
+        $event->rules['DELETE ' . $apiPrefix . '/users/<id>'] = 'skills/users/delete';
+        $event->rules['GET ' . $apiPrefix . '/users/field-layout'] = 'skills/users/field-layout';
+
+        // User group routes
+        $event->rules['GET ' . $apiPrefix . '/user-groups'] = 'skills/user-groups/list';
+        $event->rules['POST ' . $apiPrefix . '/user-groups'] = 'skills/user-groups/create';
+        $event->rules['GET ' . $apiPrefix . '/user-groups/<id>'] = 'skills/user-groups/get';
+        $event->rules['PUT ' . $apiPrefix . '/user-groups/<id>'] = 'skills/user-groups/update';
+        $event->rules['DELETE ' . $apiPrefix . '/user-groups/<id>'] = 'skills/user-groups/delete';
+
         // Health check route
         $event->rules['GET ' . $apiPrefix . '/health'] = 'skills/health/index';
+
+        // Commerce: Product routes
+        $event->rules['POST ' . $apiPrefix . '/products'] = 'skills/products/create';
+        $event->rules['GET ' . $apiPrefix . '/products/search'] = 'skills/products/search';
+        $event->rules['GET ' . $apiPrefix . '/products/<id>'] = 'skills/products/get';
+        $event->rules['PUT ' . $apiPrefix . '/products/<id>'] = 'skills/products/update';
+        $event->rules['DELETE ' . $apiPrefix . '/products/<id>'] = 'skills/products/delete';
+        $event->rules['GET ' . $apiPrefix . '/product-types'] = 'skills/products/types';
+        $event->rules['POST ' . $apiPrefix . '/product-types'] = 'skills/products/create-type';
+        $event->rules['GET ' . $apiPrefix . '/product-types/<id>'] = 'skills/products/get-type';
+        $event->rules['PUT ' . $apiPrefix . '/product-types/<id>'] = 'skills/products/update-type';
+        $event->rules['DELETE ' . $apiPrefix . '/product-types/<id>'] = 'skills/products/delete-type';
+
+        // Commerce: Variant routes
+        $event->rules['POST ' . $apiPrefix . '/variants'] = 'skills/variants/create';
+        $event->rules['GET ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/get';
+        $event->rules['PUT ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/update';
+        $event->rules['DELETE ' . $apiPrefix . '/variants/<id>'] = 'skills/variants/delete';
+
+        // Commerce: Order routes
+        $event->rules['GET ' . $apiPrefix . '/orders/search'] = 'skills/orders/search';
+        $event->rules['GET ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/get';
+        $event->rules['PUT ' . $apiPrefix . '/orders/<id>'] = 'skills/orders/update';
+        $event->rules['GET ' . $apiPrefix . '/order-statuses'] = 'skills/orders/statuses';
+
+        // Commerce: Store routes
+        $event->rules['GET ' . $apiPrefix . '/stores'] = 'skills/stores/list';
+        $event->rules['GET ' . $apiPrefix . '/stores/<id>'] = 'skills/stores/get';
+        $event->rules['PUT ' . $apiPrefix . '/stores/<id>'] = 'skills/stores/update';
     }
 }
