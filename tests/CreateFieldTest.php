@@ -268,7 +268,7 @@ it('can create a matrix field with advanced settings', function () {
     expect($field)->toBeInstanceOf(\craft\fields\Matrix::class);
     expect($field->minEntries)->toBe(2);
     expect($field->maxEntries)->toBe(20);
-    existspect($field->viewMode)->toBe('blocks');
+    expect($field->viewMode)->toBe('blocks');
     // removed in 5.9
     //expect($field->showCardsInGrid)->toBeTrue();
     expect($field->createButtonLabel)->toBe('Add New Block');
