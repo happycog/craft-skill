@@ -29,7 +29,7 @@ class Plugin extends BasePlugin
         Craft::$app->getView()->registerAssetBundle(ChatAsset::class);
 
         return Craft::$app->getView()->renderTemplate('skills/settings', [
-            'settings' => $this->getSettings(),
+            'settings' => $this->getSettings() ?? new Settings(),
         ]);
     }
 }

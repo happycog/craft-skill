@@ -3,6 +3,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
   plugins: [react()],
   build: {
     cssCodeSplit: false,
@@ -16,8 +19,10 @@ export default defineConfig({
     outDir: resolve(__dirname, 'src/web/assets/chat/dist'),
     rollupOptions: {
       output: {
+        banner:
+          'var process = globalThis.process || (globalThis.process = { env: { NODE_ENV: "production" } });',
         assetFileNames: (assetInfo) =>
-          assetInfo.names.includes('style.css') ? 'chat.css' : '[name][extname]',
+          assetInfo.names.some((name) => name.endsWith('.css')) ? 'chat.css' : '[name][extname]',
       },
     },
   },

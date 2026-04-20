@@ -38,7 +38,7 @@ const initialTimeline: TimelineEvent[] = [
   },
 ];
 
-function App({ apiPrefix }: { apiPrefix: string }) {
+function App({ mcpPath }: { mcpPath: string }) {
   const [timeline, setTimeline] = useState<TimelineEvent[]>(initialTimeline);
   const [prompt, setPrompt] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -107,7 +107,7 @@ function App({ apiPrefix }: { apiPrefix: string }) {
             entry.id === toolId
               ? {
                   ...entry,
-                  detail: `Querying Craft content via ${apiPrefix}/entries/search (mocked).`,
+                  detail: `Querying Craft content via /${mcpPath} (mocked).`,
                 }
               : entry,
           ),
@@ -169,7 +169,7 @@ function App({ apiPrefix }: { apiPrefix: string }) {
 
         <div className="skills-chat-meta">
           <span>{chatSummary}</span>
-          <span>API prefix: /{apiPrefix}</span>
+          <span>MCP path: /{mcpPath}</span>
         </div>
       </header>
 
@@ -225,9 +225,9 @@ function App({ apiPrefix }: { apiPrefix: string }) {
   );
 }
 
-const rootElement = document.getElementById('skills-chat-root');
+const rootElement = document.querySelector<HTMLElement>('[data-skills-chat-root]');
 
 if (rootElement) {
-  const apiPrefix = rootElement.dataset.apiPrefix ?? 'api';
-  createRoot(rootElement).render(<App apiPrefix={apiPrefix} />);
+  const mcpPath = rootElement.dataset.mcpPath ?? 'mcp';
+  createRoot(rootElement).render(<App mcpPath={mcpPath} />);
 }
