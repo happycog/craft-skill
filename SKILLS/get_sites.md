@@ -2,9 +2,9 @@
 
 List all available sites in multi-site installations.
 
-## Route
+## Tool
 
-`GET /api/sites`
+`get_sites` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

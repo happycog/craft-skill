@@ -2,9 +2,9 @@
 
 Update an existing asset in Craft CMS.
 
-## Route
+## Tool
 
-`PUT /api/assets/<id>`
+`update_asset` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

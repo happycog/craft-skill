@@ -2,9 +2,9 @@
 
 Delete sections permanently with impact analysis and data protection.
 
-## Route
+## Tool
 
-`DELETE /api/sections/<id>`
+`delete_section` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

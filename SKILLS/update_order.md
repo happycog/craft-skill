@@ -2,9 +2,9 @@
 
 Update an existing Commerce order's status or message.
 
-## Route
+## Tool
 
-`PUT /api/orders/<id>`
+`update_order` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

@@ -2,9 +2,9 @@
 
 List all available Commerce product types.
 
-## Route
+## Tool
 
-`GET /api/product-types`
+`get_product_types` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

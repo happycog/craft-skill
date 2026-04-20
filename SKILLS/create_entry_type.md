@@ -2,9 +2,9 @@
 
 Create new entry types with custom handles, names, and field layouts.
 
-## Route
+## Tool
 
-`POST /api/entry-types`
+`create_entry_type` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

@@ -2,9 +2,9 @@
 
 Update existing field properties and settings.
 
-## Route
+## Tool
 
-`PUT /api/fields/<id>`
+`update_field` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

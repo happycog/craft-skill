@@ -2,9 +2,9 @@
 
 Update an existing Commerce product type's configuration.
 
-## Route
+## Tool
 
-`PUT /api/product-types/<id>`
+`update_product_type` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

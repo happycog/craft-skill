@@ -2,9 +2,9 @@
 
 List all entry types with complete field information and usage stats.
 
-## Route
+## Tool
 
-`GET /api/entry-types`
+`get_entry_types` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

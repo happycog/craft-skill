@@ -2,9 +2,9 @@
 
 Delete a Commerce product and its variants.
 
-## Route
+## Tool
 
-`DELETE /api/products/<id>`
+`delete_product` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

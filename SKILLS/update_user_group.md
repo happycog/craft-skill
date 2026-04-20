@@ -4,7 +4,7 @@ Update a Craft user group by ID or handle.
 
 ## Endpoint
 
-`PUT /api/user-groups/<id>`
+`update_user_group`
 
 ## Parameters
 

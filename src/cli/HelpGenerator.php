@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace happycog\craftmcp\cli;
 
+use happycog\craftmcp\base\CommandMap;
 use ReflectionMethod;
 
 class HelpGenerator

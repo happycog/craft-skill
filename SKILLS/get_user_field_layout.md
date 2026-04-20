@@ -4,7 +4,7 @@ Retrieve the single global field layout used by Craft users.
 
 ## Endpoint
 
-`GET /api/users/field-layout`
+`get_user_field_layout`
 
 ## Parameters
 

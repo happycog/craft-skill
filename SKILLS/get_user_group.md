@@ -4,7 +4,7 @@ Retrieve a Craft user group by ID or handle.
 
 ## Endpoint
 
-`GET /api/user-groups/<id>`
+`get_user_group`
 
 ## Parameters
 

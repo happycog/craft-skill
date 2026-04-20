@@ -2,9 +2,9 @@
 
 Search and list Commerce orders with flexible filtering options.
 
-## Route
+## Tool
 
-`GET /api/orders/search`
+`search_orders` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

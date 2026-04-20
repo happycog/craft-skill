@@ -2,9 +2,9 @@
 
 Create new sections with configurable types, entry types, and site settings.
 
-## Route
+## Tool
 
-`POST /api/sections`
+`create_section` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

@@ -2,9 +2,9 @@
 
 List all sections or filter by section IDs.
 
-## Route
+## Tool
 
-`GET /api/sections`
+`get_sections` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

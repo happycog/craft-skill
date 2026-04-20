@@ -4,7 +4,7 @@ Retrieve a single Address element by ID.
 
 ## Endpoint
 
-`GET /api/addresses/<id>`
+`get_address`
 
 ## Parameters
 

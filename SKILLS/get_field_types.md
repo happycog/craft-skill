@@ -2,9 +2,9 @@
 
 Discover available field types in the Craft installation.
 
-## Route
+## Tool
 
-`GET /api/fields/types`
+`get_field_types` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

@@ -5,133 +5,127 @@ description: Complete skill suite for managing Craft CMS content including users
 
 ## Important: Use this plugin, Not YAML Files
 
-**CRITICAL**: Always use this HTTP API to manage Craft CMS content. Never directly modify YAML configuration files in the `config/project/` directory. The API ensures proper validation, maintains data integrity, and handles all necessary relationships automatically. Direct YAML edits can corrupt your Craft installation.
+**CRITICAL**: Always use these skill tools (MCP or CLI) to manage Craft CMS content. Never directly modify YAML configuration files in the `config/project/` directory. The API ensures proper validation, maintains data integrity, and handles all necessary relationships automatically. Direct YAML edits can corrupt your Craft installation.
 
 **CRITICAL**: The `skills` plugin must be installed to Craft. You can verify installation by running `php craft plugin/list` and install it with `php craft plugin/install skills`
 
-## Base URL Configuration
+## How to call these tools
 
-All API routes require a base URL and API prefix. The standard Craft CMS configuration uses the `PRIMARY_SITE_URL` environment variable and a configurable API prefix:
+The plugin exposes each skill as an MCP tool and as a CLI command, backed by
+the same invokable class. Pick the surface that fits the caller:
 
-- **Environment Variable**: Check for `PRIMARY_SITE_URL` in ENV or `.env` file
-- **If Not Set**: Ask the user for the base URL to use
-- **API Prefix**: Configurable prefix that defaults to `/api`
-  - **Check Order**:
-    1. First check `config/skills.php` for `apiPrefix` in the PHP array
-    2. If not found, try the default `/api`
-    3. If requests fail, ask the user for the configured API prefix
-- **Route Format**: `{PRIMARY_SITE_URL}/{apiPrefix}/{endpoint}`
-- **Default Example**: `https://craft-site.com/api/sections`
-- **Custom Prefix Example**: `https://craft-site.com/custom-api/sections`
+- **MCP (HTTP)**: POST JSON-RPC to `{PRIMARY_SITE_URL}/{mcpPath}` (the
+  `mcpPath` setting defaults to `mcp`). See `docs/mcp.md` for a full
+  description of the transport, including the `Mcp-Session-Id` header.
+- **MCP (stdio)**: `php craft skills/mcp/serve` (useful for Claude Desktop
+  and similar clients that spawn the server as a subprocess).
+- **CLI**: `agent-craft <command>` — see the README for positional/flag
+  conventions. The same tools are addressable through `CommandMap`.
 
-## Request/Response Format
-
-All API endpoints:
-- **Return JSON**: All responses are in JSON format with structured data
-- **Accept Header**: Include `Accept: application/json` header in requests to ensure errors are also formatted as JSON for better error handling and debugging
-- **Content-Type**: Use `Content-Type: application/json` for POST/PUT requests with JSON body data
+All tools return JSON. Errors from the MCP transport are returned as
+JSON-RPC errors; CLI errors are written to STDERR with an exit code.
 
 ## Content
-- [create_entry](create_entry.md) - `POST /api/entries` - Create entries with section/entry type IDs and field data
-- [get_entry](get_entry.md) - `GET /api/entries/<id>` - Retrieve entry by ID with all fields and metadata
-- [update_entry](update_entry.md) - `PUT /api/entries/<id>` - Update entry (prefers draft workflow)
-- [delete_entry](delete_entry.md) - `DELETE /api/entries/<id>` - Delete entry (soft/permanent)
-- [search_content](search_content.md) - `GET /api/entries/search` - Search/filter entries by section/status/query
+- [create_entry](create_entry.md) - Create entries with section/entry type IDs and field data
+- [get_entry](get_entry.md) - Retrieve entry by ID with all fields and metadata
+- [update_entry](update_entry.md) - Update entry (prefers draft workflow)
+- [delete_entry](delete_entry.md) - Delete entry (soft/permanent)
+- [search_content](search_content.md) - Search/filter entries by section/status/query
 
 ## Drafts
-- [create_draft](create_draft.md) - `POST /api/drafts` - Create draft from scratch or existing entry
-- [update_draft](update_draft.md) - `PUT /api/drafts/<id>` - Update draft content/metadata (PATCH semantics)
-- [apply_draft](apply_draft.md) - `POST /api/drafts/<id>/apply` - Publish draft to canonical entry
+- [create_draft](create_draft.md) - Create draft from scratch or existing entry
+- [update_draft](update_draft.md) - Update draft content/metadata (PATCH semantics)
+- [apply_draft](apply_draft.md) - Publish draft to canonical entry
 
 ## Sections
-- [create_section](create_section.md) - `POST /api/sections` - Create section with types/versioning/sites
-- [get_sections](get_sections.md) - `GET /api/sections` - List all or filter by IDs
-- [update_section](update_section.md) - `PUT /api/sections/<id>` - Update properties/settings
-- [delete_section](delete_section.md) - `DELETE /api/sections/<id>` - Permanently delete (removes all entries)
+- [create_section](create_section.md) - Create section with types/versioning/sites
+- [get_sections](get_sections.md) - List all or filter by IDs
+- [update_section](update_section.md) - Update properties/settings
+- [delete_section](delete_section.md) - Permanently delete (removes all entries)
 
 ## Entry Types
-- [create_entry_type](create_entry_type.md) - `POST /api/entry-types` - Create with handle/name/layout
-- [get_entry_types](get_entry_types.md) - `GET /api/entry-types` - List with fields/usage/URLs
-- [update_entry_type](update_entry_type.md) - `PUT /api/entry-types/<id>` - Update properties/layout
-- [delete_entry_type](delete_entry_type.md) - `DELETE /api/entry-types/<id>` - Delete if not in use
+- [create_entry_type](create_entry_type.md) - Create with handle/name/layout
+- [get_entry_types](get_entry_types.md) - List with fields/usage/URLs
+- [update_entry_type](update_entry_type.md) - Update properties/layout
+- [delete_entry_type](delete_entry_type.md) - Delete if not in use
 
 ## Fields
-- [create_field](create_field.md) - `POST /api/fields` - Create with type and settings
-- [get_fields](get_fields.md) - `GET /api/fields` - List global or layout-specific
-- [get_field_types](get_field_types.md) - `GET /api/fields/types` - List available types
-- [update_field](update_field.md) - `PUT /api/fields/<id>` - Update properties/settings
-- [delete_field](delete_field.md) - `DELETE /api/fields/<id>` - Permanently delete (removes data)
+- [create_field](create_field.md) - Create with type and settings
+- [get_fields](get_fields.md) - List global or layout-specific
+- [get_field_types](get_field_types.md) - List available types
+- [update_field](update_field.md) - Update properties/settings
+- [delete_field](delete_field.md) - Permanently delete (removes data)
 
 ## Field Layouts
-- [create_field_layout](create_field_layout.md) - `POST /api/field-layouts` - Create empty field layout for entry types
-- [get_field_layout](get_field_layout.md) - `GET /api/field-layouts` - Get field layout structure by entry type/layout/element ID
-- [add_tab_to_field_layout](add_tab_to_field_layout.md) - `POST /api/field-layouts/<id>/tabs` - Add tab to field layout with flexible positioning (prepend/append/before/after)
-- [add_field_to_field_layout](add_field_to_field_layout.md) - `POST /api/field-layouts/<id>/fields` - Add custom field to tab with positioning, width, required, and display options
-- [add_ui_element_to_field_layout](add_ui_element_to_field_layout.md) - `POST /api/field-layouts/<id>/ui-elements` - Add UI elements (heading, tip, horizontal rule, markdown, template) to layouts
-- [move_element_in_field_layout](move_element_in_field_layout.md) - `PUT /api/field-layouts/<id>/elements` - Move fields/UI elements within or between tabs with precise positioning
-- [remove_element_from_field_layout](remove_element_from_field_layout.md) - `DELETE /api/field-layouts/<id>/elements` - Remove fields or UI elements from field layout
+- [create_field_layout](create_field_layout.md) - Create empty field layout for entry types
+- [get_field_layout](get_field_layout.md) - Get field layout structure by entry type/layout/element ID
+- [add_tab_to_field_layout](add_tab_to_field_layout.md) - Add tab to field layout with flexible positioning (prepend/append/before/after)
+- [add_field_to_field_layout](add_field_to_field_layout.md) - Add custom field to tab with positioning, width, required, and display options
+- [add_ui_element_to_field_layout](add_ui_element_to_field_layout.md) - Add UI elements (heading, tip, horizontal rule, markdown, template) to layouts
+- [move_element_in_field_layout](move_element_in_field_layout.md) - Move fields/UI elements within or between tabs with precise positioning
+- [remove_element_from_field_layout](remove_element_from_field_layout.md) - Remove fields or UI elements from field layout
 
 ## Sites
-- [get_sites](get_sites.md) - `GET /api/sites` - List all sites with IDs/handles/URLs
+- [get_sites](get_sites.md) - List all sites with IDs/handles/URLs
 
 ## Assets
-- [create_asset](create_asset.md) - `POST /api/assets` - Upload file from local/remote URL to volume
-- [update_asset](update_asset.md) - `PUT /api/assets/<id>` - Update metadata or replace file
-- [delete_asset](delete_asset.md) - `DELETE /api/assets/<id>` - Delete asset and file
-- [get_volumes](get_volumes.md) - `GET /api/volumes` - List asset volumes with IDs/URLs
+- [create_asset](create_asset.md) - Upload file from local/remote URL to volume
+- [update_asset](update_asset.md) - Update metadata or replace file
+- [delete_asset](delete_asset.md) - Delete asset and file
+- [get_volumes](get_volumes.md) - List asset volumes with IDs/URLs
 
 ## Addresses
-- [get_addresses](get_addresses.md) - `GET /api/addresses` - List/search addresses by owner, field, and location
-- [get_address](get_address.md) - `GET /api/addresses/<id>` - Retrieve address details with owner and field context
-- [create_address](create_address.md) - `POST /api/addresses` - Create generic owner-backed addresses for users or custom address fields
-- [update_address](update_address.md) - `PUT /api/addresses/<id>` - Update address attributes and custom fields
-- [delete_address](delete_address.md) - `DELETE /api/addresses/<id>` - Delete address (soft/permanent)
-- [get_address_field_layout](get_address_field_layout.md) - `GET /api/addresses/field-layout` - Retrieve the single global address field layout
+- [get_addresses](get_addresses.md) - List/search addresses by owner, field, and location
+- [get_address](get_address.md) - Retrieve address details with owner and field context
+- [create_address](create_address.md) - Create generic owner-backed addresses for users or custom address fields
+- [update_address](update_address.md) - Update address attributes and custom fields
+- [delete_address](delete_address.md) - Delete address (soft/permanent)
+- [get_address_field_layout](get_address_field_layout.md) - Retrieve the single global address field layout
 
 ## Users
-- [get_users](get_users.md) - `GET /api/users` - List/search users by query, identity fields, status, and optionally group
-- [get_user](get_user.md) - `GET /api/users/<id>` - Retrieve a user by ID, email, or username
-- [create_user](create_user.md) - `POST /api/users` - Create a user with native attributes and custom fields
-- [get_available_permissions](get_available_permissions.md) - `GET /api/users/permissions` - List all known permissions plus custom stored permission names
-- [update_user](update_user.md) - `PUT /api/users/<id>` - Update a user by ID, email, or username
-- [delete_user](delete_user.md) - `DELETE /api/users/<id>` - Delete a user by ID, email, or username
-- [get_user_field_layout](get_user_field_layout.md) - `GET /api/users/field-layout` - Retrieve the single global user field layout
+- [get_users](get_users.md) - List/search users by query, identity fields, status, and optionally group
+- [get_user](get_user.md) - Retrieve a user by ID, email, or username
+- [create_user](create_user.md) - Create a user with native attributes and custom fields
+- [get_available_permissions](get_available_permissions.md) - List all known permissions plus custom stored permission names
+- [update_user](update_user.md) - Update a user by ID, email, or username
+- [delete_user](delete_user.md) - Delete a user by ID, email, or username
+- [get_user_field_layout](get_user_field_layout.md) - Retrieve the single global user field layout
 
 ## User Groups
-- [get_user_groups](get_user_groups.md) - `GET /api/user-groups` - List user groups and their permissions
-- [get_user_group](get_user_group.md) - `GET /api/user-groups/<id>` - Retrieve a user group by ID or handle
-- [create_user_group](create_user_group.md) - `POST /api/user-groups` - Create a user group and set permissions
-- [update_user_group](update_user_group.md) - `PUT /api/user-groups/<id>` - Update a user group and its permissions
-- [delete_user_group](delete_user_group.md) - `DELETE /api/user-groups/<id>` - Delete a user group by ID or handle
+- [get_user_groups](get_user_groups.md) - List user groups and their permissions
+- [get_user_group](get_user_group.md) - Retrieve a user group by ID or handle
+- [create_user_group](create_user_group.md) - Create a user group and set permissions
+- [update_user_group](update_user_group.md) - Update a user group and its permissions
+- [delete_user_group](delete_user_group.md) - Delete a user group by ID or handle
 
 ## System
-- [health](health.md) - `GET /api/health` - Health check endpoint to verify plugin installation and API availability
+- [get_health](get_health.md) - Health check endpoint to verify plugin installation and API availability
 
 ## Commerce: Products
-- [create_product](create_product.md) - `POST /api/products` - Create product with type, title, SKU, price, and custom fields
-- [get_product](get_product.md) - `GET /api/products/<id>` - Retrieve product with variants, pricing, and custom fields
-- [get_products](get_products.md) - `GET /api/products/search` - Search/filter products by type/status/query
-- [update_product](update_product.md) - `PUT /api/products/<id>` - Update product attributes and custom fields
-- [delete_product](delete_product.md) - `DELETE /api/products/<id>` - Delete product (soft/permanent)
-- [get_product_types](get_product_types.md) - `GET /api/product-types` - List available Commerce product types
-- [get_product_type](get_product_type.md) - `GET /api/product-types/<id>` - Retrieve product type with field layouts and site settings
-- [create_product_type](create_product_type.md) - `POST /api/product-types` - Create product type with title, variant, layout, and site settings
-- [update_product_type](update_product_type.md) - `PUT /api/product-types/<id>` - Update product type configuration and site settings
-- [delete_product_type](delete_product_type.md) - `DELETE /api/product-types/<id>` - Delete product type with impact analysis and force protection
+- [create_product](create_product.md) - Create product with type, title, SKU, price, and custom fields
+- [get_product](get_product.md) - Retrieve product with variants, pricing, and custom fields
+- [get_products](get_products.md) - Search/filter products by type/status/query
+- [update_product](update_product.md) - Update product attributes and custom fields
+- [delete_product](delete_product.md) - Delete product (soft/permanent)
+- [get_product_types](get_product_types.md) - List available Commerce product types
+- [get_product_type](get_product_type.md) - Retrieve product type with field layouts and site settings
+- [create_product_type](create_product_type.md) - Create product type with title, variant, layout, and site settings
+- [update_product_type](update_product_type.md) - Update product type configuration and site settings
+- [delete_product_type](delete_product_type.md) - Delete product type with impact analysis and force protection
 
 ## Commerce: Variants
-- [create_variant](create_variant.md) - `POST /api/variants` - Add variant to existing product with SKU, price, and attributes
-- [get_variant](get_variant.md) - `GET /api/variants/<id>` - Retrieve variant with pricing, inventory, and dimensions
-- [update_variant](update_variant.md) - `PUT /api/variants/<id>` - Update variant pricing, SKU, stock, and fields
-- [delete_variant](delete_variant.md) - `DELETE /api/variants/<id>` - Delete variant (soft/permanent)
+- [create_variant](create_variant.md) - Add variant to existing product with SKU, price, and attributes
+- [get_variant](get_variant.md) - Retrieve variant with pricing, inventory, and dimensions
+- [update_variant](update_variant.md) - Update variant pricing, SKU, stock, and fields
+- [delete_variant](delete_variant.md) - Delete variant (soft/permanent)
 
 ## Commerce: Orders
-- [get_order](get_order.md) - `GET /api/orders/<id>` - Retrieve order with line items, totals, and addresses
-- [search_orders](search_orders.md) - `GET /api/orders/search` - Search/filter orders by email/status/date/payment
-- [update_order](update_order.md) - `PUT /api/orders/<id>` - Update order status or message
-- [get_order_statuses](get_order_statuses.md) - `GET /api/order-statuses` - List all order statuses with IDs/handles/colors
+- [get_order](get_order.md) - Retrieve order with line items, totals, and addresses
+- [search_orders](search_orders.md) - Search/filter orders by email/status/date/payment
+- [update_order](update_order.md) - Update order status or message
+- [get_order_statuses](get_order_statuses.md) - List all order statuses with IDs/handles/colors
 
 ## Commerce: Stores
-- [get_stores](get_stores.md) - `GET /api/stores` - List all stores with checkout/payment/tax configuration
-- [get_store](get_store.md) - `GET /api/stores/<id>` - Retrieve store with full configuration details
-- [update_store](update_store.md) - `PUT /api/stores/<id>` - Update store checkout, payment, and pricing settings
+- [get_stores](get_stores.md) - List all stores with checkout/payment/tax configuration
+- [get_store](get_store.md) - Retrieve store with full configuration details
+- [update_store](update_store.md) - Update store checkout, payment, and pricing settings

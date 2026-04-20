@@ -4,7 +4,7 @@ List all available Craft user permissions, grouped the same way Craft registers 
 
 ## Endpoint
 
-`GET /api/users/permissions`
+`get_available_permissions`
 
 ## Parameters
 

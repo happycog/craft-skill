@@ -2,9 +2,9 @@
 
 List all available Commerce order statuses.
 
-## Route
+## Tool
 
-`GET /api/order-statuses`
+`get_order_statuses` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

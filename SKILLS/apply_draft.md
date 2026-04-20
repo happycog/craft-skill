@@ -2,9 +2,9 @@
 
 Apply draft changes to the canonical entry, making content live.
 
-## Route
+## Tool
 
-`POST /api/drafts/<id>/apply`
+`apply_draft` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

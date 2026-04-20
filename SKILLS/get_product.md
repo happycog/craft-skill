@@ -2,9 +2,9 @@
 
 Retrieve complete Commerce product details by ID.
 
-## Route
+## Tool
 
-`GET /api/products/<id>`
+`get_product` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

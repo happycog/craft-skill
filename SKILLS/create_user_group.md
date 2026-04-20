@@ -4,7 +4,7 @@ Create a Craft user group and optionally set its permissions.
 
 ## Endpoint
 
-`POST /api/user-groups`
+`create_user_group`
 
 ## Parameters
 

@@ -2,9 +2,9 @@
 
 Update an existing Commerce product variant.
 
-## Route
+## Tool
 
-`PUT /api/variants/<id>`
+`update_variant` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

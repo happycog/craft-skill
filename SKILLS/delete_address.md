@@ -4,7 +4,7 @@ Delete an Address element.
 
 ## Endpoint
 
-`DELETE /api/addresses/<id>`
+`delete_address`
 
 ## Parameters
 

@@ -2,9 +2,9 @@
 
 Create a new Commerce product type with configurable fields, variants, and site settings.
 
-## Route
+## Tool
 
-`POST /api/product-types`
+`create_product_type` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

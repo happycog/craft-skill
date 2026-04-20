@@ -221,7 +221,7 @@ Errors are written to stderr with appropriate exit codes:
 
 ## Available Tools
 
-All tools from the HTTP API are available via CLI. Common operations include:
+All tools are available via CLI (same set is exposed over MCP — see `docs/mcp.md`). Common operations include:
 
 ### Entries
 - `entries/create` - Create new entry

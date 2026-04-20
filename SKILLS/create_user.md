@@ -4,7 +4,7 @@ Create a Craft user with native attributes and optional custom field values.
 
 ## Endpoint
 
-`POST /api/users`
+`create_user`
 
 ## Parameters
 

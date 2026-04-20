@@ -4,7 +4,7 @@ Update an existing Address element.
 
 ## Endpoint
 
-`PUT /api/addresses/<id>`
+`update_address`
 
 ## Parameters
 

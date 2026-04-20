@@ -2,9 +2,9 @@
 
 Retrieve complete Commerce order details by ID.
 
-## Route
+## Tool
 
-`GET /api/orders/<id>`
+`get_order` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

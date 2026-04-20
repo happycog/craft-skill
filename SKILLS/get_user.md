@@ -4,7 +4,7 @@ Retrieve a single Craft user by ID, email, or username.
 
 ## Endpoint
 
-`GET /api/users/<id>`
+`get_user`
 
 ## Parameters
 

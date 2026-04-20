@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace happycog\craftmcp\cli;
+namespace happycog\craftmcp\base;
 
 use happycog\craftmcp\tools\AddFieldToFieldLayout;
 use happycog\craftmcp\tools\AddTabToFieldLayout;

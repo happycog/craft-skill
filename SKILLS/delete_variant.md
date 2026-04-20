@@ -2,9 +2,9 @@
 
 Delete a Commerce product variant.
 
-## Route
+## Tool
 
-`DELETE /api/variants/<id>`
+`delete_variant` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

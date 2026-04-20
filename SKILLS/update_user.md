@@ -4,7 +4,7 @@ Update a Craft user resolved by ID, email, or username.
 
 ## Endpoint
 
-`PUT /api/users/<id>`
+`update_user`
 
 ## Parameters
 

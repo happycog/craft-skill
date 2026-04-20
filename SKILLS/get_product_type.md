@@ -2,9 +2,9 @@
 
 Get detailed information about a single Commerce product type by ID.
 
-## Route
+## Tool
 
-`GET /api/product-types/<id>`
+`get_product_type` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

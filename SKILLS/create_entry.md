@@ -2,9 +2,9 @@
 
 Create new entries in Craft CMS with custom field data and native attributes.
 
-## Route
+## Tool
 
-`POST /api/entries`
+`create_entry` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

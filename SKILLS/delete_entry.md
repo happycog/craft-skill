@@ -2,9 +2,9 @@
 
 Delete entries with soft delete or permanent deletion options.
 
-## Route
+## Tool
 
-`DELETE /api/entries/<id>`
+`delete_entry` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

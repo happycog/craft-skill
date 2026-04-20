@@ -2,9 +2,9 @@
 
 Get detailed information about a single Commerce store by ID.
 
-## Route
+## Tool
 
-`GET /api/stores/<id>`
+`get_store` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

@@ -2,9 +2,9 @@
 
 List all Commerce stores with their configuration.
 
-## Route
+## Tool
 
-`GET /api/stores`
+`get_stores` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

@@ -2,9 +2,9 @@
 
 Update an existing Commerce product's attributes and custom fields.
 
-## Route
+## Tool
 
-`PUT /api/products/<id>`
+`update_product` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 
