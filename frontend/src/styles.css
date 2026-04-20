@@ -1,0 +1,249 @@
+:root {
+  color-scheme: light;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skills-chat-shell {
+  display: grid;
+  gap: 20px;
+}
+
+.skills-chat-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.skills-chat-header h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.skills-chat-eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5c6b7a;
+}
+
+.skills-chat-subtitle {
+  margin: 8px 0 0;
+  max-width: 54ch;
+  color: #5c6b7a;
+}
+
+.skills-chat-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.skills-chat-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d8dee5;
+  border-radius: 999px;
+  background: #fff;
+  color: #44515f;
+  font-size: 12px;
+}
+
+.skills-chat-frame {
+  display: grid;
+  grid-template-rows: minmax(420px, 58vh) auto;
+  border: 1px solid #d8dee5;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fcfdff 0%, #f4f7fb 100%);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.skills-chat-conversation {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.skills-message {
+  display: grid;
+  gap: 6px;
+}
+
+.skills-message--user {
+  justify-items: end;
+}
+
+.skills-message-role {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #677789;
+}
+
+.skills-message-bubble {
+  max-width: min(78ch, 100%);
+  padding: 14px 16px;
+  border-radius: 18px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  background: #fff;
+  border: 1px solid #dde5ee;
+  color: #16202a;
+}
+
+.skills-message--user .skills-message-bubble {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border-color: #0f172a;
+  color: #f8fafc;
+}
+
+.skills-tool-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #d7e0ea;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.skills-tool-card p {
+  margin: 0;
+  color: #536272;
+}
+
+.skills-tool-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.skills-tool-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.skills-tool-status--running {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.skills-tool-status--complete {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.skills-chat-composer {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-top: 1px solid #d8dee5;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.skills-chat-composer textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 84px;
+  border: 1px solid #cad5e2;
+  border-radius: 16px;
+  padding: 14px 16px;
+  font: inherit;
+  line-height: 1.5;
+  background: #fff;
+  color: #16202a;
+}
+
+.skills-chat-composer textarea:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.skills-chat-composerFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.skills-chat-composerFooter span {
+  color: #677789;
+  font-size: 12px;
+}
+
+.skills-chat-composerFooter button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #0f172a;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.skills-chat-composerFooter button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.skills-cursor {
+  display: inline-block;
+  width: 10px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 999px;
+  background: currentColor;
+  animation: skills-blink 1s step-end infinite;
+}
+
+@keyframes skills-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .skills-chat-header,
+  .skills-chat-composerFooter {
+    display: grid;
+  }
+
+  .skills-chat-meta {
+    justify-content: flex-start;
+  }
+
+  .skills-chat-frame {
+    grid-template-rows: minmax(380px, 50vh) auto;
+  }
+}

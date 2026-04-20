@@ -8,3 +8,4 @@
 .DS_Store
 /agent-craft.phar
 /uploads
+/node_modules

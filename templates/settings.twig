@@ -1,0 +1,13 @@
+{% import '_includes/forms.twig' as forms %}
+
+<div id="skills-chat-root" data-api-prefix="{{ settings.apiPrefix|e('html_attr') }}"></div>
+
+<hr>
+
+{{ forms.textField({
+    label: 'API Prefix'|t('app'),
+    instructions: 'Existing plugin setting. The chat UI is front-end only for now and is not wired to this endpoint yet.'|t('app'),
+    id: 'apiPrefix',
+    name: 'apiPrefix',
+    value: settings.apiPrefix,
+}) }}
