@@ -2,9 +2,9 @@
 
 Retrieve field layout details including tabs and fields.
 
-## Route
+## Tool
 
-`GET /api/field-layouts`
+`get_field_layout` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

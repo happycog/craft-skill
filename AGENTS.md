@@ -305,8 +305,9 @@ test('tool retrieves entry', function () {
 ## Current State
 
 ### ✅ Completed Setup
-- [x] RESTful HTTP API with Valinor validation
-- [x] Controller-based architecture with automatic request mapping
+- [x] Native MCP (Model Context Protocol) server via `mcp/sdk`
+- [x] Streamable HTTP transport (`{site}/mcp`) and stdio transport (`php craft skills/mcp/serve`)
+- [x] Every skill tool dual-surfaced as MCP tool + CLI command via a shared invokable class
 - [x] Complete CRUD operations for Craft entries
 - [x] Section, entry type, and field management endpoints
 - [x] Field layout configuration endpoints

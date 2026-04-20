@@ -2,9 +2,9 @@
 
 Delete custom fields permanently.
 
-## Route
+## Tool
 
-`DELETE /api/fields/<id>`
+`delete_field` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

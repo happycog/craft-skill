@@ -2,9 +2,9 @@
 
 Get health status of the Craft Skill plugin installation.
 
-## API Route
+## Tool
 
-`GET /api/health`
+`get_health` (MCP tool, also callable via CLI: `agent-craft health`)
 
 ## Parameters
 
@@ -19,11 +19,6 @@ Returns a JSON object with health status information including:
 - `site`: Primary site information (name, base URL)
 
 ## Example Usage
-
-### Request
-```bash
-curl -X GET http://craft-site.com/api/health
-```
 
 ### Response
 ```json

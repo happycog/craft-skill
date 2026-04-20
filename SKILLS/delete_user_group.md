@@ -4,7 +4,7 @@ Delete a Craft user group by ID or handle.
 
 ## Endpoint
 
-`DELETE /api/user-groups/<id>`
+`delete_user_group`
 
 ## Parameters
 

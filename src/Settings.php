@@ -6,7 +6,7 @@ use craft\base\Model;
 
 class Settings extends Model
 {
-    public string $apiPrefix = 'api';
+    public string $mcpPath = 'mcp';
 
     /**
      * @return array<string, mixed>
@@ -14,9 +14,8 @@ class Settings extends Model
     protected function defineRules(): array
     {
         return [
-            [['apiPrefix'], 'required'],
-            [['apiPrefix'], 'string'],
+            [['mcpPath'], 'required'],
+            [['mcpPath'], 'string'],
         ];
     }
 }
-

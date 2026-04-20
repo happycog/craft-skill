@@ -2,9 +2,9 @@
 
 Update entry type properties and field layout assignments.
 
-## Route
+## Tool
 
-`PUT /api/entry-types/<id>`
+`update_entry_type` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

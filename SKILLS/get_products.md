@@ -2,9 +2,9 @@
 
 Search and list Commerce products with flexible filtering options.
 
-## Route
+## Tool
 
-`GET /api/products/search`
+`get_products` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

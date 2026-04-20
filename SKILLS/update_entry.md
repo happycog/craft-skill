@@ -2,9 +2,9 @@
 
 Update existing entry content and attributes.
 
-## Route
+## Tool
 
-`PUT /api/entries/<id>`
+`update_entry` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

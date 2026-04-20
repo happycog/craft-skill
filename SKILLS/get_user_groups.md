@@ -4,7 +4,7 @@ List Craft user groups.
 
 ## Endpoint
 
-`GET /api/user-groups`
+`get_user_groups`
 
 ## Parameters
 

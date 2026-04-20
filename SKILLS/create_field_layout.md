@@ -2,9 +2,9 @@
 
 Create field layouts with organized tabs and fields.
 
-## Route
+## Tool
 
-`POST /api/field-layouts`
+`create_field_layout` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

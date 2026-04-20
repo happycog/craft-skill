@@ -4,7 +4,7 @@ List Address elements, with optional filtering by owner, address field, and loca
 
 ## Endpoint
 
-`GET /api/addresses`
+`get_addresses`
 
 ## Parameters
 

@@ -2,9 +2,9 @@
 
 Delete entry types with usage validation.
 
-## Route
+## Tool
 
-`DELETE /api/entry-types/<id>`
+`delete_entry_type` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

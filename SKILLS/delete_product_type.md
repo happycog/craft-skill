@@ -2,9 +2,9 @@
 
 Delete a Commerce product type with impact analysis and data protection.
 
-## Route
+## Tool
 
-`DELETE /api/product-types/<id>`
+`delete_product_type` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

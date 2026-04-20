@@ -6,6 +6,7 @@ namespace happycog\craftmcp\cli;
 
 use Craft;
 use CuyZ\Valinor\Mapper\ArgumentsMapper;
+use happycog\craftmcp\base\CommandMap;
 
 class CommandRouter
 {

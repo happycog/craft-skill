@@ -4,7 +4,7 @@ Delete a Craft user by ID, email, or username.
 
 ## Endpoint
 
-`DELETE /api/users/<id>`
+`delete_user`
 
 ## Parameters
 

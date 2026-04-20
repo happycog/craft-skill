@@ -4,7 +4,7 @@ Create an Address for a generic owner, either directly on an element or inside a
 
 ## Endpoint
 
-`POST /api/addresses`
+`create_address`
 
 ## Parameters
 

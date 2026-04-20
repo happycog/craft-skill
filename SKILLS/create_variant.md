@@ -2,9 +2,9 @@
 
 Create a new variant on an existing Commerce product.
 
-## Route
+## Tool
 
-`POST /api/variants`
+`create_variant` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

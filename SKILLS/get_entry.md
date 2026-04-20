@@ -2,9 +2,9 @@
 
 Retrieve complete entry details by ID.
 
-## Route
+## Tool
 
-`GET /api/entries/<id>`
+`get_entry` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

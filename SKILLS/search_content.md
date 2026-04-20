@@ -2,9 +2,9 @@
 
 Search for content across Craft CMS with flexible filtering options.
 
-## Route
+## Tool
 
-`GET /api/entries/search`
+`search_content` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

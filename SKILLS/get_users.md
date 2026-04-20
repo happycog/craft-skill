@@ -4,7 +4,7 @@ List Craft users, with optional filters for search text, email, username, status
 
 ## Endpoint
 
-`GET /api/users`
+`get_users`
 
 ## Parameters
 

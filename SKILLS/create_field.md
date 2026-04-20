@@ -2,9 +2,9 @@
 
 Create new custom fields with specified field types and settings.
 
-## Route
+## Tool
 
-`POST /api/fields`
+`create_field` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 
@@ -56,13 +56,13 @@ Matrix fields allow flexible, repeatable content blocks with nested fields. Befo
 **Step 1: Create Entry Types for Block Types**
 
 ```json
-POST /api/entry-types
+tools/call: create_entry_type
 {
   "name": "Text Block",
   "handle": "textBlock"
 }
 
-POST /api/entry-types
+tools/call: create_entry_type
 {
   "name": "Image Block",
   "handle": "imageBlock"
@@ -74,7 +74,7 @@ Both requests will return objects including a `uid` field - save these UIDs for 
 **Step 2: Create Matrix Field**
 
 ```json
-POST /api/fields
+tools/call: create_field
 {
   "name": "Content Blocks",
   "handle": "contentBlocks",

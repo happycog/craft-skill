@@ -4,7 +4,9 @@
     "license": "proprietary",
     "type": "craft-plugin",
     "require": {
-        "cuyz/valinor": "^2.2"
+        "cuyz/valinor": "^2.2",
+        "mcp/sdk": "^0.4.0",
+        "guzzlehttp/psr7": "^2.0"
     },
     "autoload": {
         "psr-4": {

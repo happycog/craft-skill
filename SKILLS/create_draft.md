@@ -2,9 +2,9 @@
 
 Create drafts either from scratch or from existing published entries.
 
-## Route
+## Tool
 
-`POST /api/drafts`
+`create_draft` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

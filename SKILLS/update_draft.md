@@ -2,9 +2,9 @@
 
 Update draft content and metadata using PATCH semantics.
 
-## Route
+## Tool
 
-`PUT /api/drafts/<id>`
+`update_draft` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

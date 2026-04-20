@@ -2,9 +2,9 @@
 
 Update a Commerce store's configuration settings.
 
-## Route
+## Tool
 
-`PUT /api/stores/<id>`
+`update_store` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

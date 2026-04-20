@@ -2,9 +2,9 @@
 
 Create a new Commerce product with a default variant.
 
-## Route
+## Tool
 
-`POST /api/products`
+`create_product` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

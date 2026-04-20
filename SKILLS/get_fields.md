@@ -2,9 +2,9 @@
 
 List all global fields or fields for a specific field layout.
 
-## Route
+## Tool
 
-`GET /api/fields`
+`get_fields` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

@@ -2,9 +2,9 @@
 
 Update section properties including name, type, and site configurations.
 
-## Route
+## Tool
 
-`PUT /api/sections/<id>`
+`update_section` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 

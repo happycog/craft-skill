@@ -4,7 +4,7 @@ Retrieve the single global field layout used by all Address elements.
 
 ## Endpoint
 
-`GET /api/addresses/field-layout`
+`get_address_field_layout`
 
 ## Parameters
 

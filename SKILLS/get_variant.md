@@ -2,9 +2,9 @@
 
 Retrieve complete Commerce variant details by ID.
 
-## Route
+## Tool
 
-`GET /api/variants/<id>`
+`get_variant` (MCP tool, also callable via CLI: `agent-craft` — see the CLI section of the README)
 
 ## Description
 
