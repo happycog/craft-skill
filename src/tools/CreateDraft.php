@@ -5,6 +5,7 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
+use craft\helpers\UrlHelper;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class CreateDraft
@@ -34,7 +35,7 @@ class CreateDraft
      * - provisional: Set to true for provisional drafts (auto-save drafts), defaults to false
      * - siteId: Optional site ID, defaults to primary site
      *
-     * Returns draft information including ID and edit URL for the Craft control panel.
+     * Returns draft information including ID, edit URL, and preview URL.
      *
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
@@ -157,6 +158,36 @@ class CreateDraft
             'provisional' => $draft->getIsDraft() ? $draft->isProvisionalDraft : $provisional,
             'siteId' => $draft->siteId,
             'url' => ElementHelper::elementEditorUrl($draft),
+            'previewUrl' => $this->previewUrl($draft),
         ];
+    }
+
+    private function previewUrl(Entry $draft): ?string
+    {
+        $previewTarget = $draft->getPreviewTargets()[0]['url'] ?? null;
+
+        if (!is_string($previewTarget) || $previewTarget === '') {
+            return null;
+        }
+
+        $token = Craft::$app->getTokens()->createPreviewToken([
+            'preview/preview', [
+                'elementType' => Entry::class,
+                'canonicalId' => (int)$draft->canonicalId,
+                'siteId' => (int)$draft->siteId,
+                'draftId' => (int)$draft->draftId,
+                'revisionId' => null,
+                'userId' => Craft::$app->getUser()->getId(),
+            ],
+        ]);
+
+        if (!is_string($token) || $token === '') {
+            return null;
+        }
+
+        return UrlHelper::urlWithParams($previewTarget, [
+            'token' => $token,
+            'x-craft-preview' => Craft::$app->getSecurity()->hashData($token),
+        ]);
     }
 }

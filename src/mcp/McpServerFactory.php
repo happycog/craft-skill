@@ -6,6 +6,7 @@ namespace happycog\craftmcp\mcp;
 
 use Craft;
 use happycog\craftmcp\base\CommandMap;
+use happycog\craftmcp\llm\LlmManager;
 use Mcp\Server;
 use Psr\Container\ContainerInterface;
 
@@ -38,6 +39,12 @@ final class McpServerFactory
         $builder = Server::builder()
             ->setServerInfo('Craft Skills MCP', $version, 'Craft CMS management tools exposed over the Model Context Protocol.')
             ->setContainer($this->container);
+
+        $builder->addPrompt(
+            handler: [LlmManager::class, 'aiWidgetSystemPrompt'],
+            name: LlmManager::AI_WIDGET_SYSTEM_PROMPT,
+            description: 'Returns the system prompt used by the embedded Craft control panel AI widget.',
+        );
 
         foreach (CommandMap::all() as $class) {
             $builder->addTool([$class, '__invoke']);

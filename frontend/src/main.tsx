@@ -1,6 +1,8 @@
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles.css';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import styles from './styles.css?inline';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -10,6 +12,8 @@ const uid = (): string =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
+const AI_WIDGET_OPEN_STORAGE_KEY = 'skills-chat-widget:is-open';
+
 // ─── Types ───────────────────────────────────────────────────────────
 
 type ToolStatus = 'running' | 'complete' | 'error';
@@ -17,8 +21,9 @@ type ToolStatus = 'running' | 'complete' | 'error';
 type ToolEvent = {
   id: string;
   kind: 'tool';
-  label: string;
-  detail: string;
+  name: string;
+  input: string;
+  result: string;
   status: ToolStatus;
 };
 
@@ -53,6 +58,34 @@ type ToolCall = {
   input: Record<string, unknown>;
 };
 
+function formatToolPayload(
+  value: unknown,
+  options: {
+    empty: string;
+    maxLength?: number;
+  },
+): string {
+  const text = typeof value === 'string'
+    ? value
+    : typeof value === 'object' && value !== null
+      ? JSON.stringify(value, null, 2)
+      : value == null
+        ? ''
+        : String(value);
+
+  const normalized = text.trim();
+
+  if (!normalized) {
+    return options.empty;
+  }
+
+  if (options.maxLength && normalized.length > options.maxLength) {
+    return `${normalized.slice(0, options.maxLength)}...`;
+  }
+
+  return normalized;
+}
+
 // ─── SSE reader ──────────────────────────────────────────────────────
 
 type SseCallback = {
@@ -68,12 +101,13 @@ async function streamChat(
   url: string,
   messages: InternalMessage[],
   userMessage: string,
+  currentUrl: string,
   callbacks: SseCallback,
 ) {
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, message: userMessage }),
+    body: JSON.stringify({ messages, message: userMessage, currentUrl }),
   });
 
   if (!response.ok) {
@@ -184,19 +218,35 @@ const welcomeTimeline: TimelineEvent[] = [
     id: 'welcome',
     kind: 'message',
     role: 'assistant',
-    text: 'Hi! I\u2019m your Craft CMS assistant. Ask me to create entries, search content, manage fields, or anything else \u2014 I have full access to your Craft installation.',
+    text: 'Hi! I\'m your Craft CMS assistant. Ask me to create entries, search content, manage fields, or anything else. I have full access to your Craft installation.',
   },
 ];
 
-function App({ chatUrl }: { chatUrl: string }) {
+type AppProps = {
+  chatUrl: string;
+  canChat: boolean;
+  configured: boolean;
+  context: 'cp' | 'site';
+  currentUrl: string;
+};
+
+function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
   const [timeline, setTimeline] = useState<TimelineEvent[]>(welcomeTimeline);
   const [history, setHistory] = useState<InternalMessage[]>([]);
   const [prompt, setPrompt] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.localStorage.getItem(AI_WIDGET_OPEN_STORAGE_KEY) === 'true';
+  });
   const conversationRef = useRef<HTMLDivElement | null>(null);
   const currentTurnId = useRef<string | null>(null);
   const currentThinkingId = useRef<string | null>(null);
   const currentAssistantId = useRef<string | null>(null);
+  const promptId = useRef(uid());
 
   // Auto-scroll to bottom on new content
   useEffect(() => {
@@ -207,17 +257,33 @@ function App({ chatUrl }: { chatUrl: string }) {
     }
   }, [timeline]);
 
+  useEffect(() => {
+    window.localStorage.setItem(AI_WIDGET_OPEN_STORAGE_KEY, String(isOpen));
+  }, [isOpen]);
+
   const chatSummary = useMemo(() => {
     const count = timeline.filter((e) => e.kind === 'message').length;
 
     return `${count} message${count === 1 ? '' : 's'}`;
   }, [timeline]);
 
+  const statusLabel = useMemo(() => {
+    if (!configured) {
+      return 'LLM not configured';
+    }
+
+    if (!canChat) {
+      return context === 'cp' ? 'Sign in required' : 'CP login required';
+    }
+
+    return context === 'cp' ? 'Control Panel' : 'Front-end';
+  }, [canChat, configured, context]);
+
   const handleSubmit = useCallback(
     () => {
       const text = prompt.trim();
 
-      if (!text || isStreaming) {
+      if (!text || isStreaming || !canChat || !configured) {
         return;
       }
 
@@ -236,7 +302,7 @@ function App({ chatUrl }: { chatUrl: string }) {
       currentThinkingId.current = null;
       currentAssistantId.current = null;
 
-      streamChat(chatUrl, history, text, {
+      streamChat(chatUrl, history, text, currentUrl, {
         onTurn(id) {
           const previousThinkingId = currentThinkingId.current;
           const thinkingId = `thinking-${id}`;
@@ -306,10 +372,9 @@ function App({ chatUrl }: { chatUrl: string }) {
               {
                 id: `tool-${id}`,
                 kind: 'tool',
-                label: name,
-                detail: Object.keys(input).length
-                  ? JSON.stringify(input, null, 2)
-                  : 'Executing\u2026',
+                name,
+                input: formatToolPayload(input, { empty: 'No input', maxLength: 280 }),
+                result: 'Running...',
                 status: 'running',
               },
             ]);
@@ -323,9 +388,10 @@ function App({ chatUrl }: { chatUrl: string }) {
                 e.id === `tool-${id}` && e.kind === 'tool'
                   ? {
                       ...e,
-                      detail: typeof result === 'object'
-                        ? JSON.stringify(result, null, 2).slice(0, 500)
-                        : String(result).slice(0, 500),
+                      result: formatToolPayload(result, {
+                        empty: 'No result',
+                        maxLength: 1000,
+                      }),
                       status: (result as Record<string, unknown>)?.error ? 'error' : 'complete',
                     }
                   : e,
@@ -382,10 +448,10 @@ function App({ chatUrl }: { chatUrl: string }) {
                   id: uid(),
                   kind: 'message' as const,
                   role: 'assistant' as const,
-                  text: `\u274c Error: ${message}`,
-                },
-              ];
-            });
+                   text: `Error: ${message}`,
+                 },
+               ];
+             });
           });
 
           setIsStreaming(false);
@@ -404,98 +470,178 @@ function App({ chatUrl }: { chatUrl: string }) {
               id: uid(),
               kind: 'message',
               role: 'assistant',
-              text: `\u274c Network error: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ]);
-        });
+               text: `Network error: ${err instanceof Error ? err.message : String(err)}`,
+             },
+           ]);
+         });
 
         setIsStreaming(false);
       });
     },
-    [prompt, isStreaming, history, chatUrl],
+    [prompt, isStreaming, history, chatUrl, currentUrl, canChat, configured],
   );
 
   return (
-    <section className="skills-chat-shell">
-      <div className="skills-chat-frame">
-        <div className="skills-chat-conversation" ref={conversationRef}>
-          {timeline.map((entry) =>
-            entry.kind === 'tool' ? (
-              <article className="skills-tool-card" key={entry.id}>
-                <div className="skills-tool-row">
-                  <strong>{entry.label}</strong>
-                  <span className={`skills-tool-status skills-tool-status--${entry.status}`}>
-                    {entry.status}
-                  </span>
+    <section className={`skills-chat-widget${isOpen ? ' skills-chat-widget--open' : ''}`}>
+      <button
+        aria-controls="skills-chat-panel"
+        aria-expanded={isOpen}
+        className="skills-chat-launcher"
+        onClick={() => setIsOpen((open) => !open)}
+        type="button"
+      >
+        <span className="skills-chat-launcherLabel">AI</span>
+        <span className="skills-chat-launcherMeta">{statusLabel}</span>
+      </button>
+
+      {isOpen ? (
+        <div className="skills-chat-panel" id="skills-chat-panel">
+          <header className="skills-chat-panelHeader">
+            <div>
+              <p className="skills-chat-eyebrow">Craft Skill</p>
+              <h2>Chat</h2>
+            </div>
+
+            <div className="skills-chat-meta">
+              <span>{context === 'cp' ? 'CP page' : 'Front-end page'}</span>
+              <span>{chatSummary}</span>
+            </div>
+          </header>
+
+          <div className="skills-chat-frame">
+            <div className="skills-chat-conversation" ref={conversationRef}>
+              {timeline.map((entry) =>
+                entry.kind === 'tool' ? (
+                  <article className="skills-tool-card" key={entry.id}>
+                    <details className="skills-tool-disclosure">
+                      <summary className="skills-tool-summary">
+                        <div className="skills-tool-row">
+                          <strong>{entry.name}</strong>
+                          <span className={`skills-tool-status skills-tool-status--${entry.status}`}>
+                            {entry.status}
+                          </span>
+                        </div>
+                        <pre className="skills-tool-detail skills-tool-detail--input">{entry.input}</pre>
+                      </summary>
+                      <pre className="skills-tool-detail">{entry.result}</pre>
+                    </details>
+                  </article>
+                ) : entry.kind === 'thinking' ? (
+                  <article className="skills-message skills-message--thinking" key={entry.id}>
+                    <div className="skills-message-bubble skills-message-bubble--thinking">
+                      Assistant is thinking
+                      <span aria-hidden="true" className="skills-thinking-dots">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                    </div>
+                  </article>
+                ) : (
+                  <article
+                    className={`skills-message skills-message--${entry.role}`}
+                    key={entry.id}
+                  >
+                    <div className="skills-message-role">{entry.role}</div>
+                    <div className="skills-message-bubble">
+                      {entry.role === 'assistant' ? (
+                        <ReactMarkdown
+                          components={{
+                            a: ({ ...props }) => (
+                              <a {...props} rel="noreferrer noopener" target="_blank" />
+                            ),
+                          }}
+                          remarkPlugins={[remarkGfm]}
+                        >
+                          {entry.text || (entry.streaming ? ' ' : '')}
+                        </ReactMarkdown>
+                      ) : (
+                        entry.text || (entry.streaming ? ' ' : null)
+                      )}
+                      {entry.streaming ? <span className="skills-cursor" /> : null}
+                    </div>
+                  </article>
+                ),
+              )}
+            </div>
+
+            {configured && canChat ? (
+              <div className="skills-chat-composer">
+                <label className="visually-hidden" htmlFor={promptId.current}>
+                  Prompt
+                </label>
+                <textarea
+                  id={promptId.current}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  placeholder="Ask me to create content, search entries, or manage fields..."
+                  rows={3}
+                  value={prompt}
+                />
+
+                <div className="skills-chat-composerFooter">
+                  <span>Enter to send, Shift+Enter for a new line.</span>
+                  <button
+                    disabled={isStreaming || prompt.trim().length === 0}
+                    onClick={handleSubmit}
+                    type="button"
+                  >
+                    {isStreaming ? 'Thinking...' : 'Send'}
+                  </button>
                 </div>
-                <pre className="skills-tool-detail">{entry.detail}</pre>
-              </article>
-            ) : entry.kind === 'thinking' ? (
-              <article className="skills-message skills-message--thinking" key={entry.id}>
-                <div className="skills-message-bubble skills-message-bubble--thinking">
-                  Assistant is thinking
-                  <span aria-hidden="true" className="skills-thinking-dots">
-                    <span />
-                    <span />
-                    <span />
-                  </span>
-                </div>
-              </article>
+              </div>
             ) : (
-              <article
-                className={`skills-message skills-message--${entry.role}`}
-                key={entry.id}
-              >
-                <div className="skills-message-role">{entry.role}</div>
-                <div className="skills-message-bubble">
-                  {entry.text || (entry.streaming ? ' ' : null)}
-                  {entry.streaming ? <span className="skills-cursor" /> : null}
-                </div>
-              </article>
-            ),
-          )}
-        </div>
-
-        <div className="skills-chat-composer">
-          <label className="visually-hidden" htmlFor="skills-chat-prompt">
-            Prompt
-          </label>
-          <textarea
-            id="skills-chat-prompt"
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-            placeholder="Ask me to create content, search entries, manage fields\u2026"
-            rows={3}
-            value={prompt}
-          />
-
-          <div className="skills-chat-composerFooter">
-            <span>{chatSummary}</span>
-            <button
-              disabled={isStreaming || prompt.trim().length === 0}
-              onClick={handleSubmit}
-              type="button"
-            >
-              {isStreaming ? 'Thinking\u2026' : 'Send'}
-            </button>
+              <div className="skills-chat-stateNotice" role="status">
+                {configured
+                  ? 'Sign into the Craft control panel to use the assistant from this page.'
+                  : 'Configure an LLM provider in config/ai.php before using the assistant.'}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      ) : null}
     </section>
   );
 }
 
-// ─── Mount ───────────────────────────────────────────────────────────
+class CraftSkillChatElement extends HTMLElement {
+  private root: ReturnType<typeof createRoot> | null = null;
 
-const rootElement = document.querySelector<HTMLElement>('[data-skills-chat-root]');
+  connectedCallback() {
+    if (this.root) {
+      return;
+    }
 
-if (rootElement) {
-  const chatUrl = rootElement.dataset.chatUrl ?? '';
+    const shadowRoot = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
+    const mountPoint = document.createElement('div');
+    const styleTag = document.createElement('style');
 
-  createRoot(rootElement).render(<App chatUrl={chatUrl} />);
+    styleTag.textContent = styles;
+    shadowRoot.replaceChildren(styleTag, mountPoint);
+
+    this.root = createRoot(mountPoint);
+    this.root.render(
+      <App
+        canChat={this.dataset.canChat === '1'}
+        chatUrl={this.dataset.chatUrl ?? ''}
+        configured={this.dataset.configured === '1'}
+        context={this.dataset.context === 'cp' ? 'cp' : 'site'}
+        currentUrl={this.dataset.currentUrl ?? window.location.href}
+      />,
+    );
+  }
+
+  disconnectedCallback() {
+    this.root?.unmount();
+    this.root = null;
+  }
+}
+
+if (!customElements.get('craft-skill-chat')) {
+  customElements.define('craft-skill-chat', CraftSkillChatElement);
 }

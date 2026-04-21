@@ -53,9 +53,10 @@ it('can update draft content fields', function () {
         attributeAndFieldData: ['title' => 'Updated Draft Title']
     );
 
-    expect($response)->toHaveKeys(['draftId', 'canonicalId', 'title', 'slug', 'url']);
+    expect($response)->toHaveKeys(['draftId', 'canonicalId', 'title', 'slug', 'url', 'previewUrl']);
     expect($response['title'])->toBe('Updated Draft Title');
     expect($response['draftId'])->toBe($draftId);
+    expect($response['previewUrl'])->not->toBeNull();
     
     $draft = \craft\elements\Entry::find()->id($draftId)->drafts()->one();
     expect($draft->title)->toBe('Updated Draft Title');
@@ -82,6 +83,7 @@ it('can update draft metadata', function () {
 
     expect($response['draftName'])->toBe('Updated Name');
     expect($response['draftNotes'])->toBe('Updated Notes');
+    expect($response['previewUrl'])->not->toBeNull();
     
     $draft = \craft\elements\Entry::find()->id($draftId)->drafts()->one();
     expect($draft->draftName)->toBe('Updated Name');
@@ -101,6 +103,7 @@ it('uses PATCH semantics - preserves existing fields', function () {
 
     expect($response['title'])->toBe('New Title');
     expect($response['slug'])->toBe('original-slug'); // Should be preserved
+    expect($response['previewUrl'])->not->toBeNull();
     
     $draft = \craft\elements\Entry::find()->id($draftId)->drafts()->one();
     expect($draft->title)->toBe('New Title');
@@ -129,6 +132,7 @@ it('can update both content and metadata in one call', function () {
     expect($response['title'])->toBe('Updated Title');
     expect($response['draftName'])->toBe('Updated Name');
     expect($response['draftNotes'])->toBe('New Notes');
+    expect($response['previewUrl'])->not->toBeNull();
 });
 
 it('works with provisional drafts', function () {
@@ -169,4 +173,5 @@ it('handles empty update gracefully', function () {
 
     expect($response['title'])->toBe('Original Title'); // Should remain unchanged
     expect($response['draftId'])->toBe($draftId);
+    expect($response['previewUrl'])->not->toBeNull();
 });

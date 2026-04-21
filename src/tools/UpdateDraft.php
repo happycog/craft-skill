@@ -5,6 +5,7 @@ namespace happycog\craftmcp\tools;
 use Craft;
 use craft\elements\Entry;
 use craft\helpers\ElementHelper;
+use craft\helpers\UrlHelper;
 use happycog\craftmcp\exceptions\ModelSaveException;
 
 class UpdateDraft
@@ -25,7 +26,7 @@ class UpdateDraft
      * For example, to update a body field: {"body":"Updated content"}
      * To update multiple fields: {"title":"New title","body":"Updated body"}
      *
-     * Returns updated draft information including edit URL for the Craft control panel.
+     * Returns updated draft information including edit URL and preview URL.
      *
      * @param array<string, mixed> $attributeAndFieldData
      * @return array<string, mixed>
@@ -99,6 +100,36 @@ class UpdateDraft
             'siteId' => $draft->siteId,
             'postDate' => $draft->postDate?->format('c'),
             'url' => ElementHelper::elementEditorUrl($draft),
+            'previewUrl' => $this->previewUrl($draft),
         ];
+    }
+
+    private function previewUrl(Entry $draft): ?string
+    {
+        $previewTarget = $draft->getPreviewTargets()[0]['url'] ?? null;
+
+        if (!is_string($previewTarget) || $previewTarget === '') {
+            return null;
+        }
+
+        $token = Craft::$app->getTokens()->createPreviewToken([
+            'preview/preview', [
+                'elementType' => Entry::class,
+                'canonicalId' => (int)$draft->canonicalId,
+                'siteId' => (int)$draft->siteId,
+                'draftId' => (int)$draft->draftId,
+                'revisionId' => null,
+                'userId' => Craft::$app->getUser()->getId(),
+            ],
+        ]);
+
+        if (!is_string($token) || $token === '') {
+            return null;
+        }
+
+        return UrlHelper::urlWithParams($previewTarget, [
+            'token' => $token,
+            'x-craft-preview' => Craft::$app->getSecurity()->hashData($token),
+        ]);
     }
 }

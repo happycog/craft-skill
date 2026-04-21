@@ -31,11 +31,12 @@ it('can create draft from scratch', function () {
         attributeAndFieldData: ['title' => 'Draft Title']
     );
 
-    expect($response)->toHaveKeys(['draftId', 'canonicalId', 'title', 'slug', 'draftName', 'provisional', 'url']);
+    expect($response)->toHaveKeys(['draftId', 'canonicalId', 'title', 'slug', 'draftName', 'provisional', 'url', 'previewUrl']);
     expect($response['title'])->toBe('Draft Title');
     expect($response['canonicalId'])->not->toBeNull(); // From scratch creates canonical then draft
     expect($response['provisional'])->toBeFalse();
     expect($response['_notes'])->toBe('The draft was successfully created.');
+    expect($response['previewUrl'])->not->toBeNull();
 });
 
 it('can create draft from existing entry', function () {
@@ -49,11 +50,12 @@ it('can create draft from existing entry', function () {
         draftNotes: 'Test notes'
     );
 
-    expect($response)->toHaveKeys(['draftId', 'canonicalId', 'title', 'draftName', 'draftNotes']);
+    expect($response)->toHaveKeys(['draftId', 'canonicalId', 'title', 'draftName', 'draftNotes', 'previewUrl']);
     expect($response['canonicalId'])->toBe($canonicalId);
     expect($response['title'])->toBe('Original Entry');
     expect($response['draftName'])->toBe('Test Draft');
     expect($response['draftNotes'])->toBe('Test notes');
+    expect($response['previewUrl'])->not->toBeNull();
     
     $draft = \craft\elements\Entry::find()->id($response['draftId'])->drafts()->one();
     expect($draft)->not->toBeNull();
@@ -75,6 +77,7 @@ it('can create provisional draft', function () {
     expect($response['title'])->toBe('Provisional Draft');
     expect($response['draftName'])->toBe('Draft 1');
     expect($response['_notes'])->toBe('The draft was successfully created.');
+    expect($response['previewUrl'])->not->toBeNull();
 });
 
 it('can override field data when creating from existing entry', function () {
@@ -90,6 +93,7 @@ it('can override field data when creating from existing entry', function () {
     expect($response['title'])->toBe('Modified Title');
     expect($response['canonicalId'])->toBe($canonicalId);
     expect($response['_notes'])->toBe('The draft was successfully created.');
+    expect($response['previewUrl'])->not->toBeNull();
 });
 
 it('validates required parameters', function () {

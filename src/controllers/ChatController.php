@@ -46,6 +46,7 @@ class ChatController extends CraftController
         $input   = json_decode($rawBody, true) ?? [];
 
         $newText = is_string($input['message'] ?? null) ? trim($input['message']) : '';
+        $currentUrl = is_string($input['currentUrl'] ?? null) ? trim($input['currentUrl']) : '';
 
         /** @var array<int, array<string, mixed>> $history */
         $history = is_array($input['messages'] ?? null) ? $input['messages'] : [];
@@ -72,7 +73,8 @@ class ChatController extends CraftController
         $revealedTools = [];
         $toolSearch    = $schemaBuilder->getTool(ToolSchemaBuilder::TOOL_SEARCH, compact: true);
         $tools         = $toolSearch === null ? [] : [$toolSearch];
-        $systemPrompt  = $llm->systemPrompt();
+        $systemPrompt  = $llm->buildSystemPrompt($currentUrl);
+
         $driver        = $llm->driver();
 
         // ── Agentic loop ─────────────────────────────────────────────
@@ -113,7 +115,6 @@ class ChatController extends CraftController
                         $schemaBuilder,
                         $toolCall['name'],
                         $toolCall['input'],
-                        array_values($revealedTools),
                     );
 
                     if ($toolCall['name'] === ToolSchemaBuilder::TOOL_SEARCH) {
@@ -171,11 +172,10 @@ class ChatController extends CraftController
     /**
      * Execute a tool by name with the given input.
      *
-      * @param  array<string, mixed> $input
-     * @param  array<int, string> $revealedTools
+     * @param  array<string, mixed> $input
      * @return array<string, mixed>
      */
-    private function executeTool(ToolSchemaBuilder $schema, string $name, array $input, array $revealedTools = []): array
+    private function executeTool(ToolSchemaBuilder $schema, string $name, array $input): array
     {
         if ($name === ToolSchemaBuilder::TOOL_SEARCH) {
             $query = is_string($input['query'] ?? null) ? $input['query'] : null;
@@ -184,10 +184,6 @@ class ChatController extends CraftController
             $limit = is_int($input['limit'] ?? null) ? $input['limit'] : 8;
 
             return $schema->searchTools($query, $names, $limit);
-        }
-
-        if (! in_array($name, $revealedTools, true)) {
-            return ['error' => "Tool {$name} has not been revealed yet. Call ToolSearch first."];
         }
 
         $class = $schema->getClass($name);
