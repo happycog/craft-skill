@@ -19,8 +19,13 @@ use ReflectionParameter;
  */
 final class ToolSchemaBuilder
 {
+    public const TOOL_SEARCH = 'ToolSearch';
+
     /** @var array<string, array<string, mixed>>|null */
     private ?array $tools = null;
+
+    /** @var array<string, array<string, mixed>>|null */
+    private ?array $compactTools = null;
 
     /** @var array<string, class-string>|null */
     private ?array $nameToClass = null;
@@ -28,16 +33,37 @@ final class ToolSchemaBuilder
     /**
      * All tool definitions keyed by tool name.
      *
+     * @param  array<int, string>|null $toolNames
      * @return array<string, array<string, mixed>>
      */
-    public function getTools(): array
+    public function getTools(?array $toolNames = null, bool $compact = false, bool $includeToolSearch = false): array
     {
-        if ($this->tools === null) {
-            $this->build();
+        $tools = $compact ? $this->compactTools() : $this->fullTools();
+
+        if ($toolNames !== null) {
+            $tools = array_intersect_key($tools, array_fill_keys($toolNames, true));
+        }
+
+        if ($includeToolSearch) {
+            $tools[self::TOOL_SEARCH] = $this->buildToolSearchDefinition($compact);
         }
 
         /** @var array<string, array<string, mixed>> */
-        return $this->tools;
+        return $tools;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getTool(string $toolName, bool $compact = false): ?array
+    {
+        if ($toolName === self::TOOL_SEARCH) {
+            return $this->buildToolSearchDefinition($compact);
+        }
+
+        $tools = $compact ? $this->compactTools() : $this->fullTools();
+
+        return $tools[$toolName] ?? null;
     }
 
     /**
@@ -47,11 +73,83 @@ final class ToolSchemaBuilder
      */
     public function getClass(string $toolName): ?string
     {
+        if ($toolName === self::TOOL_SEARCH) {
+            return null;
+        }
+
         if ($this->nameToClass === null) {
             $this->build();
         }
 
         return $this->nameToClass[$toolName] ?? null;
+    }
+
+    /**
+     * Return compact metadata for tools matching a user intent.
+     *
+     * @param  array<string>|null $names
+     * @return array<string, mixed>
+     */
+    public function searchTools(?string $query = null, ?array $names = null, int $limit = 8): array
+    {
+        $limit = max(1, min($limit, 20));
+        $tools = $this->compactTools();
+
+        /** @var array<int, string> $requestedNames */
+        $requestedNames = array_values(array_filter(
+            $names ?? [],
+            static fn (mixed $name): bool => is_string($name) && $name !== '',
+        ));
+
+        $needle  = mb_strtolower(trim($query ?? ''));
+        $matches = [];
+
+        foreach ($tools as $name => $tool) {
+            if ($requestedNames !== [] && ! in_array($name, $requestedNames, true)) {
+                continue;
+            }
+
+            $score = $this->toolSearchScore($name, $tool, $needle, $requestedNames);
+
+            if ($score <= 0) {
+                continue;
+            }
+
+            $matches[] = [
+                'score' => $score,
+                'tool' => [
+                    'name' => $name,
+                    'description' => $tool['description'],
+                    'parameters' => $this->summarizeParameters(
+                        is_array($tool['parameters'] ?? null) ? $tool['parameters'] : [],
+                    ),
+                ],
+            ];
+        }
+
+        usort($matches, static function (array $left, array $right): int {
+            $scoreCompare = $right['score'] <=> $left['score'];
+
+            if ($scoreCompare !== 0) {
+                return $scoreCompare;
+            }
+
+            return strcmp($left['tool']['name'], $right['tool']['name']);
+        });
+
+        $matches = array_slice($matches, 0, $limit);
+
+        return [
+            '_notes' => $this->buildToolSearchNotes($needle, $requestedNames, count($matches)),
+            'revealedTools' => array_values(array_map(
+                static fn (array $match): string => $match['tool']['name'],
+                $matches,
+            )),
+            'matches' => array_values(array_map(
+                static fn (array $match): array => $match['tool'],
+                $matches,
+            )),
+        ];
     }
 
     // ------------------------------------------------------------------
@@ -61,6 +159,7 @@ final class ToolSchemaBuilder
     private function build(): void
     {
         $this->tools = [];
+        $this->compactTools = [];
         $this->nameToClass = [];
 
         foreach (CommandMap::all() as $class) {
@@ -79,13 +178,44 @@ final class ToolSchemaBuilder
                 'description' => $this->extractDescription($method),
                 'parameters'  => $this->buildParameterSchema($method),
             ];
+            $this->compactTools[$name] = [
+                'name'        => $name,
+                'description' => $this->extractDescription($method, compact: true),
+                'parameters'  => $this->buildParameterSchema($method, compact: true),
+            ];
         }
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function fullTools(): array
+    {
+        if ($this->tools === null) {
+            $this->build();
+        }
+
+        /** @var array<string, array<string, mixed>> */
+        return $this->tools;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function compactTools(): array
+    {
+        if ($this->compactTools === null) {
+            $this->build();
+        }
+
+        /** @var array<string, array<string, mixed>> */
+        return $this->compactTools;
     }
 
     /**
      * Pull the free-text description from a method's PHPDoc (everything before the first @-tag).
      */
-    private function extractDescription(ReflectionMethod $method): string
+    private function extractDescription(ReflectionMethod $method, bool $compact = false): string
     {
         $doc = $method->getDocComment();
 
@@ -108,13 +238,16 @@ final class ToolSchemaBuilder
             }
         }
 
-        return implode("\n", $description);
+        $text = implode("\n", $description);
+
+        return $compact ? $this->compactText($text) : $text;
     }
 
     /**
+     * @param  bool $compact
      * @return array<string, mixed>
      */
-    private function buildParameterSchema(ReflectionMethod $method): array
+    private function buildParameterSchema(ReflectionMethod $method, bool $compact = false): array
     {
         $properties = [];
         $required   = [];
@@ -122,10 +255,10 @@ final class ToolSchemaBuilder
 
         foreach ($method->getParameters() as $param) {
             $name   = $param->getName();
-            $schema = $this->parameterToSchema($param, $method);
+            $schema = $this->parameterToSchema($param, $method, $compact);
 
             if (isset($paramDocs[$name])) {
-                $schema['description'] = $paramDocs[$name];
+                $schema['description'] = $compact ? $this->compactText($paramDocs[$name]) : $paramDocs[$name];
             }
 
             $properties[$name] = $schema;
@@ -152,7 +285,7 @@ final class ToolSchemaBuilder
      *
      * @return array<string, mixed>
      */
-    private function parameterToSchema(ReflectionParameter $param, ReflectionMethod $method): array
+    private function parameterToSchema(ReflectionParameter $param, ReflectionMethod $method, bool $compact = false): array
     {
         $type = $param->getType();
 
@@ -175,7 +308,7 @@ final class ToolSchemaBuilder
             };
         }
 
-        if ($param->isDefaultValueAvailable()) {
+        if (! $compact && $param->isDefaultValueAvailable()) {
             $default = $param->getDefaultValue();
 
             if ($default !== null) {
@@ -184,6 +317,175 @@ final class ToolSchemaBuilder
         }
 
         return $schema;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildToolSearchDefinition(bool $compact): array
+    {
+        return [
+            'name' => self::TOOL_SEARCH,
+            'description' => $compact
+                ? 'Find relevant tools and inspect their parameters before calling them.'
+                : "Find relevant tools and inspect their parameters before calling them.\n\nUse this first to discover the smallest set of tools needed for the task. Pass `query` for intent-based matching, or `names` when you already know exact tool names and want their parameter summaries.",
+            'parameters' => [
+                'type' => 'object',
+                'properties' => (object) [
+                    'query' => [
+                        'type' => 'string',
+                        'description' => $compact
+                            ? 'What you want to do.'
+                            : 'Short description of the task or capability you need, like "create an entry" or "list sections".',
+                    ],
+                    'names' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                        'description' => $compact
+                            ? 'Exact tool names to inspect.'
+                            : 'Optional exact tool names to inspect directly when you already know candidates.',
+                    ],
+                    'limit' => [
+                        'type' => 'integer',
+                        'description' => $compact
+                            ? 'Maximum matches to return.'
+                            : 'Maximum number of matches to return. Keep this small to reveal only the most relevant tools.',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed> $tool
+     * @param  array<int, string> $requestedNames
+     */
+    private function toolSearchScore(string $name, array $tool, string $needle, array $requestedNames): int
+    {
+        if ($requestedNames !== []) {
+            return in_array($name, $requestedNames, true) ? 1000 : 0;
+        }
+
+        if ($needle === '') {
+            return 100;
+        }
+
+        $haystacks = [
+            mb_strtolower($name),
+            mb_strtolower(is_string($tool['description'] ?? null) ? $tool['description'] : ''),
+        ];
+
+        $score = 0;
+
+        foreach ($haystacks as $haystack) {
+            if ($haystack === '') {
+                continue;
+            }
+
+            if ($haystack === $needle) {
+                $score = max($score, 900);
+            } elseif (str_contains($haystack, $needle)) {
+                $score = max($score, 700);
+            }
+        }
+
+        foreach (preg_split('/\s+/', $needle) ?: [] as $token) {
+            if ($token === '') {
+                continue;
+            }
+
+            foreach ($haystacks as $haystack) {
+                if ($haystack !== '' && str_contains($haystack, $token)) {
+                    $score += 50;
+                }
+            }
+        }
+
+        return $score;
+    }
+
+    /**
+     * @param  array<string, mixed> $parameters
+     * @return array<int, array<string, mixed>>
+     */
+    private function summarizeParameters(array $parameters): array
+    {
+        $properties = $parameters['properties'] ?? [];
+        $required = $parameters['required'] ?? [];
+
+        if (! is_object($properties) && ! is_array($properties)) {
+            return [];
+        }
+
+        /** @var array<string, mixed> $propertyList */
+        $propertyList = (array) $properties;
+        /** @var array<int, string> $requiredList */
+        $requiredList = is_array($required) ? array_values(array_filter($required, 'is_string')) : [];
+
+        $summary = [];
+
+        foreach ($propertyList as $name => $schema) {
+            if (! is_array($schema)) {
+                continue;
+            }
+
+            $type = is_string($schema['type'] ?? null) ? $schema['type'] : 'string';
+
+            if ($type === 'array' && is_array($schema['items'] ?? null) && is_string($schema['items']['type'] ?? null)) {
+                $type .= '<' . $schema['items']['type'] . '>';
+            }
+
+            $row = [
+                'name' => $name,
+                'type' => $type,
+                'required' => in_array($name, $requiredList, true),
+            ];
+
+            if (is_string($schema['description'] ?? null) && $schema['description'] !== '') {
+                $row['description'] = $schema['description'];
+            }
+
+            $summary[] = $row;
+        }
+
+        return $summary;
+    }
+
+    /**
+     * @param  array<int, string> $requestedNames
+     */
+    private function buildToolSearchNotes(string $needle, array $requestedNames, int $matchCount): string
+    {
+        if ($requestedNames !== []) {
+            return $matchCount === 0
+                ? 'None of the requested tool names were found.'
+                : 'Requested tool details returned. Only the listed tools will be revealed for direct use.';
+        }
+
+        if ($needle === '') {
+            return 'Browse the returned tools, then call ToolSearch again with exact names to inspect a narrower set.';
+        }
+
+        return $matchCount === 0
+            ? 'No tools matched that search. Try broader wording or inspect exact tool names.'
+            : 'Relevant tools returned. Use the revealed tool names directly on the next turn, or call ToolSearch again with exact names for a tighter set.';
+    }
+
+    private function compactText(string $text, int $maxLength = 160): string
+    {
+        $text = trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+
+        if ($text === '') {
+            return '';
+        }
+
+        $sentence = preg_split('/(?<=[.!?])\s+/', $text, 2)[0] ?? $text;
+
+        if (mb_strlen($sentence) <= $maxLength) {
+            return $sentence;
+        }
+
+        return rtrim(mb_substr($sentence, 0, $maxLength - 1)) . '…';
     }
 
     /**

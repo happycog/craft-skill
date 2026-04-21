@@ -69,7 +69,9 @@ class ChatController extends CraftController
         $messages[] = ['role' => 'user', 'content' => $newText];
 
         $schemaBuilder = new ToolSchemaBuilder();
-        $tools         = $schemaBuilder->getTools();
+        $revealedTools = [];
+        $toolSearch    = $schemaBuilder->getTool(ToolSchemaBuilder::TOOL_SEARCH, compact: true);
+        $tools         = $toolSearch === null ? [] : [$toolSearch];
         $systemPrompt  = $llm->systemPrompt();
         $driver        = $llm->driver();
 
@@ -107,7 +109,30 @@ class ChatController extends CraftController
 
             if ($hasToolCalls) {
                 foreach ($toolCalls as $toolCall) {
-                    $result = $this->executeTool($schemaBuilder, $toolCall['name'], $toolCall['input']);
+                    $result = $this->executeTool(
+                        $schemaBuilder,
+                        $toolCall['name'],
+                        $toolCall['input'],
+                        array_values($revealedTools),
+                    );
+
+                    if ($toolCall['name'] === ToolSchemaBuilder::TOOL_SEARCH) {
+                        /** @var array<int, string> $toolNames */
+                        $toolNames = array_values(array_filter(
+                            is_array($result['revealedTools'] ?? null) ? $result['revealedTools'] : [],
+                            'is_string',
+                        ));
+
+                        foreach ($toolNames as $toolName) {
+                            $revealedTools[$toolName] = $toolName;
+                        }
+
+                        $tools = array_values($schemaBuilder->getTools(
+                            toolNames: array_values($revealedTools),
+                            compact: true,
+                            includeToolSearch: true,
+                        ));
+                    }
 
                     $resultJson = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
@@ -146,11 +171,25 @@ class ChatController extends CraftController
     /**
      * Execute a tool by name with the given input.
      *
-     * @param  array<string, mixed> $input
+      * @param  array<string, mixed> $input
+     * @param  array<int, string> $revealedTools
      * @return array<string, mixed>
      */
-    private function executeTool(ToolSchemaBuilder $schema, string $name, array $input): array
+    private function executeTool(ToolSchemaBuilder $schema, string $name, array $input, array $revealedTools = []): array
     {
+        if ($name === ToolSchemaBuilder::TOOL_SEARCH) {
+            $query = is_string($input['query'] ?? null) ? $input['query'] : null;
+            /** @var array<string>|null $names */
+            $names = is_array($input['names'] ?? null) ? $input['names'] : null;
+            $limit = is_int($input['limit'] ?? null) ? $input['limit'] : 8;
+
+            return $schema->searchTools($query, $names, $limit);
+        }
+
+        if (! in_array($name, $revealedTools, true)) {
+            return ['error' => "Tool {$name} has not been revealed yet. Call ToolSearch first."];
+        }
+
         $class = $schema->getClass($name);
 
         if ($class === null) {

@@ -75,6 +75,7 @@ test('ToolSchemaBuilder resolves class from tool name', function () {
 
     expect($builder->getClass('SearchContent'))->toBe(\happycog\craftmcp\tools\SearchContent::class);
     expect($builder->getClass('CreateEntry'))->toBe(\happycog\craftmcp\tools\CreateEntry::class);
+    expect($builder->getClass(ToolSchemaBuilder::TOOL_SEARCH))->toBeNull();
     expect($builder->getClass('NonExistentTool'))->toBeNull();
 });
 
@@ -89,6 +90,43 @@ test('ToolSchemaBuilder extracts inline doc comments', function () {
     expect($props['status'])->toHaveKey('description');
     expect($props['status']['description'])->toContain('status');
     expect($props['sectionIds'])->toHaveKey('description');
+});
+
+test('ToolSchemaBuilder can build compact tool definitions', function () {
+    $builder = new ToolSchemaBuilder();
+    $tool = $builder->getTool('SearchContent', compact: true);
+
+    expect($tool)->not->toBeNull();
+    expect($tool['description'])->toBeString();
+    expect(strlen($tool['description']))->toBeLessThan(200);
+
+    $props = (array) $tool['parameters']['properties'];
+    expect($props['limit'])->not->toHaveKey('default');
+});
+
+test('ToolSchemaBuilder exposes virtual ToolSearch definition', function () {
+    $builder = new ToolSchemaBuilder();
+    $tool = $builder->getTool(ToolSchemaBuilder::TOOL_SEARCH, compact: true);
+
+    expect($tool)->not->toBeNull();
+    expect($tool['name'])->toBe(ToolSchemaBuilder::TOOL_SEARCH);
+    expect($tool['parameters']['type'])->toBe('object');
+
+    $props = (array) $tool['parameters']['properties'];
+    expect($props)->toHaveKey('query');
+    expect($props)->toHaveKey('names');
+    expect($props)->toHaveKey('limit');
+});
+
+test('ToolSchemaBuilder searches tools and returns revealed tool names', function () {
+    $builder = new ToolSchemaBuilder();
+    $result = $builder->searchTools('section', limit: 5);
+
+    expect($result)->toHaveKey('revealedTools');
+    expect($result)->toHaveKey('matches');
+    expect($result['revealedTools'])->not->toBeEmpty();
+    expect($result['matches'][0])->toHaveKey('name');
+    expect($result['matches'][0])->toHaveKey('parameters');
 });
 
 // ─── Anthropic message conversion ───────────────────────────────────

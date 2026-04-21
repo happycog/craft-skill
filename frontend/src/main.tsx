@@ -7,7 +7,7 @@ import './styles.css';
 /** uid() requires a secure context (HTTPS). Fall back for local dev over HTTP. */
 const uid = (): string =>
   typeof crypto.randomUUID === 'function'
-    ? uid()
+    ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -22,6 +22,11 @@ type ToolEvent = {
   status: ToolStatus;
 };
 
+type ThinkingEvent = {
+  id: string;
+  kind: 'thinking';
+};
+
 type MessageEvent = {
   id: string;
   kind: 'message';
@@ -30,7 +35,7 @@ type MessageEvent = {
   streaming?: boolean;
 };
 
-type TimelineEvent = ToolEvent | MessageEvent;
+type TimelineEvent = ToolEvent | ThinkingEvent | MessageEvent;
 
 /**
  * Internal message format shared with the PHP backend.
@@ -189,6 +194,8 @@ function App({ chatUrl }: { chatUrl: string }) {
   const [prompt, setPrompt] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const conversationRef = useRef<HTMLDivElement | null>(null);
+  const currentTurnId = useRef<string | null>(null);
+  const currentThinkingId = useRef<string | null>(null);
   const currentAssistantId = useRef<string | null>(null);
 
   // Auto-scroll to bottom on new content
@@ -225,43 +232,77 @@ function App({ chatUrl }: { chatUrl: string }) {
         { id: userMsgId, kind: 'message', role: 'user', text },
       ]);
 
+      currentTurnId.current = null;
+      currentThinkingId.current = null;
       currentAssistantId.current = null;
 
       streamChat(chatUrl, history, text, {
         onTurn(id) {
-          const msgId = `assistant-${id}`;
-          currentAssistantId.current = msgId;
+          const previousThinkingId = currentThinkingId.current;
+          const thinkingId = `thinking-${id}`;
+
+          currentTurnId.current = id;
+          currentThinkingId.current = thinkingId;
+          currentAssistantId.current = null;
 
           startTransition(() => {
             setTimeline((prev) => [
-              ...prev,
-              { id: msgId, kind: 'message', role: 'assistant', text: '', streaming: true },
+              ...prev.filter((e) => e.id !== previousThinkingId),
+              { id: thinkingId, kind: 'thinking' },
             ]);
           });
         },
 
         onText(content) {
           const targetId = currentAssistantId.current;
+          const turnId = currentTurnId.current;
 
-          if (!targetId) {
+          if (targetId) {
+            startTransition(() => {
+              setTimeline((prev) =>
+                prev.map((e) =>
+                  e.id === targetId && e.kind === 'message'
+                    ? { ...e, text: e.text + content }
+                    : e,
+                ),
+              );
+            });
+
             return;
           }
 
+          if (!turnId) {
+            return;
+          }
+
+          const thinkingId = currentThinkingId.current;
+          const assistantId = `assistant-${turnId}`;
+
+          currentThinkingId.current = null;
+          currentAssistantId.current = assistantId;
+
           startTransition(() => {
-            setTimeline((prev) =>
-              prev.map((e) =>
-                e.id === targetId && e.kind === 'message'
-                  ? { ...e, text: e.text + content }
-                  : e,
-              ),
-            );
+            setTimeline((prev) => [
+              ...prev.filter((e) => e.id !== thinkingId),
+              {
+                id: assistantId,
+                kind: 'message',
+                role: 'assistant',
+                text: content,
+                streaming: true,
+              },
+            ]);
           });
         },
 
         onToolStart(id, name, input) {
+          const thinkingId = currentThinkingId.current;
+
+          currentThinkingId.current = null;
+
           startTransition(() => {
             setTimeline((prev) => [
-              ...prev,
+              ...prev.filter((e) => e.id !== thinkingId),
               {
                 id: `tool-${id}`,
                 kind: 'tool',
@@ -295,11 +336,19 @@ function App({ chatUrl }: { chatUrl: string }) {
 
         onDone(newMessages) {
           // Mark all assistant bubbles as done streaming
+          const thinkingId = currentThinkingId.current;
+
+          currentTurnId.current = null;
+          currentThinkingId.current = null;
+          currentAssistantId.current = null;
+
           startTransition(() => {
             setTimeline((prev) =>
-              prev.map((e) =>
-                e.kind === 'message' && e.streaming ? { ...e, streaming: false } : e,
-              ),
+              prev
+                .filter((e) => e.id !== thinkingId)
+                .map((e) =>
+                  e.kind === 'message' && e.streaming ? { ...e, streaming: false } : e,
+                ),
             );
           });
 
@@ -314,12 +363,18 @@ function App({ chatUrl }: { chatUrl: string }) {
         },
 
         onError(message) {
+          const thinkingId = currentThinkingId.current;
+
+          currentTurnId.current = null;
+          currentThinkingId.current = null;
+          currentAssistantId.current = null;
+
           startTransition(() => {
             setTimeline((prev) => {
               // Mark streaming messages as done
-              const updated = prev.map((e) =>
-                e.kind === 'message' && e.streaming ? { ...e, streaming: false } : e,
-              );
+              const updated = prev
+                .filter((e) => e.id !== thinkingId)
+                .map((e) => (e.kind === 'message' && e.streaming ? { ...e, streaming: false } : e));
 
               return [
                 ...updated,
@@ -336,9 +391,15 @@ function App({ chatUrl }: { chatUrl: string }) {
           setIsStreaming(false);
         },
       }).catch((err) => {
+        const thinkingId = currentThinkingId.current;
+
+        currentTurnId.current = null;
+        currentThinkingId.current = null;
+        currentAssistantId.current = null;
+
         startTransition(() => {
           setTimeline((prev) => [
-            ...prev,
+            ...prev.filter((e) => e.id !== thinkingId),
             {
               id: uid(),
               kind: 'message',
@@ -368,6 +429,17 @@ function App({ chatUrl }: { chatUrl: string }) {
                   </span>
                 </div>
                 <pre className="skills-tool-detail">{entry.detail}</pre>
+              </article>
+            ) : entry.kind === 'thinking' ? (
+              <article className="skills-message skills-message--thinking" key={entry.id}>
+                <div className="skills-message-bubble skills-message-bubble--thinking">
+                  Assistant is thinking
+                  <span aria-hidden="true" className="skills-thinking-dots">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                </div>
               </article>
             ) : (
               <article
