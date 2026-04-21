@@ -1,1 +1,10 @@
-<div id="skills-chat-root" data-skills-chat-root data-mcp-path="{{ settings.mcpPath|e('html_attr') }}"></div>
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.textField({
+    label: 'MCP Path',
+    instructions: 'The URL path where the MCP server is accessible (e.g. "mcp" → yoursite.com/mcp).',
+    id: 'mcpPath',
+    name: 'mcpPath',
+    value: settings.mcpPath,
+    required: true,
+}) }}

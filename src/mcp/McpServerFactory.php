@@ -39,7 +39,7 @@ final class McpServerFactory
             ->setServerInfo('Craft Skills MCP', $version, 'Craft CMS management tools exposed over the Model Context Protocol.')
             ->setContainer($this->container);
 
-        foreach (CommandMap::MAP as $class) {
+        foreach (CommandMap::all() as $class) {
             $builder->addTool([$class, '__invoke']);
         }
 

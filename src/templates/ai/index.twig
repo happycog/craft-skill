@@ -1,0 +1,21 @@
+{% extends '_layouts/cp' %}
+
+{% set fullPageForm = false %}
+
+{% block content %}
+
+{% if not configured %}
+<div class="readable" style="padding: 24px">
+    <blockquote class="note">
+        <p><strong>LLM provider not configured.</strong> Copy the example config into your project to enable the AI chat:</p>
+        <pre style="margin:8px 0"><code>cp vendor/happycog/craft-skill/stubs/config/ai.php config/ai.php</code></pre>
+        <p>Then edit <code>config/ai.php</code> with your API key and provider settings.</p>
+    </blockquote>
+</div>
+{% endif %}
+
+<div id="skills-chat-root"
+     data-skills-chat-root
+     data-chat-url="{{ chatUrl }}"></div>
+
+{% endblock %}

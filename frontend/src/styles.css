@@ -14,9 +14,31 @@
   border: 0;
 }
 
+:where([data-skills-chat-root]) {
+  display: block;
+  height: 100%;
+}
+
+:where([data-skills-chat-root]) > * {
+  height: 100%;
+}
+
+/* Fill the CP content area when rendered as a full-page section */
+#content:has([data-skills-chat-root]) {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+#content:has([data-skills-chat-root]) > [data-skills-chat-root] {
+  flex: 1;
+  min-height: 0;
+}
+
 .skills-chat-shell {
   display: grid;
-  gap: 20px;
+  height: 100%;
 }
 
 .skills-chat-header {
@@ -68,11 +90,9 @@
 
 .skills-chat-frame {
   display: grid;
-  grid-template-rows: minmax(420px, 58vh) auto;
-  border: 1px solid #d8dee5;
-  border-radius: 20px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
   background: linear-gradient(180deg, #fcfdff 0%, #f4f7fb 100%);
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
   overflow: hidden;
 }
 
@@ -80,6 +100,7 @@
   display: grid;
   align-content: start;
   gap: 14px;
+  min-height: 0;
   padding: 20px;
   overflow-y: auto;
 }
@@ -133,6 +154,20 @@
   color: #536272;
 }
 
+.skills-tool-detail {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-x: auto;
+  max-height: 160px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .skills-tool-row {
   display: flex;
   justify-content: space-between;
@@ -159,6 +194,11 @@
 .skills-tool-status--complete {
   background: #dcfce7;
   color: #166534;
+}
+
+.skills-tool-status--error {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .skills-chat-composer {
@@ -244,6 +284,6 @@
   }
 
   .skills-chat-frame {
-    grid-template-rows: minmax(380px, 50vh) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
   }
 }

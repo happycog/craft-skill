@@ -54,43 +54,29 @@ use happycog\craftmcp\tools\UpdateDraft;
 use happycog\craftmcp\tools\UpdateEntry;
 use happycog\craftmcp\tools\UpdateEntryType;
 use happycog\craftmcp\tools\UpdateField;
-use happycog\craftmcp\tools\UpdateOrder;
-use happycog\craftmcp\tools\UpdateProduct;
-use happycog\craftmcp\tools\UpdateProductType;
 use happycog\craftmcp\tools\UpdateSection;
 use happycog\craftmcp\tools\UpdateUser;
 use happycog\craftmcp\tools\UpdateUserGroup;
-use happycog\craftmcp\tools\UpdateVariant;
-use happycog\craftmcp\tools\CreateProduct;
-use happycog\craftmcp\tools\CreateProductType;
-use happycog\craftmcp\tools\CreateVariant;
-use happycog\craftmcp\tools\DeleteProduct;
-use happycog\craftmcp\tools\DeleteProductType;
-use happycog\craftmcp\tools\DeleteVariant;
-use happycog\craftmcp\tools\GetOrder;
-use happycog\craftmcp\tools\GetOrderStatuses;
-use happycog\craftmcp\tools\GetProduct;
-use happycog\craftmcp\tools\GetProducts;
-use happycog\craftmcp\tools\GetProductType;
-use happycog\craftmcp\tools\GetProductTypes;
-use happycog\craftmcp\tools\GetVariant;
-use happycog\craftmcp\tools\GetStore;
-use happycog\craftmcp\tools\GetStores;
-use happycog\craftmcp\tools\SearchOrders;
-use happycog\craftmcp\tools\UpdateStore;
 
 /**
  * Centralized command-to-tool mapping.
- * 
+ *
  * This class defines all available CLI commands and their corresponding tool classes.
  * All tools are invokable (use __invoke method).
+ *
+ * Commerce tools are registered only when Craft Commerce is installed.
  */
 class CommandMap
 {
+    /** @var array<string, class-string>|null */
+    private static ?array $resolved = null;
+
     /**
+     * Core tools that ship with Craft CMS itself.
+     *
      * @var array<string, class-string>
      */
-    public const MAP = [
+    public const CORE = [
         // Assets
         'assets/create' => CreateAsset::class,
         'assets/delete' => DeleteAsset::class,
@@ -169,66 +155,85 @@ class CommandMap
 
         // Health
         'health' => GetHealth::class,
-
-        // Commerce: Products
-        'products/create' => CreateProduct::class,
-        'products/get' => GetProduct::class,
-        'products/search' => GetProducts::class,
-        'products/update' => UpdateProduct::class,
-        'products/delete' => DeleteProduct::class,
-        'product-types/list' => GetProductTypes::class,
-        'product-types/get' => GetProductType::class,
-        'product-types/create' => CreateProductType::class,
-        'product-types/update' => UpdateProductType::class,
-        'product-types/delete' => DeleteProductType::class,
-
-        // Commerce: Variants
-        'variants/create' => CreateVariant::class,
-        'variants/get' => GetVariant::class,
-        'variants/update' => UpdateVariant::class,
-        'variants/delete' => DeleteVariant::class,
-
-        // Commerce: Orders
-        'orders/get' => GetOrder::class,
-        'orders/search' => SearchOrders::class,
-        'orders/update' => UpdateOrder::class,
-        'order-statuses/list' => GetOrderStatuses::class,
-
-        // Commerce: Stores
-        'stores/list' => GetStores::class,
-        'stores/get' => GetStore::class,
-        'stores/update' => UpdateStore::class,
     ];
 
     /**
-     * Get the tool class for a command.
+     * Commerce tools — only loaded when `craft\commerce\Plugin` is available.
      *
-     * @param string $command
-     * @return class-string|null
+     * Uses string literals instead of `::class` constants so PHP never
+     * tries to autoload the Commerce tool classes at compile time.
+     *
+     * @var array<string, string>
      */
-    public static function getToolClass(string $command): ?string
-    {
-        return self::MAP[$command] ?? null;
-    }
+    private const COMMERCE = [
+        // Products
+        'products/create' => 'happycog\craftmcp\tools\CreateProduct',
+        'products/get' => 'happycog\craftmcp\tools\GetProduct',
+        'products/search' => 'happycog\craftmcp\tools\GetProducts',
+        'products/update' => 'happycog\craftmcp\tools\UpdateProduct',
+        'products/delete' => 'happycog\craftmcp\tools\DeleteProduct',
+        'product-types/list' => 'happycog\craftmcp\tools\GetProductTypes',
+        'product-types/get' => 'happycog\craftmcp\tools\GetProductType',
+        'product-types/create' => 'happycog\craftmcp\tools\CreateProductType',
+        'product-types/update' => 'happycog\craftmcp\tools\UpdateProductType',
+        'product-types/delete' => 'happycog\craftmcp\tools\DeleteProductType',
+
+        // Variants
+        'variants/create' => 'happycog\craftmcp\tools\CreateVariant',
+        'variants/get' => 'happycog\craftmcp\tools\GetVariant',
+        'variants/update' => 'happycog\craftmcp\tools\UpdateVariant',
+        'variants/delete' => 'happycog\craftmcp\tools\DeleteVariant',
+
+        // Orders
+        'orders/get' => 'happycog\craftmcp\tools\GetOrder',
+        'orders/search' => 'happycog\craftmcp\tools\SearchOrders',
+        'orders/update' => 'happycog\craftmcp\tools\UpdateOrder',
+        'order-statuses/list' => 'happycog\craftmcp\tools\GetOrderStatuses',
+
+        // Stores
+        'stores/list' => 'happycog\craftmcp\tools\GetStores',
+        'stores/get' => 'happycog\craftmcp\tools\GetStore',
+        'stores/update' => 'happycog\craftmcp\tools\UpdateStore',
+    ];
 
     /**
-     * Check if a command exists.
-     *
-     * @param string $command
-     * @return bool
-     */
-    public static function hasCommand(string $command): bool
-    {
-        return isset(self::MAP[$command]);
-    }
-
-    /**
-     * Get all commands.
+     * Return the full tool map, including optional Commerce tools when available.
      *
      * @return array<string, class-string>
      */
     public static function all(): array
     {
-        return self::MAP;
+        if (self::$resolved !== null) {
+            return self::$resolved;
+        }
+
+        /** @var array<string, class-string> $map */
+        $map = self::CORE;
+
+        if (class_exists(\craft\commerce\Plugin::class)) {
+            $map = array_merge($map, self::COMMERCE);
+        }
+
+        self::$resolved = $map;
+
+        return $map;
+    }
+
+    /**
+     * Get the tool class for a command.
+     *
+     * @return class-string|null
+     */
+    public static function getToolClass(string $command): ?string
+    {
+        return self::all()[$command] ?? null;
+    }
+
+    /**
+     * Check if a command exists.
+     */
+    public static function hasCommand(string $command): bool
+    {
+        return isset(self::all()[$command]);
     }
 }

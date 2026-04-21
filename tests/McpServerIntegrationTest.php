@@ -102,7 +102,7 @@ test('tools/list advertises every registered Craft skill tool', function () {
         $cursor = $payload['result']['nextCursor'] ?? null;
     } while ($cursor !== null);
 
-    foreach (\happycog\craftmcp\base\CommandMap::MAP as $class) {
+    foreach (\happycog\craftmcp\base\CommandMap::all() as $class) {
         $expectedName = (new \ReflectionClass($class))->getShortName();
         expect($names)->toContain($expectedName);
     }

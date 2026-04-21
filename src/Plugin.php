@@ -12,6 +12,19 @@ use craft\events\RegisterUrlRulesEvent;
 class Plugin extends BasePlugin
 {
     public bool $hasCpSettings = true;
+    public bool $hasCpSection = true;
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getCpNavItem(): ?array
+    {
+        $item = parent::getCpNavItem();
+        $item['label'] = 'AI';
+        $item['url'] = 'ai';
+
+        return $item;
+    }
 
     #[RegisterListener(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES)]
     protected function registerSiteUrlRules(RegisterUrlRulesEvent $event): void
@@ -24,10 +37,14 @@ class Plugin extends BasePlugin
         $event->rules[$mcpPath] = 'skills/mcp/index';
     }
 
+    #[RegisterListener(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES)]
+    protected function registerCpUrlRules(RegisterUrlRulesEvent $event): void
+    {
+        $event->rules['ai'] = 'skills/ai/index';
+    }
+
     protected function settingsHtml(): ?string
     {
-        Craft::$app->getView()->registerAssetBundle(ChatAsset::class);
-
         return Craft::$app->getView()->renderTemplate('skills/settings', [
             'settings' => $this->getSettings() ?? new Settings(),
         ]);
