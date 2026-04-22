@@ -58,6 +58,10 @@ class Plugin extends BasePlugin
 
         $currentUser = Craft::$app->getUser()->getIdentity();
         $canChat = $currentUser?->can('accessCp') ?? false;
+
+        if (!$canChat) {
+            return;
+        }
         $matchedElement = $urlManager->getMatchedElement();
         $pageContext = $llm->pageContext($matchedElement instanceof ElementInterface ? $matchedElement : null);
         $pageContextJson = json_encode($pageContext, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

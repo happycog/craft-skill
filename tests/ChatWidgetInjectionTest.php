@@ -5,7 +5,56 @@ use craft\web\View;
 use happycog\craftmcp\Plugin;
 use markhuot\craftpest\factories\Entry;
 
+test('chat widget injection skips guests', function () {
+    Craft::$app->getUser()->logout(false);
+
+    $event = new TemplateEvent([
+        'template' => 'index',
+        'variables' => [],
+        'templateMode' => View::TEMPLATE_MODE_SITE,
+        'output' => '<html><body><main>Test</main></body></html>',
+    ]);
+
+    /** @var Plugin $plugin */
+    $plugin = Craft::$app->getPlugins()->getPlugin('skills');
+
+    expect($plugin)->not->toBeNull();
+
+    $method = new ReflectionMethod($plugin, 'injectChatUi');
+    $method->setAccessible(true);
+    $method->invoke($plugin, $event);
+
+    expect($event->output)->not->toContain('<craft-skill-chat');
+});
+
+test('chat widget injection skips users without control panel access', function () {
+    $user = $this->createMock(\craft\elements\User::class);
+    $user->method('can')->with('accessCp')->willReturn(false);
+    Craft::$app->getUser()->setIdentity($user);
+
+    $event = new TemplateEvent([
+        'template' => 'index',
+        'variables' => [],
+        'templateMode' => View::TEMPLATE_MODE_SITE,
+        'output' => '<html><body><main>Test</main></body></html>',
+    ]);
+
+    /** @var Plugin $plugin */
+    $plugin = Craft::$app->getPlugins()->getPlugin('skills');
+
+    expect($plugin)->not->toBeNull();
+
+    $method = new ReflectionMethod($plugin, 'injectChatUi');
+    $method->setAccessible(true);
+    $method->invoke($plugin, $event);
+
+    expect($event->output)->not->toContain('<craft-skill-chat');
+});
+
 test('chat widget injection includes serialized page context', function () {
+    $user = createTestUser(admin: true);
+    Craft::$app->getUser()->setIdentity($user);
+
     $entry = Entry::factory()
         ->section('news')
         ->title('Injected Entry')
@@ -47,6 +96,9 @@ test('chat widget injection includes serialized page context', function () {
 });
 
 test('chat widget injection includes draftId when route params indicate a draft', function () {
+    $user = createTestUser(admin: true);
+    Craft::$app->getUser()->setIdentity($user);
+
     $entry = Entry::factory()
         ->section('news')
         ->title('Draft Context Entry')

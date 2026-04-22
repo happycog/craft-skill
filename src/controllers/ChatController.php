@@ -12,6 +12,7 @@ use happycog\craftmcp\cli\ValidationErrorFormatter;
 use happycog\craftmcp\llm\LlmManager;
 use happycog\craftmcp\llm\ToolSchemaBuilder;
 use yii\web\Response;
+use yii\web\ForbiddenHttpException;
 
 /**
  * SSE streaming endpoint for the embedded AI chat.
@@ -42,6 +43,12 @@ class ChatController extends CraftController
      */
     public function actionStream(): Response|null
     {
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if ($currentUser === null || !$currentUser->can('accessCp')) {
+            throw new ForbiddenHttpException('You must be logged in with control panel access to use the chat.');
+        }
+
         // Give the agentic loop generous room to finish.
         set_time_limit(300);
 
