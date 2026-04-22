@@ -14,6 +14,15 @@ class CommandRouter
         'attributeAndFieldData' => true,
     ];
 
+    /**
+     * @var array<class-string, array<string, string>>
+     */
+    private const FLAG_ALIASES = [
+        \happycog\craftmcp\tools\CreateDraft::class => [
+            'entryId' => 'canonicalId',
+        ],
+    ];
+
     public function __construct(
         protected ArgumentsMapper $mapper,
     ) {
@@ -61,7 +70,7 @@ class CommandRouter
         $parameters = $reflection->getParameters();
 
         // Merge positional arguments with flags by parameter name
-        $mergedParams = $this->mergeArguments($parameters, $positional, $flags);
+        $mergedParams = $this->mergeArguments($toolClass, $parameters, $positional, $flags);
 
         $this->validateAssociativeArrayParameters($mergedParams);
 
@@ -106,15 +115,17 @@ class CommandRouter
      * 'attributeAndFieldData' parameter if it exists, allowing field data to be
      * passed via simple flags like --title=foo instead of --attributeAndFieldData[title]=foo
      *
+     * @param class-string $toolClass
      * @param array<int, \ReflectionParameter> $parameters
      * @param array<int, mixed> $positional
      * @param array<string, mixed> $flags
      * @return array<string, mixed>
      */
-    private function mergeArguments(array $parameters, array $positional, array $flags): array
+    private function mergeArguments(string $toolClass, array $parameters, array $positional, array $flags): array
     {
         $merged = [];
         $paramNames = [];
+        $aliases = self::FLAG_ALIASES[$toolClass] ?? [];
 
         // Build a set of valid parameter names for quick lookup
         foreach ($parameters as $param) {
@@ -132,6 +143,10 @@ class CommandRouter
         // Separate flags into direct parameters and field data
         $fieldData = [];
         foreach ($flags as $key => $value) {
+            if (isset($aliases[$key])) {
+                $key = $aliases[$key];
+            }
+
             if (isset($paramNames[$key])) {
                 // This flag matches a method parameter directly
                 $merged[$key] = $value;

@@ -45,3 +45,37 @@ test('chat widget injection includes serialized page context', function () {
         ->toContain('&quot;requestedRoute&quot;:&quot;templates/render&quot;')
         ->toContain('&quot;routeParams&quot;:{&quot;entryHandle&quot;:&quot;news&quot;,&quot;preview&quot;:false}');
 });
+
+test('chat widget injection includes draftId when route params indicate a draft', function () {
+    $entry = Entry::factory()
+        ->section('news')
+        ->title('Draft Context Entry')
+        ->slug('draft-context-entry')
+        ->create();
+
+    Craft::$app->requestedRoute = 'entries/edit-entry';
+    Craft::$app->getUrlManager()->setMatchedElement($entry);
+    Craft::$app->getUrlManager()->setRouteParams([
+        'siteId' => $entry->siteId,
+        'draftId' => 456,
+    ], merge: false);
+
+    $event = new TemplateEvent([
+        'template' => 'news/_entry',
+        'variables' => [],
+        'templateMode' => View::TEMPLATE_MODE_SITE,
+        'output' => '<html><body><main>Test</main></body></html>',
+    ]);
+
+    /** @var Plugin $plugin */
+    $plugin = Craft::$app->getPlugins()->getPlugin('skills');
+
+    expect($plugin)->not->toBeNull();
+
+    $method = new ReflectionMethod($plugin, 'injectChatUi');
+    $method->setAccessible(true);
+    $method->invoke($plugin, $event);
+
+    expect($event->output)->toContain('&quot;draftId&quot;:456')
+        ->toContain('&quot;routeParams&quot;:{&quot;siteId&quot;:' . $entry->siteId . ',&quot;draftId&quot;:456}');
+});

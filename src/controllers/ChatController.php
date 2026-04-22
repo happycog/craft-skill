@@ -120,19 +120,22 @@ class ChatController extends CraftController
                         $toolCall['input'],
                     );
 
-                    $resultJson = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    $resultContent = is_string($result)
+                        ? $result
+                        : (json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}');
 
                     $this->sendSseEvent('tool_end', [
-                        'id'     => $toolCall['id'],
-                        'name'   => $toolCall['name'],
+                        'id' => $toolCall['id'],
+                        'name' => $toolCall['name'],
                         'result' => $result,
+                        'isError' => is_string($result) || (is_array($result) && array_key_exists('error', $result)),
                     ]);
 
                     $toolResultMessage = [
                         'role'       => 'tool',
                         'toolCallId' => $toolCall['id'],
                         'name'       => $toolCall['name'],
-                        'content'    => $resultJson ?: '{}',
+                        'content'    => $resultContent,
                     ];
 
                     $messages[]    = $toolResultMessage;
@@ -158,9 +161,9 @@ class ChatController extends CraftController
      * Execute a tool by name with the given input.
      *
      * @param  array<string, mixed> $input
-     * @return array<string, mixed>
+     * @return array<string, mixed>|string
      */
-    private function executeTool(ToolSchemaBuilder $schema, string $name, array $input): array
+    private function executeTool(ToolSchemaBuilder $schema, string $name, array $input): array|string
     {
         if ($name === ToolSchemaBuilder::TOOL_SEARCH) {
             $query = is_string($input['query'] ?? null) ? $input['query'] : null;

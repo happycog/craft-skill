@@ -386,6 +386,43 @@ test('entries/delete command with positional argument', function () {
     expect($getResult['exitCode'])->toBe(2); // Not found
 });
 
+test('drafts/delete command removes only the draft', function () {
+    $createEntryResult = ($this->execCli)(
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"Canonical For Draft Delete\"",
+        true
+    );
+
+    $createEntryData = ($this->parseJsonOutput)($createEntryResult['stdout']);
+    $entryId = $createEntryData['entryId'];
+    $this->createdEntryIds[] = $entryId;
+
+    $createDraftResult = ($this->execCli)(
+        "drafts/create --canonicalId={$entryId} --attributeAndFieldData[title]=\"Draft To Delete\"",
+        true
+    );
+
+    $createDraftData = ($this->parseJsonOutput)($createDraftResult['stdout']);
+    $draftId = $createDraftData['draftId'];
+
+    $result = ($this->execCli)("drafts/delete {$draftId}", true);
+
+    expect($result['exitCode'])->toBe(0);
+    expect($result['stderr'])->toBeEmpty();
+
+    $data = ($this->parseJsonOutput)($result['stdout']);
+    expect($data)->toBeArray();
+    expect($data['draftId'])->toBe($draftId);
+    expect($data['canonicalId'])->toBe($entryId);
+    expect($data['deletedPermanently'])->toBeFalse();
+
+    $getResult = ($this->execCli)("entries/get {$entryId}", true);
+    expect($getResult['exitCode'])->toBe(0);
+
+    $getData = ($this->parseJsonOutput)($getResult['stdout']);
+    expect($getData['id'])->toBe($entryId);
+    expect($getData['title'])->toBe('Canonical For Draft Delete');
+});
+
 test('entries/search command with query parameter', function () {
     // Create entry with searchable content via CLI
     // Use a unique title to avoid conflicts with other tests

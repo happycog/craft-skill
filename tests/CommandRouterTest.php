@@ -2,6 +2,7 @@
 
 use CuyZ\Valinor\MapperBuilder;
 use happycog\craftmcp\cli\CommandRouter;
+use happycog\craftmcp\tools\CreateDraft;
 use happycog\craftmcp\tools\GetEntry;
 use markhuot\craftpest\factories\Entry;
 
@@ -164,4 +165,28 @@ test('routeToolClass validates inputs consistently', function () {
     );
 
     expect($result['id'])->toBe($entry->id);
+});
+
+test('routeToolClass accepts entryId as canonicalId alias for CreateDraft', function () {
+    $mapper = (new MapperBuilder())
+        ->allowPermissiveTypes()
+        ->allowScalarValueCasting()
+        ->argumentsMapper();
+
+    $router = new CommandRouter($mapper);
+
+    $entry = Entry::factory()
+        ->section('news')
+        ->title('Canonical Entry')
+        ->create();
+
+    $result = $router->routeToolClass(
+        CreateDraft::class,
+        positional: [],
+        flags: ['entryId' => (string) $entry->id, 'draftName' => 'Alias Draft']
+    );
+
+    expect($result['canonicalId'])->toBe($entry->id);
+    expect($result['title'])->toBe('Canonical Entry');
+    expect($result['draftName'])->toBe('Alias Draft');
 });

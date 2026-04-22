@@ -35,6 +35,7 @@ JSON-RPC errors; CLI errors are written to STDERR with an exit code.
 ## Drafts
 - [create_draft](create_draft.md) - Create draft from scratch or existing entry
 - [update_draft](update_draft.md) - Update draft content/metadata (PATCH semantics)
+- [delete_draft](delete_draft.md) - Delete draft without changing canonical entry
 - [apply_draft](apply_draft.md) - Publish draft to canonical entry
 
 ## Sections

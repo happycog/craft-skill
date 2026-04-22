@@ -334,6 +334,7 @@ test('prompts/get returns the AI widget system prompt and accepts page context',
                 'elementTitle' => 'Homepage',
                 'elementSlug' => 'homepage',
                 'elementUri' => '__home__',
+                'draftId' => 123,
                 'siteId' => 1,
             ],
         ],
@@ -370,5 +371,6 @@ test('prompts/get returns the AI widget system prompt and accepts page context',
         ->toContain('- Element title: Homepage')
         ->toContain('- Element slug: homepage')
         ->toContain('- Element URI: __home__')
+        ->toContain('- Draft ID: 123')
         ->toContain('- Site ID: 1');
 });

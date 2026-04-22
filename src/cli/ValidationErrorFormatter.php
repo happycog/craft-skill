@@ -9,10 +9,7 @@ use happycog\craftmcp\llm\ToolSchemaBuilder;
 
 final class ValidationErrorFormatter
 {
-    /**
-     * @return array<string, mixed>
-     */
-    public function formatMappingError(MappingError $error, ?string $toolName = null): array
+    public function formatMappingError(MappingError $error, ?string $toolName = null): string
     {
         $errors = [];
 
@@ -37,27 +34,69 @@ final class ValidationErrorFormatter
             }
         }
 
-        $payload = [
-            'validation_errors' => $errors,
+        $lines = [
+            '# Tool validation failed',
+            '',
         ];
 
         if ($toolName !== null) {
-            $payload['tool'] = $toolName;
-            $payload['input_schema'] = (new ToolSchemaBuilder())->getToolInputSchema($toolName);
+            $lines[] = "Tool: `{$toolName}`";
+            $lines[] = '';
         }
 
-        return $payload;
+        $lines[] = '## Problems';
+        $lines[] = '';
+
+        foreach ($errors as $validationError) {
+            $parameter = $validationError['parameter'];
+            $message = $validationError['message'];
+            $lines[] = "- `{$parameter}`: {$message}";
+        }
+
+        if ($toolName !== null) {
+            $schema = (new ToolSchemaBuilder())->getToolInputSchema($toolName);
+            $schemaJson = json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            $lines[] = '';
+            $lines[] = '## Retry tips';
+            $lines[] = '';
+            $lines[] = '- Read the validation messages carefully before retrying; they often identify the wrong parameter or shape directly.';
+            $lines[] = '- Retry with arguments that match the schema below.';
+            $lines[] = '';
+            $lines[] = '## Input schema';
+            $lines[] = '';
+            $lines[] = '```json';
+            $lines[] = $schemaJson === false ? '{}' : $schemaJson;
+            $lines[] = '```';
+        }
+
+        return implode("\n", $lines);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function formatToolArgumentError(string $toolName, string $message): array
+    public function formatToolArgumentError(string $toolName, string $message): string
     {
-        return [
-            'error' => $message,
-            'tool' => $toolName,
-            'input_schema' => (new ToolSchemaBuilder())->getToolInputSchema($toolName),
-        ];
+        $schema = (new ToolSchemaBuilder())->getToolInputSchema($toolName);
+        $schemaJson = json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return implode("\n", [
+            '# Tool call failed',
+            '',
+            "Tool: `{$toolName}`",
+            '',
+            '## Error',
+            '',
+            $message,
+            '',
+            '## Retry tips',
+            '',
+            '- Check the schema and required parameters below before retrying.',
+            '- Retry with corrected arguments.',
+            '',
+            '## Input schema',
+            '',
+            '```json',
+            $schemaJson === false ? '{}' : $schemaJson,
+            '```',
+        ]);
     }
 }

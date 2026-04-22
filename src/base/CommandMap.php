@@ -20,6 +20,7 @@ use happycog\craftmcp\tools\CreateUser;
 use happycog\craftmcp\tools\CreateUserGroup;
 use happycog\craftmcp\tools\DeleteAsset;
 use happycog\craftmcp\tools\DeleteAddress;
+use happycog\craftmcp\tools\DeleteDraft;
 use happycog\craftmcp\tools\DeleteEntry;
 use happycog\craftmcp\tools\DeleteEntryType;
 use happycog\craftmcp\tools\DeleteField;
@@ -112,6 +113,7 @@ class CommandMap
         // Drafts
         'drafts/apply' => ApplyDraft::class,
         'drafts/create' => CreateDraft::class,
+        'drafts/delete' => DeleteDraft::class,
         'drafts/update' => UpdateDraft::class,
 
         // Entries

@@ -44,6 +44,27 @@ try {
 // Output error to stderr and exit with the given code
 function exitWithError(int $code, string|array $message, ?Throwable $exception = null, int $verbosity = 0): never
 {
+    if (is_string($message)) {
+        $output = $message;
+
+        if ($exception !== null && $verbosity >= 1) {
+            $output .= PHP_EOL . PHP_EOL . 'Debug message: ' . $exception->getMessage();
+
+            if ($verbosity >= 2) {
+                $output .= PHP_EOL . PHP_EOL . $exception->getTraceAsString();
+            }
+
+            if ($verbosity >= 3) {
+                $output .= PHP_EOL . PHP_EOL . 'File: ' . $exception->getFile();
+                $output .= PHP_EOL . 'Line: ' . $exception->getLine();
+                $output .= PHP_EOL . 'Code: ' . $exception->getCode();
+            }
+        }
+
+        fwrite(STDERR, $output . PHP_EOL);
+        exit($code);
+    }
+
     $output = ['error' => $message];
 
     if ($exception !== null && $verbosity >= 1) {

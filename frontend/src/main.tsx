@@ -230,7 +230,7 @@ type SseCallback = {
   onText: (content: string) => void;
   onTurn: (id: string) => void;
   onToolStart: (id: string, name: string, input: Record<string, unknown>) => void;
-  onToolEnd: (id: string, name: string, result: unknown) => void;
+  onToolEnd: (id: string, name: string, result: unknown, isError: boolean) => void;
   onDone: (newMessages: InternalMessage[]) => void;
   onError: (message: string) => void;
 };
@@ -334,6 +334,7 @@ async function streamChat(
             data.id as string,
             data.name as string,
             data.result,
+            data.isError === true,
           );
           break;
 
@@ -634,7 +635,7 @@ function App({ chatUrl, canChat, configured, context, pageContext }: AppProps) {
           });
         },
 
-        onToolEnd(id, name, result) {
+        onToolEnd(id, name, result, isError) {
           startTransition(() => {
             setTimeline((prev) =>
               prev.map((e) =>
@@ -645,7 +646,7 @@ function App({ chatUrl, canChat, configured, context, pageContext }: AppProps) {
                         empty: 'No result',
                         maxLength: 1000,
                       }),
-                      status: (result as Record<string, unknown>)?.error ? 'error' : 'complete',
+                      status: isError ? 'error' : 'complete',
                     }
                   : e,
               ),

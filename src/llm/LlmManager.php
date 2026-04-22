@@ -91,36 +91,18 @@ You have access to tools that interact with Craft CMS: creating and editing entr
 
 ToolSearch is available to help you discover relevant tools and inspect parameter summaries, but it is optional. If you already know the right tool for the task, you may call it directly.
 
-OpenUrl is available only inside the chat widget. Use `OpenUrl` with a `url` string after successful changes when opening the result will help the user immediately review what changed.
-
 The initial tool definitions may be intentionally minimal to keep context small. When a tool's parameters are unclear, use `ToolSearch` to inspect likely tools before calling them.
 
-Use `ToolSearch` like this:
-- Use `query` with a short capability phrase describing the user's goal, not a full sentence. Good examples: `find entry by slug`, `create draft from entry`, `update draft title`, `list sections`, `create asset`, `inspect entry types`.
-- Keep `limit` small, usually `3` to `5`, so you only reveal a narrow set of candidates.
-- If the first results are close but too broad, call `ToolSearch` again with `names` set to the exact candidate tool names you want to inspect more closely.
-- Use `ToolSearch` when you are unsure which tool to call or want a quick parameter summary.
-- If you already know the correct tool and its likely parameters, call it directly without searching first.
-- If a direct tool call fails because the parameters were wrong or incomplete, use `ToolSearch` to inspect that tool and then retry with the correct arguments.
+Guidelines:
+- When a user asks to change the content of an existing entry **always** create or update a draft.
+- If you know a draftId use draft tools.
+- Use live entry updates for content **only** if the user clearly asks to publish immediately or avoid drafts.
+- Always call `OpenUrl` after a content change so the user can see their changes in the browser. You can call this with any URL (an entry URL, a preview URL, etc...)
+- After making changes, provide the Craft control panel link so the user can review.
 - When a tool call returns an error, read the full tool response carefully before retrying because it often includes helpful formatting, debugging tips, or corrected parameter examples.
 
-Recommended pattern:
-1. If needed, call `ToolSearch` with a concise `query` and small `limit`.
-2. Review the returned matches and parameter summaries.
-3. If needed, call `ToolSearch` again with exact `names` to narrow further.
-4. Call the tool that best matches the task.
-
-Guidelines:
-- When a user asks to change the content of an existing entry, prefer creating or updating a draft rather than editing the live entry directly.
-- Use live entry updates for content only if the user clearly asks to publish immediately or avoid drafts.
-- Always keep the user on the current surface when redirecting. If the current surface is `site`, you may use `OpenUrl` for a frontend URL such as a preview URL. If the current surface is `cp`, do not use `OpenUrl` for a frontend URL; only open control panel URLs on the control panel surface.
-- After a successful change, prefer calling `OpenUrl` so the user lands on the most relevant result for the current surface.
-- When you create or update a draft, tell the user it is a draft and include both the Craft control panel edit link and the draft preview URL so they can review the changes safely.
-- When creating or modifying content, explain what you're doing and confirm the results.
-- After making changes, provide the Craft control panel link so the user can review.
-- Be concise and helpful.
-- If you're unsure about something, ask for clarification rather than guessing.
-- When searching for content, show relevant details like title, ID, and edit URL.
+**Never** edit live entry content directly unless you are specifically instructed to do so by the user.
+**Never** apply draft changes unless you are specifically instructed to do so by the user.
 PROMPT;
 
         $pageContext = $this->normalizePageContext($pageContext);
@@ -151,6 +133,7 @@ PROMPT;
         ?string $elementTitle = null,
         ?string $elementSlug = null,
         ?string $elementUri = null,
+        ?int $draftId = null,
         ?int $siteId = null,
     ): array
     {
@@ -166,6 +149,7 @@ PROMPT;
                 'elementTitle' => $elementTitle,
                 'elementSlug' => $elementSlug,
                 'elementUri' => $elementUri,
+                'draftId' => $draftId,
                 'siteId' => $siteId,
             ]),
         ]];
@@ -194,6 +178,7 @@ PROMPT;
             'elementTitle' => 'Element title',
             'elementSlug' => 'Element slug',
             'elementUri' => 'Element URI',
+            'draftId' => 'Draft ID',
             'siteId' => 'Site ID',
         ];
 
@@ -253,6 +238,10 @@ PROMPT;
             $context['elementType'] = $element::class;
             $context['siteId'] = $element->siteId;
 
+            if ($element->getIsDraft()) {
+                $context['draftId'] = $element->id;
+            }
+
             if (property_exists($element, 'title') && is_string($element->title) && trim($element->title) !== '') {
                 $context['elementTitle'] = $element->title;
             }
@@ -264,6 +253,12 @@ PROMPT;
             if (property_exists($element, 'uri') && is_string($element->uri) && trim($element->uri) !== '') {
                 $context['elementUri'] = $element->uri;
             }
+        }
+
+        $draftId = $context['routeParams']['draftId'] ?? null;
+
+        if (is_int($draftId) || is_string($draftId) && ctype_digit($draftId)) {
+            $context['draftId'] = (int) $draftId;
         }
 
         return $context;

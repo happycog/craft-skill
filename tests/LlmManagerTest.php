@@ -21,13 +21,13 @@ test('buildSystemPrompt includes structured page context', function () {
         'elementTitle' => 'Hello World',
         'elementSlug' => 'hello-world',
         'elementUri' => 'news/hello-world',
+        'draftId' => 456,
         'siteId' => 1,
     ]);
 
     expect($prompt)->toContain('Current page context:')
-        ->toContain('OpenUrl is available only inside the chat widget.')
+        ->toContain('Always call `OpenUrl` after a content change so the user can see their changes in the browser.')
         ->toContain('When a tool call returns an error, read the full tool response carefully before retrying')
-        ->toContain('Always keep the user on the current surface when redirecting.')
         ->toContain('- Current surface: site')
         ->toContain('- URL: https://example.test/news/hello-world')
         ->toContain('- Control panel URL: https://example.test/admin')
@@ -39,6 +39,7 @@ test('buildSystemPrompt includes structured page context', function () {
         ->toContain('- Element title: Hello World')
         ->toContain('- Element slug: hello-world')
         ->toContain('- Element URI: news/hello-world')
+        ->toContain('- Draft ID: 456')
         ->toContain('- Site ID: 1');
 });
 
@@ -60,5 +61,29 @@ test('pageContext includes matched element metadata', function () {
         'elementSlug' => 'context-entry',
         'elementUri' => 'news/context-entry',
         'siteId' => $entry->siteId,
+    ]);
+});
+
+test('pageContext includes draftId from route params', function () {
+    $entry = Entry::factory()
+        ->section('news')
+        ->title('Draft Route Entry')
+        ->slug('draft-route-entry')
+        ->create();
+
+    Craft::$app->getUrlManager()->setRouteParams([
+        'siteId' => $entry->siteId,
+        'draftId' => '789',
+    ], merge: false);
+
+    $llm = Craft::$container->get(LlmManager::class);
+    $context = $llm->pageContext($entry);
+
+    expect($context)->toMatchArray([
+        'draftId' => 789,
+        'routeParams' => [
+            'siteId' => $entry->siteId,
+            'draftId' => '789',
+        ],
     ]);
 });
