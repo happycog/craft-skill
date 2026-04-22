@@ -38,6 +38,7 @@ use happycog\craftmcp\tools\GetHealth;
 use happycog\craftmcp\tools\GetSection;
 use happycog\craftmcp\tools\GetSections;
 use happycog\craftmcp\tools\GetSites;
+use happycog\craftmcp\tools\GetTemplate;
 use happycog\craftmcp\tools\GetAvailablePermissions;
 use happycog\craftmcp\tools\GetUser;
 use happycog\craftmcp\tools\GetUserFieldLayout;
@@ -45,9 +46,11 @@ use happycog\craftmcp\tools\GetUserGroup;
 use happycog\craftmcp\tools\GetUserGroups;
 use happycog\craftmcp\tools\GetUsers;
 use happycog\craftmcp\tools\GetVolumes;
+use happycog\craftmcp\tools\ListTemplates;
 use happycog\craftmcp\tools\MoveElementInFieldLayout;
 use happycog\craftmcp\tools\RemoveElementFromFieldLayout;
 use happycog\craftmcp\tools\SearchContent;
+use happycog\craftmcp\tools\SearchTemplates;
 use happycog\craftmcp\tools\UpdateAsset;
 use happycog\craftmcp\tools\UpdateAddress;
 use happycog\craftmcp\tools\UpdateDraft;
@@ -149,6 +152,11 @@ class CommandMap
 
         // Sites
         'sites/list' => GetSites::class,
+
+        // Templates
+        'templates/list' => ListTemplates::class,
+        'templates/get' => GetTemplate::class,
+        'templates/search' => SearchTemplates::class,
 
         // Volumes
         'volumes/list' => GetVolumes::class,

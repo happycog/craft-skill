@@ -30,6 +30,30 @@ test('routes commands to correct tool methods', function () {
     expect($result['id'])->toBe($entry->id);
 });
 
+test('routes entries/get using slug flag', function () {
+    $mapper = (new MapperBuilder())
+        ->allowPermissiveTypes()
+        ->allowScalarValueCasting()
+        ->argumentsMapper();
+
+    $router = new CommandRouter($mapper);
+
+    $entry = Entry::factory()
+        ->section('news')
+        ->slug('router-entry-slug')
+        ->create();
+
+    $result = $router->route(
+        command: 'entries/get',
+        positional: [],
+        flags: ['slug' => 'router-entry-slug']
+    );
+
+    expect($result)->toBeArray();
+    expect($result['id'])->toBe($entry->id);
+    expect($result['slug'])->toBe('router-entry-slug');
+});
+
 test('throws exception for unknown commands', function () {
     $mapper = (new MapperBuilder())
         ->allowPermissiveTypes()
@@ -119,4 +143,25 @@ test('supports sections list command', function () {
     );
 
     expect($result)->toBeArray();
+});
+
+test('routeToolClass validates inputs consistently', function () {
+    $mapper = (new MapperBuilder())
+        ->allowPermissiveTypes()
+        ->allowScalarValueCasting()
+        ->argumentsMapper();
+
+    $router = new CommandRouter($mapper);
+
+    $entry = Entry::factory()
+        ->section('news')
+        ->create();
+
+    $result = $router->routeToolClass(
+        GetEntry::class,
+        positional: [],
+        flags: ['entryId' => (string) $entry->id]
+    );
+
+    expect($result['id'])->toBe($entry->id);
 });

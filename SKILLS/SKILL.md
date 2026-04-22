@@ -15,7 +15,7 @@ The plugin exposes each skill as an MCP tool and as a CLI command, backed by
 the same invokable class. Pick the surface that fits the caller:
 
 - **MCP (HTTP)**: POST JSON-RPC to `{PRIMARY_SITE_URL}/{mcpPath}` (the
-  `mcpPath` setting defaults to `mcp`). See `docs/mcp.md` for a full
+  `mcpPath` value in `config/ai.php` defaults to `mcp`). See `docs/mcp.md` for a full
   description of the transport, including the `Mcp-Session-Id` header.
 - **MCP (stdio)**: `php craft skills/mcp/serve` (useful for Claude Desktop
   and similar clients that spawn the server as a subprocess).
@@ -67,6 +67,11 @@ JSON-RPC errors; CLI errors are written to STDERR with an exit code.
 
 ## Sites
 - [get_sites](get_sites.md) - List all sites with IDs/handles/URLs
+
+## Templates
+- [list_templates](list_templates.md) - List all site template filenames relative to the templates directory
+- [get_template](get_template.md) - Retrieve the contents of a specific site template by filename
+- [search_templates](search_templates.md) - Search site template contents for a plain-text string
 
 ## Assets
 - [create_asset](create_asset.md) - Upload file from local/remote URL to volume

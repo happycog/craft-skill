@@ -37,11 +37,4 @@ class Plugin extends BasePlugin
         }
     }
 
-    /**
-     * @return class-string
-     */
-    protected static function settingsClass(): ?string
-    {
-        return \happycog\craftmcp\Settings::class;
-    }
 }

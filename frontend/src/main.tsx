@@ -1,3 +1,4 @@
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import ReactMarkdown from 'react-markdown';
@@ -13,6 +14,29 @@ const uid = (): string =>
     : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 const AI_WIDGET_OPEN_STORAGE_KEY = 'skills-chat-widget:is-open';
+const AI_WIDGET_SIZE_STORAGE_KEY = 'skills-chat-widget:size';
+const MOBILE_BREAKPOINT = 640;
+const DEFAULT_PANEL_WIDTH = 420;
+const DEFAULT_PANEL_HEIGHT = 720;
+const MIN_PANEL_WIDTH = 320;
+const MIN_PANEL_HEIGHT = 360;
+
+type PanelSize = {
+  width: number;
+  height: number;
+};
+
+type ResizeDirection = 'top' | 'left';
+
+type ResizeSession = {
+  direction: ResizeDirection;
+  startX: number;
+  startY: number;
+  startWidth: number;
+  startHeight: number;
+  previousCursor: string;
+  previousUserSelect: string;
+};
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -58,6 +82,21 @@ type ToolCall = {
   input: Record<string, unknown>;
 };
 
+type PageContext = {
+  surface?: 'cp' | 'site';
+  currentUrl?: string;
+  controlPanelUrl?: string;
+  requestPath?: string;
+  requestedRoute?: string;
+  routeParams?: Record<string, unknown>;
+  elementId?: number;
+  elementType?: string;
+  elementTitle?: string;
+  elementSlug?: string;
+  elementUri?: string;
+  siteId?: number;
+};
+
 function formatToolPayload(
   value: unknown,
   options: {
@@ -86,6 +125,105 @@ function formatToolPayload(
   return normalized;
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function parseUrl(value: string | undefined, base?: string): URL | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value, base ?? window.location.href);
+  } catch {
+    return null;
+  }
+}
+
+function isControlPanelUrl(url: URL, pageContext: PageContext): boolean {
+  const controlPanelUrl = parseUrl(pageContext.controlPanelUrl, window.location.href);
+
+  if (!controlPanelUrl) {
+    return false;
+  }
+
+  const controlPanelPath = controlPanelUrl.pathname.replace(/\/$/, '');
+
+  return url.origin === controlPanelUrl.origin
+    && (url.pathname === controlPanelPath || url.pathname.startsWith(`${controlPanelPath}/`));
+}
+
+function shouldRedirectForSurface(context: 'cp' | 'site', targetUrl: URL, pageContext: PageContext): boolean {
+  if (!['http:', 'https:'].includes(targetUrl.protocol)) {
+    return false;
+  }
+
+  if (context === 'cp') {
+    return isControlPanelUrl(targetUrl, pageContext);
+  }
+
+  return targetUrl.origin === window.location.origin && !isControlPanelUrl(targetUrl, pageContext);
+}
+
+function maybeRedirectForTool(name: string, result: unknown, context: 'cp' | 'site', pageContext: PageContext): void {
+  if (name !== 'OpenUrl') {
+    return;
+  }
+
+  const urlValue = (result as Record<string, unknown> | null)?.url;
+
+  if (typeof urlValue !== 'string') {
+    return;
+  }
+
+  const targetUrl = parseUrl(urlValue);
+
+  if (!targetUrl || !shouldRedirectForSurface(context, targetUrl, pageContext)) {
+    return;
+  }
+
+  window.location.assign(targetUrl.toString());
+}
+
+function getPanelBounds(): PanelSize {
+  if (typeof window === 'undefined') {
+    return {
+      width: DEFAULT_PANEL_WIDTH,
+      height: DEFAULT_PANEL_HEIGHT,
+    };
+  }
+
+  return {
+    width: Math.max(MIN_PANEL_WIDTH, window.innerWidth - 24),
+    height: Math.max(
+      MIN_PANEL_HEIGHT,
+      window.innerWidth <= MOBILE_BREAKPOINT ? window.innerHeight - 88 : window.innerHeight - 110,
+    ),
+  };
+}
+
+function normalizePanelSize(size: Partial<PanelSize> | null | undefined): PanelSize {
+  const bounds = getPanelBounds();
+
+  return {
+    width: clamp(
+      Math.round(typeof size?.width === 'number' && Number.isFinite(size.width) ? size.width : DEFAULT_PANEL_WIDTH),
+      MIN_PANEL_WIDTH,
+      bounds.width,
+    ),
+    height: clamp(
+      Math.round(
+        typeof size?.height === 'number' && Number.isFinite(size.height)
+          ? size.height
+          : DEFAULT_PANEL_HEIGHT,
+      ),
+      MIN_PANEL_HEIGHT,
+      bounds.height,
+    ),
+  };
+}
+
 // ─── SSE reader ──────────────────────────────────────────────────────
 
 type SseCallback = {
@@ -101,13 +239,13 @@ async function streamChat(
   url: string,
   messages: InternalMessage[],
   userMessage: string,
-  currentUrl: string,
+  pageContext: PageContext,
   callbacks: SseCallback,
 ) {
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, message: userMessage, currentUrl }),
+    body: JSON.stringify({ messages, message: userMessage, pageContext }),
   });
 
   if (!response.ok) {
@@ -227,10 +365,10 @@ type AppProps = {
   canChat: boolean;
   configured: boolean;
   context: 'cp' | 'site';
-  currentUrl: string;
+  pageContext: PageContext;
 };
 
-function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
+function App({ chatUrl, canChat, configured, context, pageContext }: AppProps) {
   const [timeline, setTimeline] = useState<TimelineEvent[]>(welcomeTimeline);
   const [history, setHistory] = useState<InternalMessage[]>([]);
   const [prompt, setPrompt] = useState('');
@@ -242,11 +380,33 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
 
     return window.localStorage.getItem(AI_WIDGET_OPEN_STORAGE_KEY) === 'true';
   });
+  const [panelSize, setPanelSize] = useState<PanelSize>(() => {
+    if (typeof window === 'undefined') {
+      return {
+        width: DEFAULT_PANEL_WIDTH,
+        height: DEFAULT_PANEL_HEIGHT,
+      };
+    }
+
+    try {
+      const stored = window.localStorage.getItem(AI_WIDGET_SIZE_STORAGE_KEY);
+
+      if (!stored) {
+        return normalizePanelSize(null);
+      }
+
+      return normalizePanelSize(JSON.parse(stored) as Partial<PanelSize>);
+    } catch {
+      return normalizePanelSize(null);
+    }
+  });
   const conversationRef = useRef<HTMLDivElement | null>(null);
   const currentTurnId = useRef<string | null>(null);
   const currentThinkingId = useRef<string | null>(null);
   const currentAssistantId = useRef<string | null>(null);
   const promptId = useRef(uid());
+  const resizeSessionRef = useRef<ResizeSession | null>(null);
+  const isCompactViewport = typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT;
 
   // Auto-scroll to bottom on new content
   useEffect(() => {
@@ -261,11 +421,104 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
     window.localStorage.setItem(AI_WIDGET_OPEN_STORAGE_KEY, String(isOpen));
   }, [isOpen]);
 
-  const chatSummary = useMemo(() => {
-    const count = timeline.filter((e) => e.kind === 'message').length;
+  useEffect(() => {
+    window.localStorage.setItem(AI_WIDGET_SIZE_STORAGE_KEY, JSON.stringify(panelSize));
+  }, [panelSize]);
 
-    return `${count} message${count === 1 ? '' : 's'}`;
-  }, [timeline]);
+  const stopResizing = useCallback(() => {
+    const session = resizeSessionRef.current;
+
+    if (!session) {
+      return;
+    }
+
+    document.body.style.cursor = session.previousCursor;
+    document.body.style.userSelect = session.previousUserSelect;
+    resizeSessionRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const session = resizeSessionRef.current;
+
+      if (!session) {
+        return;
+      }
+
+      const bounds = getPanelBounds();
+
+      if (session.direction === 'left') {
+        const width = clamp(
+          session.startWidth - (event.clientX - session.startX),
+          MIN_PANEL_WIDTH,
+          bounds.width,
+        );
+
+        setPanelSize((prev) => (prev.width === width ? prev : { ...prev, width }));
+        return;
+      }
+
+      const height = clamp(
+        session.startHeight - (event.clientY - session.startY),
+        MIN_PANEL_HEIGHT,
+        bounds.height,
+      );
+
+      setPanelSize((prev) => (prev.height === height ? prev : { ...prev, height }));
+    };
+
+    const handleViewportResize = () => {
+      setPanelSize((prev) => normalizePanelSize(prev));
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', stopResizing);
+    window.addEventListener('pointercancel', stopResizing);
+    window.addEventListener('resize', handleViewportResize);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', stopResizing);
+      window.removeEventListener('pointercancel', stopResizing);
+      window.removeEventListener('resize', handleViewportResize);
+      stopResizing();
+    };
+  }, [stopResizing]);
+
+  const handleResizeStart = useCallback(
+    (direction: ResizeDirection) => (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (window.innerWidth <= MOBILE_BREAKPOINT) {
+        return;
+      }
+
+      event.preventDefault();
+
+      resizeSessionRef.current = {
+        direction,
+        startX: event.clientX,
+        startY: event.clientY,
+        startWidth: panelSize.width,
+        startHeight: panelSize.height,
+        previousCursor: document.body.style.cursor,
+        previousUserSelect: document.body.style.userSelect,
+      };
+
+      document.body.style.cursor = direction === 'left' ? 'ew-resize' : 'ns-resize';
+      document.body.style.userSelect = 'none';
+    },
+    [panelSize.height, panelSize.width],
+  );
+
+  const panelStyle = useMemo<CSSProperties | undefined>(() => {
+    if (isCompactViewport) {
+      return undefined;
+    }
+
+    return {
+      width: `${panelSize.width}px`,
+      height: `${panelSize.height}px`,
+    };
+  }, [isCompactViewport, panelSize.height, panelSize.width]);
 
   const statusLabel = useMemo(() => {
     if (!configured) {
@@ -276,7 +529,7 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
       return context === 'cp' ? 'Sign in required' : 'CP login required';
     }
 
-    return context === 'cp' ? 'Control Panel' : 'Front-end';
+    return context === 'cp' ? 'Control Panel' : '';
   }, [canChat, configured, context]);
 
   const handleSubmit = useCallback(
@@ -302,7 +555,7 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
       currentThinkingId.current = null;
       currentAssistantId.current = null;
 
-      streamChat(chatUrl, history, text, currentUrl, {
+      streamChat(chatUrl, history, text, pageContext, {
         onTurn(id) {
           const previousThinkingId = currentThinkingId.current;
           const thinkingId = `thinking-${id}`;
@@ -381,7 +634,7 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
           });
         },
 
-        onToolEnd(id, _name, result) {
+        onToolEnd(id, name, result) {
           startTransition(() => {
             setTimeline((prev) =>
               prev.map((e) =>
@@ -398,6 +651,8 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
               ),
             );
           });
+
+          maybeRedirectForTool(name, result, context, pageContext);
         },
 
         onDone(newMessages) {
@@ -478,7 +733,7 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
         setIsStreaming(false);
       });
     },
-    [prompt, isStreaming, history, chatUrl, currentUrl, canChat, configured],
+    [prompt, isStreaming, history, chatUrl, pageContext, canChat, configured, context],
   );
 
   return (
@@ -491,23 +746,25 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
         type="button"
       >
         <span className="skills-chat-launcherLabel">AI</span>
-        <span className="skills-chat-launcherMeta">{statusLabel}</span>
+        {statusLabel ? <span className="skills-chat-launcherMeta">{statusLabel}</span> : null}
       </button>
 
       {isOpen ? (
-        <div className="skills-chat-panel" id="skills-chat-panel">
-          <header className="skills-chat-panelHeader">
-            <div>
-              <p className="skills-chat-eyebrow">Craft Skill</p>
-              <h2>Chat</h2>
-            </div>
-
-            <div className="skills-chat-meta">
-              <span>{context === 'cp' ? 'CP page' : 'Front-end page'}</span>
-              <span>{chatSummary}</span>
-            </div>
-          </header>
-
+        <div
+          className="skills-chat-panel"
+          id="skills-chat-panel"
+          style={panelStyle}
+        >
+          <div
+            aria-hidden="true"
+            className="skills-chat-resizeHandle skills-chat-resizeHandle--top"
+            onPointerDown={handleResizeStart('top')}
+          />
+          <div
+            aria-hidden="true"
+            className="skills-chat-resizeHandle skills-chat-resizeHandle--left"
+            onPointerDown={handleResizeStart('left')}
+          />
           <div className="skills-chat-frame">
             <div className="skills-chat-conversation" ref={conversationRef}>
               {timeline.map((entry) =>
@@ -521,9 +778,17 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
                             {entry.status}
                           </span>
                         </div>
-                        <pre className="skills-tool-detail skills-tool-detail--input">{entry.input}</pre>
                       </summary>
-                      <pre className="skills-tool-detail">{entry.result}</pre>
+                      <div className="skills-tool-body">
+                        <div className="skills-tool-section">
+                          <div className="skills-tool-label">Input</div>
+                          <pre className="skills-tool-detail skills-tool-detail--input">{entry.input}</pre>
+                        </div>
+                        <div className="skills-tool-section">
+                          <div className="skills-tool-label">Output</div>
+                          <pre className="skills-tool-detail">{entry.result}</pre>
+                        </div>
+                      </div>
                     </details>
                   </article>
                 ) : entry.kind === 'thinking' ? (
@@ -612,6 +877,25 @@ function App({ chatUrl, canChat, configured, context, currentUrl }: AppProps) {
 class CraftSkillChatElement extends HTMLElement {
   private root: ReturnType<typeof createRoot> | null = null;
 
+  private pageContext(): PageContext {
+    const raw = this.dataset.pageContext;
+
+    if (!raw) {
+      return { currentUrl: window.location.href };
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as PageContext;
+
+      return {
+        ...parsed,
+        currentUrl: parsed.currentUrl ?? window.location.href,
+      };
+    } catch {
+      return { currentUrl: window.location.href };
+    }
+  }
+
   connectedCallback() {
     if (this.root) {
       return;
@@ -631,7 +915,7 @@ class CraftSkillChatElement extends HTMLElement {
         chatUrl={this.dataset.chatUrl ?? ''}
         configured={this.dataset.configured === '1'}
         context={this.dataset.context === 'cp' ? 'cp' : 'site'}
-        currentUrl={this.dataset.currentUrl ?? window.location.href}
+        pageContext={this.pageContext()}
       />,
     );
   }

@@ -7,7 +7,9 @@ namespace happycog\craftmcp\mcp;
 use Craft;
 use happycog\craftmcp\base\CommandMap;
 use happycog\craftmcp\llm\LlmManager;
+use happycog\craftmcp\llm\ToolSchemaBuilder;
 use Mcp\Server;
+use Mcp\Server\Session\FileSessionStore;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -24,6 +26,8 @@ use Psr\Container\ContainerInterface;
  */
 final class McpServerFactory
 {
+    private const SESSION_DIRECTORY = 'craft-skills-mcp';
+
     private readonly ContainerInterface $container;
 
     public function __construct(?ContainerInterface $container = null)
@@ -35,10 +39,13 @@ final class McpServerFactory
     {
         $plugin = Craft::$app->getPlugins()->getPlugin('skills');
         $version = $plugin?->getVersion() ?? 'dev';
+        $toolSchemaBuilder = new ToolSchemaBuilder();
+        $toolExecutor = Craft::$container->get(McpToolExecutor::class);
 
         $builder = Server::builder()
             ->setServerInfo('Craft Skills MCP', $version, 'Craft CMS management tools exposed over the Model Context Protocol.')
-            ->setContainer($this->container);
+            ->setContainer($this->container)
+            ->setSession(new FileSessionStore($this->sessionDirectory()));
 
         $builder->addPrompt(
             handler: [LlmManager::class, 'aiWidgetSystemPrompt'],
@@ -47,9 +54,36 @@ final class McpServerFactory
         );
 
         foreach (CommandMap::all() as $class) {
-            $builder->addTool([$class, '__invoke']);
+            $reflection = new \ReflectionClass($class);
+            $toolName = $reflection->getShortName();
+            $tool = $toolSchemaBuilder->getTool($toolName, includeChatOnly: true);
+
+            if ($tool === null) {
+                continue;
+            }
+
+            $description = is_string($tool['description'] ?? null) ? $tool['description'] : null;
+            $inputSchema = is_array($tool['parameters'] ?? null) ? $tool['parameters'] : null;
+
+            $builder->addTool(
+                handler: static fn (\Mcp\Server\RequestContext $context): array|\Mcp\Schema\Result\CallToolResult => $toolExecutor->execute(
+                    toolClass: $class,
+                    toolName: $toolName,
+                    arguments: $context->getRequest() instanceof \Mcp\Schema\Request\CallToolRequest
+                        ? $context->getRequest()->arguments
+                        : [],
+                ),
+                name: $toolName,
+                description: $description,
+                inputSchema: $inputSchema,
+            );
         }
 
         return $builder->build();
+    }
+
+    private function sessionDirectory(): string
+    {
+        return Craft::$app->getPath()->getRuntimePath() . DIRECTORY_SEPARATOR . self::SESSION_DIRECTORY;
     }
 }

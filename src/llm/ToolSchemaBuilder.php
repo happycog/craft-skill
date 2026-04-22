@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace happycog\craftmcp\llm;
 
 use happycog\craftmcp\base\CommandMap;
+use happycog\craftmcp\tools\OpenUrl;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
@@ -21,14 +22,25 @@ final class ToolSchemaBuilder
 {
     public const TOOL_SEARCH = 'ToolSearch';
 
+    /** @var array<int, class-string> */
+    private const CHAT_ONLY_TOOLS = [
+        OpenUrl::class,
+    ];
+
     /** @var array<string, array<string, mixed>>|null */
     private ?array $tools = null;
 
     /** @var array<string, array<string, mixed>>|null */
     private ?array $compactTools = null;
 
+    /** @var array<string, array<string, mixed>>|null */
+    private ?array $minimalTools = null;
+
     /** @var array<string, class-string>|null */
     private ?array $nameToClass = null;
+
+    /** @var array<string, true>|null */
+    private ?array $chatOnlyNames = null;
 
     /**
      * All tool definitions keyed by tool name.
@@ -36,9 +48,13 @@ final class ToolSchemaBuilder
      * @param  array<int, string>|null $toolNames
      * @return array<string, array<string, mixed>>
      */
-    public function getTools(?array $toolNames = null, bool $compact = false, bool $includeToolSearch = false): array
+    public function getTools(?array $toolNames = null, bool $compact = false, bool $includeToolSearch = false, bool $minimal = false, bool $includeChatOnly = false): array
     {
-        $tools = $compact ? $this->compactTools() : $this->fullTools();
+        $tools = $minimal
+            ? $this->minimalTools()
+            : ($compact ? $this->compactTools() : $this->fullTools());
+
+        $tools = $this->filterChatOnlyTools($tools, $includeChatOnly);
 
         if ($toolNames !== null) {
             $tools = array_intersect_key($tools, array_fill_keys($toolNames, true));
@@ -55,15 +71,59 @@ final class ToolSchemaBuilder
     /**
      * @return array<string, mixed>|null
      */
-    public function getTool(string $toolName, bool $compact = false): ?array
+    public function getTool(string $toolName, bool $compact = false, bool $includeChatOnly = false): ?array
     {
         if ($toolName === self::TOOL_SEARCH) {
             return $this->buildToolSearchDefinition($compact);
         }
 
-        $tools = $compact ? $this->compactTools() : $this->fullTools();
+        $tools = $this->filterChatOnlyTools(
+            $compact ? $this->compactTools() : $this->fullTools(),
+            $includeChatOnly,
+        );
 
         return $tools[$toolName] ?? null;
+    }
+
+    /**
+     * Return a tool's input schema in a compact, agent-friendly shape.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getToolInputSchema(string $toolName, bool $includeChatOnly = false): ?array
+    {
+        $tool = $this->getTool($this->resolveToolDefinitionName($toolName), includeChatOnly: $includeChatOnly);
+
+        if ($tool === null) {
+            return null;
+        }
+
+        $parameters = is_array($tool['parameters'] ?? null) ? $tool['parameters'] : [];
+
+        return [
+            'type' => is_string($parameters['type'] ?? null) ? $parameters['type'] : 'object',
+            'required' => is_array($parameters['required'] ?? null)
+                ? array_values(array_filter($parameters['required'], 'is_string'))
+                : [],
+            'properties' => $this->summarizeParameters($parameters),
+        ];
+    }
+
+    private function resolveToolDefinitionName(string $toolName): string
+    {
+        if (isset($this->fullTools()[$toolName])) {
+            return $toolName;
+        }
+
+        $toolClass = CommandMap::getToolClass($toolName);
+
+        if ($toolClass === null) {
+            return $toolName;
+        }
+
+        $reflection = new ReflectionClass($toolClass);
+
+        return $reflection->getShortName();
     }
 
     /**
@@ -90,10 +150,10 @@ final class ToolSchemaBuilder
      * @param  array<string>|null $names
      * @return array<string, mixed>
      */
-    public function searchTools(?string $query = null, ?array $names = null, int $limit = 8): array
+    public function searchTools(?string $query = null, ?array $names = null, int $limit = 8, bool $includeChatOnly = false): array
     {
         $limit = max(1, min($limit, 20));
-        $tools = $this->compactTools();
+        $tools = $this->filterChatOnlyTools($this->compactTools(), $includeChatOnly);
 
         /** @var array<int, string> $requestedNames */
         $requestedNames = array_values(array_filter(
@@ -160,9 +220,11 @@ final class ToolSchemaBuilder
     {
         $this->tools = [];
         $this->compactTools = [];
+        $this->minimalTools = [];
         $this->nameToClass = [];
+        $this->chatOnlyNames = [];
 
-        foreach (CommandMap::all() as $class) {
+        foreach ($this->allToolClasses() as $class) {
             $reflection = new ReflectionClass($class);
 
             if (! $reflection->hasMethod('__invoke')) {
@@ -173,6 +235,11 @@ final class ToolSchemaBuilder
             $name   = $reflection->getShortName();
 
             $this->nameToClass[$name] = $class;
+
+            if (in_array($class, self::CHAT_ONLY_TOOLS, true)) {
+                $this->chatOnlyNames[$name] = true;
+            }
+
             $this->tools[$name] = [
                 'name'        => $name,
                 'description' => $this->extractDescription($method),
@@ -182,6 +249,14 @@ final class ToolSchemaBuilder
                 'name'        => $name,
                 'description' => $this->extractDescription($method, compact: true),
                 'parameters'  => $this->buildParameterSchema($method, compact: true),
+            ];
+            $this->minimalTools[$name] = [
+                'name'        => $name,
+                'description' => '',
+                'parameters'  => [
+                    'type' => 'object',
+                    'properties' => (object) [],
+                ],
             ];
         }
     }
@@ -210,6 +285,52 @@ final class ToolSchemaBuilder
 
         /** @var array<string, array<string, mixed>> */
         return $this->compactTools;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function minimalTools(): array
+    {
+        if ($this->minimalTools === null) {
+            $this->build();
+        }
+
+        /** @var array<string, array<string, mixed>> */
+        return $this->minimalTools;
+    }
+
+    /**
+     * @return array<int, class-string>
+     */
+    private function allToolClasses(): array
+    {
+        /** @var array<int, class-string> */
+        return array_values(array_unique([
+            ...array_values(CommandMap::all()),
+            ...self::CHAT_ONLY_TOOLS,
+        ]));
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $tools
+     * @return array<string, array<string, mixed>>
+     */
+    private function filterChatOnlyTools(array $tools, bool $includeChatOnly): array
+    {
+        if ($includeChatOnly) {
+            return $tools;
+        }
+
+        if ($this->chatOnlyNames === null) {
+            $this->build();
+        }
+
+        foreach (array_keys($this->chatOnlyNames ?? []) as $toolName) {
+            unset($tools[$toolName]);
+        }
+
+        return $tools;
     }
 
     /**
@@ -327,29 +448,29 @@ final class ToolSchemaBuilder
         return [
             'name' => self::TOOL_SEARCH,
             'description' => $compact
-                ? 'Find relevant tools and inspect their parameters before calling them.'
-                : "Find relevant tools and inspect their parameters before calling them.\n\nUse this first to discover the smallest set of tools needed for the task. Pass `query` for intent-based matching, or `names` when you already know exact tool names and want their parameter summaries.",
+                ? 'Find relevant tools first. Use a short capability query and a small limit.'
+                : "Find relevant tools and inspect their parameters before calling them.\n\nUse this first to discover the smallest set of tools needed for the task. Prefer a short capability-style `query` like `find entry by slug`, `create draft from entry`, `update draft content`, or `list sections`, rather than a long natural-language sentence. Keep `limit` small, usually 3-5. If you already know candidate tool names, pass `names` to inspect those exact tools and get their parameter summaries.",
             'parameters' => [
                 'type' => 'object',
                 'properties' => (object) [
                     'query' => [
                         'type' => 'string',
                         'description' => $compact
-                            ? 'What you want to do.'
-                            : 'Short description of the task or capability you need, like "create an entry" or "list sections".',
+                            ? 'Short capability phrase, like "create draft".'
+                            : 'Short capability phrase describing what you need, like "find entry by slug", "create draft from entry", or "list sections". Prefer concise keywords over a full sentence.',
                     ],
                     'names' => [
                         'type' => 'array',
                         'items' => ['type' => 'string'],
                         'description' => $compact
-                            ? 'Exact tool names to inspect.'
-                            : 'Optional exact tool names to inspect directly when you already know candidates.',
+                            ? 'Exact tool names to inspect further.'
+                            : 'Optional exact tool names to inspect directly when you already know candidates from a previous ToolSearch result.',
                     ],
                     'limit' => [
                         'type' => 'integer',
                         'description' => $compact
-                            ? 'Maximum matches to return.'
-                            : 'Maximum number of matches to return. Keep this small to reveal only the most relevant tools.',
+                            ? 'Maximum matches. Usually 3-5.'
+                            : 'Maximum number of matches to return. Keep this small, usually 3-5, to reveal only the most relevant tools.',
                     ],
                 ],
             ],
@@ -458,17 +579,17 @@ final class ToolSchemaBuilder
     {
         if ($requestedNames !== []) {
             return $matchCount === 0
-                ? 'None of the requested tool names were found.'
-                : 'Requested tool details returned. Only the listed tools will be revealed for direct use.';
+                ? 'None of the requested tool names were found. Try ToolSearch again with broader capability keywords.'
+                : 'Requested tool details returned. If one of these tools matches the task, stop searching and call that revealed tool now. Only call ToolSearch again if none of these tools fit or you still need a narrower comparison.';
         }
 
         if ($needle === '') {
-            return 'Browse the returned tools, then call ToolSearch again with exact names to inspect a narrower set.';
+            return 'Review the returned tools. If one already sounds right, call that revealed tool now. Otherwise call ToolSearch again with a short capability query or exact names to narrow the list.';
         }
 
         return $matchCount === 0
-            ? 'No tools matched that search. Try broader wording or inspect exact tool names.'
-            : 'Relevant tools returned. Use the revealed tool names directly on the next turn, or call ToolSearch again with exact names for a tighter set.';
+            ? 'No tools matched that search. Try broader or simpler capability keywords, such as "entry", "draft", "section", or "asset", or inspect exact tool names.'
+            : 'Relevant tools returned. If one of the revealed tools sounds like the right tool, call it now instead of searching again. Only call ToolSearch again when the current matches are ambiguous, too broad, or missing the needed capability.';
     }
 
     private function compactText(string $text, int $maxLength = 160): string

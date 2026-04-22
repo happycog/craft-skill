@@ -10,6 +10,9 @@ use happycog\craftmcp\base\CommandMap;
 
 class CommandRouter
 {
+    private const ASSOCIATIVE_ARRAY_PARAMS = [
+        'attributeAndFieldData' => true,
+    ];
 
     public function __construct(
         protected ArgumentsMapper $mapper,
@@ -30,10 +33,25 @@ class CommandRouter
     {
         // Look up the command in the routing table
         $toolClass = CommandMap::getToolClass($command);
-        
+
         if ($toolClass === null) {
             throw new \InvalidArgumentException("Unknown command: {$command}");
         }
+
+        return $this->routeToolClass($toolClass, $positional, $flags);
+    }
+
+    /**
+     * Execute an invokable tool class with the provided arguments.
+     *
+     * @param class-string $toolClass
+     * @param array<int, mixed> $positional Positional arguments
+     * @param array<string, mixed> $flags Flag arguments
+     * @return array<string, mixed> Tool execution result
+     * @throws \ReflectionException When method reflection fails
+     */
+    public function routeToolClass(string $toolClass, array $positional, array $flags): array
+    {
 
         // Get the tool instance from DI container
         $tool = Craft::$container->get($toolClass);
@@ -45,6 +63,8 @@ class CommandRouter
         // Merge positional arguments with flags by parameter name
         $mergedParams = $this->mergeArguments($parameters, $positional, $flags);
 
+        $this->validateAssociativeArrayParameters($mergedParams);
+
         // Use Valinor to validate and type-cast parameters
         // @phpstan-ignore-next-line - Dynamic callable creation from verified command map
         $arguments = $this->mapper->mapArguments($tool, $mergedParams);
@@ -55,6 +75,28 @@ class CommandRouter
         $result = $tool(...$arguments);
 
         return $result;
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function validateAssociativeArrayParameters(array $arguments): void
+    {
+        foreach (self::ASSOCIATIVE_ARRAY_PARAMS as $parameter => $_enabled) {
+            if (!array_key_exists($parameter, $arguments)) {
+                continue;
+            }
+
+            $value = $arguments[$parameter];
+
+            if (!is_array($value)) {
+                continue;
+            }
+
+            if (array_is_list($value) && $value !== []) {
+                throw new \InvalidArgumentException("{$parameter} must be an object/map of attribute handles to values, not a list. Example: {$parameter}: {\"title\": \"Example\"}");
+            }
+        }
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace happycog\craftmcp;
 
 use Craft;
+use craft\base\ElementInterface;
 use craft\events\TemplateEvent;
 use craft\helpers\UrlHelper;
 use craft\events\RegisterUrlRulesEvent;
@@ -17,13 +18,17 @@ use yii\helpers\Html;
 
 class Plugin extends BasePlugin
 {
-    public bool $hasCpSettings = true;
+    public bool $hasCpSettings = false;
     public bool $hasCpSection = false;
 
     #[RegisterListener(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES)]
     protected function registerSiteUrlRules(RegisterUrlRulesEvent $event): void
     {
-        $mcpPath = trim($this->getSettings()->mcpPath ?? 'mcp', '/');
+        $rawConfig = Craft::$app->getConfig()->getConfigFromFile('ai');
+        $config = is_array($rawConfig) ? $rawConfig : [];
+        $configuredPath = $config['mcpPath'] ?? 'mcp';
+        $mcpPath = trim(is_string($configuredPath) ? $configuredPath : 'mcp', '/');
+        $mcpPath = $mcpPath !== '' ? $mcpPath : 'mcp';
 
         // Streamable HTTP transport for the MCP server. The transport itself
         // dispatches on POST/DELETE/OPTIONS, so we route any method at the
@@ -45,6 +50,7 @@ class Plugin extends BasePlugin
         /** @var LlmManager $llm */
         $llm = Craft::$container->get(LlmManager::class);
         $request = Craft::$app->getRequest();
+        $urlManager = Craft::$app->getUrlManager();
 
         if (!$request instanceof Request) {
             return;
@@ -52,13 +58,16 @@ class Plugin extends BasePlugin
 
         $currentUser = Craft::$app->getUser()->getIdentity();
         $canChat = $currentUser?->can('accessCp') ?? false;
+        $matchedElement = $urlManager->getMatchedElement();
+        $pageContext = $llm->pageContext($matchedElement instanceof ElementInterface ? $matchedElement : null);
+        $pageContextJson = json_encode($pageContext, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $chatHost = Html::tag('craft-skill-chat', '', [
             'data-chat-url' => UrlHelper::actionUrl('skills/chat/stream'),
             'data-can-chat' => $canChat ? '1' : '0',
             'data-configured' => $llm->isConfigured() ? '1' : '0',
             'data-context' => $request->getIsCpRequest() ? 'cp' : 'site',
-            'data-current-url' => $request->getAbsoluteUrl(),
+            'data-page-context' => is_string($pageContextJson) ? $pageContextJson : '{}',
         ]);
 
         $scriptTag = Html::script('', [
@@ -76,12 +85,5 @@ class Plugin extends BasePlugin
         }
 
         $event->output = substr_replace($event->output, $injection . '</body>', $bodyClosePosition, 7);
-    }
-
-    protected function settingsHtml(): ?string
-    {
-        return Craft::$app->getView()->renderTemplate('skills/settings', [
-            'settings' => $this->getSettings() ?? new Settings(),
-        ]);
     }
 }

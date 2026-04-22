@@ -192,6 +192,7 @@ try {
         ->allowScalarValueCasting();
 
     $mapper = $mapperBuilder->argumentsMapper();
+    $validationErrorFormatter = new \happycog\craftmcp\cli\ValidationErrorFormatter();
 
     // Create router and execute command
     $router = new \happycog\craftmcp\cli\CommandRouter($mapper);
@@ -202,34 +203,15 @@ try {
     exit(0);
 } catch (\InvalidArgumentException $e) {
     // Unknown command or invalid arguments
+    $toolClass = \happycog\craftmcp\base\CommandMap::getToolClass($command);
+
+    if ($toolClass !== null) {
+        exitWithError(2, $validationErrorFormatter->formatToolArgumentError($command, $e->getMessage()), $e, $parser->verbosity);
+    }
+
     exitWithError(2, $e->getMessage(), $e, $parser->verbosity);
 } catch (\CuyZ\Valinor\Mapper\MappingError $e) {
-     // Valinor validation error - format with parameter names
-     $errors = [];
-     foreach ($e->messages() as $message) {
-         $paramName = $message->name();
-         $msgText = (string) $message;
-         
-         // Only include messages with parameter names (skip root-level unexpected keys)
-         if (!empty($paramName)) {
-             $errors[] = [
-                 'parameter' => $paramName,
-                 'message' => $msgText,
-             ];
-         }
-     }
-     
-     // Fall back to original messages if none have names
-     if (empty($errors)) {
-         foreach ($e->messages() as $message) {
-             $errors[] = [
-                 'parameter' => $message->name() ?: 'root',
-                 'message' => (string) $message,
-             ];
-         }
-     }
-     
-     exitWithError(2, ['validation_errors' => $errors], $e, $parser->verbosity);
+     exitWithError(2, $validationErrorFormatter->formatMappingError($e, $command), $e, $parser->verbosity);
 } catch (\happycog\craftmcp\exceptions\ValidationException $e) {
     // Custom validation exception
     exitWithError(2, $e->getMessage(), $e, $parser->verbosity);

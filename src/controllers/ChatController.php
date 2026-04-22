@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace happycog\craftmcp\controllers;
 
 use Craft;
+use CuyZ\Valinor\MapperBuilder;
 use craft\web\Controller as CraftController;
+use happycog\craftmcp\cli\CommandRouter;
+use happycog\craftmcp\cli\ValidationErrorFormatter;
 use happycog\craftmcp\llm\LlmManager;
 use happycog\craftmcp\llm\ToolSchemaBuilder;
 use yii\web\Response;
@@ -35,6 +38,7 @@ class ChatController extends CraftController
      * Body (JSON):
      *   messages  — prior conversation in internal format
      *   message   — the new user text
+     *   pageContext — structured request/element context for the prompt
      */
     public function actionStream(): Response|null
     {
@@ -46,7 +50,8 @@ class ChatController extends CraftController
         $input   = json_decode($rawBody, true) ?? [];
 
         $newText = is_string($input['message'] ?? null) ? trim($input['message']) : '';
-        $currentUrl = is_string($input['currentUrl'] ?? null) ? trim($input['currentUrl']) : '';
+        /** @var array<string, mixed>|null $pageContext */
+        $pageContext = is_array($input['pageContext'] ?? null) ? $input['pageContext'] : null;
 
         /** @var array<int, array<string, mixed>> $history */
         $history = is_array($input['messages'] ?? null) ? $input['messages'] : [];
@@ -70,10 +75,8 @@ class ChatController extends CraftController
         $messages[] = ['role' => 'user', 'content' => $newText];
 
         $schemaBuilder = new ToolSchemaBuilder();
-        $revealedTools = [];
-        $toolSearch    = $schemaBuilder->getTool(ToolSchemaBuilder::TOOL_SEARCH, compact: true);
-        $tools         = $toolSearch === null ? [] : [$toolSearch];
-        $systemPrompt  = $llm->buildSystemPrompt($currentUrl);
+        $tools         = array_values($schemaBuilder->getTools(includeToolSearch: true, minimal: true, includeChatOnly: true));
+        $systemPrompt  = $llm->buildSystemPrompt($pageContext);
 
         $driver        = $llm->driver();
 
@@ -116,24 +119,6 @@ class ChatController extends CraftController
                         $toolCall['name'],
                         $toolCall['input'],
                     );
-
-                    if ($toolCall['name'] === ToolSchemaBuilder::TOOL_SEARCH) {
-                        /** @var array<int, string> $toolNames */
-                        $toolNames = array_values(array_filter(
-                            is_array($result['revealedTools'] ?? null) ? $result['revealedTools'] : [],
-                            'is_string',
-                        ));
-
-                        foreach ($toolNames as $toolName) {
-                            $revealedTools[$toolName] = $toolName;
-                        }
-
-                        $tools = array_values($schemaBuilder->getTools(
-                            toolNames: array_values($revealedTools),
-                            compact: true,
-                            includeToolSearch: true,
-                        ));
-                    }
 
                     $resultJson = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
@@ -183,7 +168,7 @@ class ChatController extends CraftController
             $names = is_array($input['names'] ?? null) ? $input['names'] : null;
             $limit = is_int($input['limit'] ?? null) ? $input['limit'] : 8;
 
-            return $schema->searchTools($query, $names, $limit);
+            return $schema->searchTools($query, $names, $limit, includeChatOnly: true);
         }
 
         $class = $schema->getClass($name);
@@ -193,16 +178,18 @@ class ChatController extends CraftController
         }
 
         try {
-            $tool = Craft::$container->get($class);
+            $mapper = (new MapperBuilder())
+                ->allowPermissiveTypes()
+                ->allowSuperfluousKeys()
+                ->allowScalarValueCasting()
+                ->argumentsMapper();
 
-            if (! is_callable($tool)) {
-                return ['error' => "Tool {$name} is not callable."];
-            }
-
-            $raw = $tool(...$input);
-
-            /** @var array<string, mixed> */
-            return is_array($raw) ? $raw : ['result' => $raw];
+            $router = new CommandRouter($mapper);
+            return $router->routeToolClass($class, [], $input);
+        } catch (\CuyZ\Valinor\Mapper\MappingError $e) {
+            return (new ValidationErrorFormatter())->formatMappingError($e, $name);
+        } catch (\InvalidArgumentException $e) {
+            return (new ValidationErrorFormatter())->formatToolArgumentError($name, $e->getMessage());
         } catch (\Throwable $e) {
             return ['error' => $e->getMessage()];
         }

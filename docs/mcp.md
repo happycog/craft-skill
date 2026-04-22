@@ -47,7 +47,7 @@ tool class to an MCP tool registration.
 ### HTTP (Streamable)
 
 The plugin registers a single site route at the path configured by the
-`mcpPath` plugin setting (default: `mcp`). Point your MCP-capable client at:
+`mcpPath` config value in `config/ai.php` (default: `mcp`). Point your MCP-capable client at:
 
 ```
 https://example.test/mcp

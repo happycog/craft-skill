@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace happycog\craftmcp\llm;
 
 use Craft;
+use craft\base\ElementInterface;
+use craft\helpers\UrlHelper;
 
 /**
  * Factory that resolves the active LLM driver from `config/ai.php`.
@@ -72,24 +74,47 @@ final class LlmManager
     }
 
     /**
-     * Build the effective system prompt, optionally scoped to a current URL.
+     * Build the effective system prompt, optionally scoped to page context.
+     *
+     * @param array<string, mixed>|null $pageContext
      */
-    public function buildSystemPrompt(?string $currentUrl = null): string
+    public function buildSystemPrompt(?array $pageContext = null): string
     {
         $custom = is_string($this->config()['systemPrompt'] ?? null)
             ? trim($this->config()['systemPrompt'])
             : '';
 
         $prompt = $custom !== '' ? $custom : <<<'PROMPT'
-You are an AI assistant embedded in the Craft CMS control panel. You help content managers and administrators manage their website content, configure sections and fields, and perform administrative tasks.
+You are an AI assistant embedded in the Craft CMS chat widget. You help content managers and administrators manage their website content, configure sections and fields, and perform administrative tasks.
 
 You have access to tools that interact with Craft CMS: creating and editing entries, managing sections and fields, organizing content types, handling users, and more. Use these tools to fulfill user requests.
 
-Tool access is discovery-based. Start by calling `ToolSearch` to find the smallest relevant set of tools for the task, inspect their parameters, and only then call the revealed tools. Do not guess tool names or parameters before using `ToolSearch`.
+ToolSearch is available to help you discover relevant tools and inspect parameter summaries, but it is optional. If you already know the right tool for the task, you may call it directly.
+
+OpenUrl is available only inside the chat widget. Use `OpenUrl` with a `url` string after successful changes when opening the result will help the user immediately review what changed.
+
+The initial tool definitions may be intentionally minimal to keep context small. When a tool's parameters are unclear, use `ToolSearch` to inspect likely tools before calling them.
+
+Use `ToolSearch` like this:
+- Use `query` with a short capability phrase describing the user's goal, not a full sentence. Good examples: `find entry by slug`, `create draft from entry`, `update draft title`, `list sections`, `create asset`, `inspect entry types`.
+- Keep `limit` small, usually `3` to `5`, so you only reveal a narrow set of candidates.
+- If the first results are close but too broad, call `ToolSearch` again with `names` set to the exact candidate tool names you want to inspect more closely.
+- Use `ToolSearch` when you are unsure which tool to call or want a quick parameter summary.
+- If you already know the correct tool and its likely parameters, call it directly without searching first.
+- If a direct tool call fails because the parameters were wrong or incomplete, use `ToolSearch` to inspect that tool and then retry with the correct arguments.
+- When a tool call returns an error, read the full tool response carefully before retrying because it often includes helpful formatting, debugging tips, or corrected parameter examples.
+
+Recommended pattern:
+1. If needed, call `ToolSearch` with a concise `query` and small `limit`.
+2. Review the returned matches and parameter summaries.
+3. If needed, call `ToolSearch` again with exact `names` to narrow further.
+4. Call the tool that best matches the task.
 
 Guidelines:
 - When a user asks to change the content of an existing entry, prefer creating or updating a draft rather than editing the live entry directly.
 - Use live entry updates for content only if the user clearly asks to publish immediately or avoid drafts.
+- Always keep the user on the current surface when redirecting. If the current surface is `site`, you may use `OpenUrl` for a frontend URL such as a preview URL. If the current surface is `cp`, do not use `OpenUrl` for a frontend URL; only open control panel URLs on the control panel surface.
+- After a successful change, prefer calling `OpenUrl` so the user lands on the most relevant result for the current surface.
 - When you create or update a draft, tell the user it is a draft and include both the Craft control panel edit link and the draft preview URL so they can review the changes safely.
 - When creating or modifying content, explain what you're doing and confirm the results.
 - After making changes, provide the Craft control panel link so the user can review.
@@ -98,10 +123,14 @@ Guidelines:
 - When searching for content, show relevant details like title, ID, and edit URL.
 PROMPT;
 
-        $currentUrl = is_string($currentUrl) ? trim($currentUrl) : '';
+        $pageContext = $this->normalizePageContext($pageContext);
 
-        if ($currentUrl !== '') {
-            $prompt .= "\n\nCurrent page URL: {$currentUrl}";
+        if ($pageContext !== []) {
+            $prompt .= "\n\nCurrent page context:";
+
+            foreach ($pageContext as $label => $value) {
+                $prompt .= "\n- {$label}: {$value}";
+            }
         }
 
         return $prompt;
@@ -112,12 +141,166 @@ PROMPT;
      *
      * @return array<int, array{role: string, content: string}>
      */
-    public function aiWidgetSystemPrompt(?string $currentUrl = null): array
+    public function aiWidgetSystemPrompt(
+        ?string $currentUrl = null,
+        ?string $requestPath = null,
+        ?string $requestedRoute = null,
+        ?array $routeParams = null,
+        ?int $elementId = null,
+        ?string $elementType = null,
+        ?string $elementTitle = null,
+        ?string $elementSlug = null,
+        ?string $elementUri = null,
+        ?int $siteId = null,
+    ): array
     {
         return [[
             'role' => 'assistant',
-            'content' => $this->buildSystemPrompt($currentUrl),
+            'content' => $this->buildSystemPrompt([
+                'currentUrl' => $currentUrl,
+                'requestPath' => $requestPath,
+                'requestedRoute' => $requestedRoute,
+                'routeParams' => $routeParams,
+                'elementId' => $elementId,
+                'elementType' => $elementType,
+                'elementTitle' => $elementTitle,
+                'elementSlug' => $elementSlug,
+                'elementUri' => $elementUri,
+                'siteId' => $siteId,
+            ]),
         ]];
+    }
+
+    /**
+     * @param array<string, mixed>|null $pageContext
+     * @return array<string, string>
+     */
+    public function normalizePageContext(?array $pageContext): array
+    {
+        if ($pageContext === null) {
+            return [];
+        }
+
+        $normalized = [];
+
+        $fieldMap = [
+            'surface' => 'Current surface',
+            'currentUrl' => 'URL',
+            'controlPanelUrl' => 'Control panel URL',
+            'requestPath' => 'Request path',
+            'requestedRoute' => 'Requested route',
+            'elementId' => 'Element ID',
+            'elementType' => 'Element type',
+            'elementTitle' => 'Element title',
+            'elementSlug' => 'Element slug',
+            'elementUri' => 'Element URI',
+            'siteId' => 'Site ID',
+        ];
+
+        foreach ($fieldMap as $key => $label) {
+            $value = $pageContext[$key] ?? null;
+
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (is_scalar($value)) {
+                $normalized[$label] = (string) $value;
+            }
+        }
+
+        $routeParams = $pageContext['routeParams'] ?? null;
+
+        if (is_array($routeParams) && $routeParams !== []) {
+            $routeParamsJson = json_encode($this->normalizeRouteParams($routeParams), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            if (is_string($routeParamsJson) && $routeParamsJson !== '') {
+                $normalized['Route params'] = $routeParamsJson;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function pageContext(?ElementInterface $element = null): array
+    {
+        $request = Craft::$app->getRequest();
+        $urlManager = Craft::$app->getUrlManager();
+
+        $context = [
+            'surface' => $request->getIsCpRequest() ? 'cp' : 'site',
+            'currentUrl' => $request->getAbsoluteUrl(),
+            'requestPath' => $request->getPathInfo(),
+            'requestedRoute' => Craft::$app->requestedRoute,
+            'routeParams' => $this->normalizeRouteParams($urlManager->getRouteParams() ?? []),
+        ];
+
+        $controlPanelUrl = UrlHelper::cpUrl('');
+
+        if (is_string($controlPanelUrl) && trim($controlPanelUrl) !== '') {
+            $context['controlPanelUrl'] = $controlPanelUrl;
+        }
+
+        if ($element !== null) {
+            $context['elementId'] = $element->id;
+            $context['elementType'] = $element::class;
+            $context['siteId'] = $element->siteId;
+
+            if (property_exists($element, 'title') && is_string($element->title) && trim($element->title) !== '') {
+                $context['elementTitle'] = $element->title;
+            }
+
+            if (property_exists($element, 'slug') && is_string($element->slug) && trim($element->slug) !== '') {
+                $context['elementSlug'] = $element->slug;
+            }
+
+            if (property_exists($element, 'uri') && is_string($element->uri) && trim($element->uri) !== '') {
+                $context['elementUri'] = $element->uri;
+            }
+        }
+
+        return $context;
+    }
+
+    /**
+     * @param array<string, mixed> $routeParams
+     * @return array<string, mixed>
+     */
+    private function normalizeRouteParams(array $routeParams): array
+    {
+        $normalized = [];
+
+        foreach ($routeParams as $key => $value) {
+            if (!is_string($key)) {
+                continue;
+            }
+
+            if (is_scalar($value) || $value === null) {
+                $normalized[$key] = $value;
+                continue;
+            }
+
+            if (is_array($value)) {
+                $normalized[$key] = $this->normalizeRouteParams($value);
+                continue;
+            }
+
+            if ($value instanceof ElementInterface) {
+                $normalized[$key] = [
+                    'id' => $value->id,
+                    'type' => $value::class,
+                ];
+            }
+        }
+
+        return $normalized;
     }
 
     /**

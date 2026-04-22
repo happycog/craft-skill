@@ -35,6 +35,11 @@ return [
     // Defaults to https://api.openai.com/v1
     // 'baseUrl' => 'https://api.openai.com/v1',
 
+    // ── MCP HTTP Path ───────────────────────────────────────────────
+    // URL path where the HTTP MCP endpoint is available.
+    // Example: 'mcp' => https://yoursite.test/mcp
+    'mcpPath' => 'mcp',
+
     // ── System Prompt ───────────────────────────────────────────────
     // Custom system prompt for the AI assistant. Leave blank (or omit)
     // to use the built-in default that describes Craft CMS capabilities.

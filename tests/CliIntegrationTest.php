@@ -113,6 +113,54 @@ test('command with positional arguments - entries/get', function () {
     expect($data['title'])->toBe('Test Entry for CLI');
 });
 
+test('entries/get supports slug flag', function () {
+    $slug = 'cli-slug-lookup-' . uniqid();
+    $createResult = ($this->execCli)(
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"CLI Slug Lookup\" --attributeAndFieldData[slug]=\"{$slug}\"",
+        true
+    );
+
+    $createData = ($this->parseJsonOutput)($createResult['stdout']);
+    $entryId = $createData['entryId'];
+    $this->createdEntryIds[] = $entryId;
+
+    $result = ($this->execCli)("entries/get --slug={$slug}", true);
+
+    expect($result['exitCode'])->toBe(0);
+    expect($result['stderr'])->toBeEmpty();
+
+    $data = ($this->parseJsonOutput)($result['stdout']);
+    expect($data)->toBeArray();
+    expect($data['id'])->toBe($entryId);
+    expect($data['slug'])->toBe($slug);
+});
+
+test('entries/get supports uri flag', function () {
+    $slug = 'cli-uri-lookup-' . uniqid();
+    $createResult = ($this->execCli)(
+        "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"CLI Uri Lookup\" --attributeAndFieldData[slug]=\"{$slug}\"",
+        true
+    );
+
+    $createData = ($this->parseJsonOutput)($createResult['stdout']);
+    $entryId = $createData['entryId'];
+    $this->createdEntryIds[] = $entryId;
+
+    $entry = Entry::find()->id($entryId)->one();
+    expect($entry)->toBeInstanceOf(Entry::class);
+    expect($entry->uri)->toBeString();
+
+    $result = ($this->execCli)("entries/get --uri={$entry->uri}", true);
+
+    expect($result['exitCode'])->toBe(0);
+    expect($result['stderr'])->toBeEmpty();
+
+    $data = ($this->parseJsonOutput)($result['stdout']);
+    expect($data)->toBeArray();
+    expect($data['id'])->toBe($entryId);
+    expect($data['slug'])->toBe($slug);
+});
+
 test('command with flags - entries/create', function () {
     $result = ($this->execCli)(
         "entries/create --sectionId={$this->testSectionId} --entryTypeId={$this->testEntryTypeId} --attributeAndFieldData[title]=\"CLI Test Entry\"",
@@ -199,9 +247,12 @@ test('missing required arguments returns exit code 2', function () {
     expect($error)->toBeArray();
     expect($error)->toHaveKey('error');
     expect($error['error'])->toBeArray();
+    expect($error['error'])->toHaveKey('tool', 'entries/create');
     expect($error['error'])->toHaveKey('validation_errors');
     expect($error['error']['validation_errors'])->toBeArray();
     expect(count($error['error']['validation_errors']))->toBeGreaterThan(0);
+    expect($error['error'])->toHaveKey('input_schema');
+    expect($error['error']['input_schema'])->toHaveKeys(['type', 'required', 'properties']);
 });
 
 test('verbosity flag -v includes exception message', function () {
@@ -469,6 +520,17 @@ test('entries/get non-existent entry returns error with exit code 2', function (
     // InvalidArgumentException becomes exit code 2
     expect($result['exitCode'])->toBe(2);
     expect($result['stderr'])->not->toBeEmpty();
+});
+
+test('entries/get rejects multiple selectors', function () {
+    $result = ($this->execCli)('entries/get 999999 --slug=test-slug', true);
+
+    expect($result['exitCode'])->toBe(2);
+    expect($result['stderr'])->not->toBeEmpty();
+
+    $error = ($this->parseJsonOutput)($result['stderr']);
+    expect($error)->toBeArray();
+    expect($error['error'])->toContain('Provide exactly one of entryId, uri, or slug.');
 });
 
 test('command execution with combined output captures both stdout and stderr', function () {

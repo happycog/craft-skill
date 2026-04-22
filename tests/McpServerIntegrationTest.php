@@ -3,6 +3,7 @@
 use GuzzleHttp\Psr7\HttpFactory;
 use GuzzleHttp\Psr7\ServerRequest;
 use happycog\craftmcp\mcp\McpServerFactory;
+use happycog\craftmcp\tools\CreateEntry;
 use Mcp\Server;
 use Mcp\Server\Transport\StreamableHttpTransport;
 use Psr\Http\Message\ResponseInterface;
@@ -71,6 +72,30 @@ test('initialize handshake returns server capabilities and a session id', functi
     expect($sessionId)->not->toBeEmpty();
 });
 
+test('session persists across separate server instances', function () {
+    $factory = Craft::$container->get(McpServerFactory::class);
+
+    $firstServer = $factory->create();
+    $sessionId = mcpInitialize($firstServer);
+
+    $secondServer = $factory->create();
+    $response = mcpSend($secondServer, [
+        'jsonrpc' => '2.0',
+        'id' => 2,
+        'method' => 'tools/list',
+        'params' => (object) [],
+    ], $sessionId);
+
+    expect($response->getStatusCode())->toBe(200);
+
+    /** @var array{result: array{tools: array<int, array{name: string}>}} $payload */
+    $payload = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($payload)->toHaveKey('result');
+    expect($payload['result'])->toHaveKey('tools');
+    expect($payload['result']['tools'])->not->toBeEmpty();
+});
+
 test('tools/list advertises every registered Craft skill tool', function () {
     $server = Craft::$container->get(McpServerFactory::class)->create();
     $sessionId = mcpInitialize($server);
@@ -129,11 +154,12 @@ test('tools/call invokes a tool and returns its result', function () {
 
     expect($response->getStatusCode())->toBe(200);
 
-    /** @var array{result: array{content: array<int, array{type: string, text?: string}>}} $payload */
+    /** @var array{result: array{content: array<int, array{type: string, text?: string}>, structuredContent: array<string, mixed>}} $payload */
     $payload = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
 
     expect($payload)->toHaveKey('result');
     expect($payload['result'])->toHaveKey('content');
+    expect($payload['result'])->toHaveKey('structuredContent');
 
     $textParts = [];
 
@@ -143,20 +169,118 @@ test('tools/call invokes a tool and returns its result', function () {
         }
     }
 
-    $text = implode("\n", $textParts);
-
-    /** @var array<string, mixed>|null $decoded */
-    $decoded = json_decode($text, true);
-    expect($decoded)->toBeArray();
-    if (! is_array($decoded)) {
-        throw new \RuntimeException('Expected decoded tool payload to be an array.');
-    }
+    /** @var array<string, mixed> $decoded */
+    $decoded = $payload['result']['structuredContent'];
 
     expect($decoded)->toHaveKey('status');
     expect($decoded['status'])->toBe('ok');
     expect($decoded)->toHaveKey('plugin');
     expect($decoded)->toHaveKey('craft');
     expect($decoded)->toHaveKey('site');
+});
+
+test('tools/call rejects list-shaped attributeAndFieldData as invalid params', function () {
+    $section = Craft::$app->getEntries()->getSectionByHandle('news');
+    expect($section)->not->toBeNull();
+    if ($section === null) {
+        throw new RuntimeException('Expected news section to exist.');
+    }
+
+    $entryTypeId = $section->getEntryTypes()[0]->id;
+
+    $server = Craft::$container->get(McpServerFactory::class)->create();
+    $sessionId = mcpInitialize($server);
+
+    $response = mcpSend($server, [
+        'jsonrpc' => '2.0',
+        'id' => 6,
+        'method' => 'tools/call',
+        'params' => [
+            'name' => 'CreateDraft',
+            'arguments' => [
+                'sectionId' => $section->id,
+                'entryTypeId' => $entryTypeId,
+                'attributeAndFieldData' => [
+                    ['title' => 'Bad Shape'],
+                ],
+            ],
+        ],
+    ], $sessionId);
+
+    expect($response->getStatusCode())->toBe(200);
+
+    /** @var array{error: array{code: int, message: string, data?: array{validation_errors?: array<int, array{message?: string}>}}} $payload */
+    $payload = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($payload)->toHaveKey('error');
+    expect($payload['error']['code'])->toBe(-32602);
+    expect($payload['error']['message'])->toContain('Invalid parameters for tool');
+    expect(json_encode($payload['error']['data'] ?? [], JSON_THROW_ON_ERROR))->toContain('attributeAndFieldData');
+});
+
+test('tools/call returns visible tool errors and includes debug details in dev mode', function () {
+    $createEntry = Craft::$container->get(CreateEntry::class);
+    $section = Craft::$app->getEntries()->getSectionByHandle('news');
+    expect($section)->not->toBeNull();
+    if ($section === null) {
+        throw new RuntimeException('Expected news section to exist.');
+    }
+
+    $entryTypeId = $section->getEntryTypes()[0]->id;
+    $sectionId = $section->id;
+    if ($sectionId === null || $entryTypeId === null) {
+        throw new RuntimeException('Expected news section and entry type IDs to exist.');
+    }
+
+    $createEntry->__invoke(
+        sectionId: $sectionId,
+        entryTypeId: $entryTypeId,
+        attributeAndFieldData: ['title' => 'Delete Me'],
+    );
+
+    $generalConfig = Craft::$app->getConfig()->getGeneral();
+    $originalDevMode = $generalConfig->devMode;
+    $generalConfig->devMode = true;
+
+    try {
+        $server = Craft::$container->get(McpServerFactory::class)->create();
+        $sessionId = mcpInitialize($server);
+
+        $response = mcpSend($server, [
+            'jsonrpc' => '2.0',
+            'id' => 7,
+            'method' => 'tools/call',
+            'params' => [
+                'name' => 'DeleteSection',
+                'arguments' => [
+                    'sectionId' => $sectionId,
+                ],
+            ],
+        ], $sessionId);
+    } finally {
+        $generalConfig->devMode = $originalDevMode;
+    }
+
+    expect($response->getStatusCode())->toBe(200);
+
+    /** @var array{result: array{isError: bool, content: array<int, array{type: string, text?: string}>, structuredContent: array<string, mixed>}} $payload */
+    $payload = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($payload)->toHaveKey('result');
+    expect($payload['result']['isError'])->toBeTrue();
+    expect($payload['result'])->toHaveKey('structuredContent');
+    expect($payload['result']['structuredContent'])->toHaveKey('tool', 'DeleteSection');
+    expect($payload['result']['structuredContent'])->toHaveKey('exception', RuntimeException::class);
+    expect($payload['result']['structuredContent'])->toHaveKey('debug');
+
+    $text = implode("\n", array_map(
+        static fn (array $content): string => is_string($content['text'] ?? null) ? $content['text'] : '',
+        $payload['result']['content'],
+    ));
+
+    expect($text)->toContain('DeleteSection failed:')
+        ->toContain('Debug:')
+        ->toContain('Exception: RuntimeException');
 });
 
 test('prompts/list advertises the AI widget system prompt', function () {
@@ -187,7 +311,7 @@ test('prompts/list advertises the AI widget system prompt', function () {
     expect($names)->toContain(\happycog\craftmcp\llm\LlmManager::AI_WIDGET_SYSTEM_PROMPT);
 });
 
-test('prompts/get returns the AI widget system prompt and accepts currentUrl', function () {
+test('prompts/get returns the AI widget system prompt and accepts page context', function () {
     $server = Craft::$container->get(McpServerFactory::class)->create();
     $sessionId = mcpInitialize($server);
 
@@ -199,6 +323,18 @@ test('prompts/get returns the AI widget system prompt and accepts currentUrl', f
             'name' => \happycog\craftmcp\llm\LlmManager::AI_WIDGET_SYSTEM_PROMPT,
             'arguments' => [
                 'currentUrl' => 'https://example.test/admin/entries/homepage',
+                'requestPath' => 'admin/entries/homepage',
+                'requestedRoute' => 'entries/edit-entry',
+                'routeParams' => [
+                    'siteId' => 1,
+                    'draftId' => null,
+                ],
+                'elementId' => 99,
+                'elementType' => 'craft\\elements\\Entry',
+                'elementTitle' => 'Homepage',
+                'elementSlug' => 'homepage',
+                'elementUri' => '__home__',
+                'siteId' => 1,
             ],
         ],
     ], $sessionId);
@@ -223,6 +359,16 @@ test('prompts/get returns the AI widget system prompt and accepts currentUrl', f
 
     $text = implode("\n", $textParts);
 
-    expect($text)->toContain('You are an AI assistant embedded in the Craft CMS control panel.');
-    expect($text)->toContain('Current page URL: https://example.test/admin/entries/homepage');
+    expect($text)->toContain('You are an AI assistant embedded in the Craft CMS chat widget.')
+        ->toContain('Current page context:')
+        ->toContain('- URL: https://example.test/admin/entries/homepage')
+        ->toContain('- Request path: admin/entries/homepage')
+        ->toContain('- Requested route: entries/edit-entry')
+        ->toContain('- Route params: {"siteId":1,"draftId":null}')
+        ->toContain('- Element ID: 99')
+        ->toContain('- Element type: craft\\elements\\Entry')
+        ->toContain('- Element title: Homepage')
+        ->toContain('- Element slug: homepage')
+        ->toContain('- Element URI: __home__')
+        ->toContain('- Site ID: 1');
 });

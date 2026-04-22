@@ -16,6 +16,15 @@ test('ToolSchemaBuilder builds tools from CommandMap', function () {
     expect($tools)->toHaveKey('SearchContent');
     expect($tools)->toHaveKey('CreateEntry');
     expect($tools)->toHaveKey('GetSections');
+    expect($tools)->not->toHaveKey('OpenUrl');
+});
+
+test('ToolSchemaBuilder can include chat-only tools when requested', function () {
+    $builder = new ToolSchemaBuilder();
+    $tools = $builder->getTools(includeChatOnly: true);
+
+    expect($tools)->toHaveKey('OpenUrl');
+    expect($builder->getClass('OpenUrl'))->toBe(\happycog\craftmcp\tools\OpenUrl::class);
 });
 
 test('ToolSchemaBuilder tool has required fields', function () {
@@ -104,6 +113,19 @@ test('ToolSchemaBuilder can build compact tool definitions', function () {
     expect($props['limit'])->not->toHaveKey('default');
 });
 
+test('ToolSchemaBuilder can build minimal tool definitions', function () {
+    $builder = new ToolSchemaBuilder();
+    $tools = $builder->getTools(minimal: true);
+    $tool = $tools['SearchContent'];
+
+    expect($tool)->not->toBeNull();
+    expect($tool['name'])->toBe('SearchContent');
+    expect($tool['description'])->toBe('');
+    expect($tool['parameters'])->toHaveKey('type', 'object');
+    expect($tool['parameters'])->toHaveKey('properties');
+    expect((array) $tool['parameters']['properties'])->toBe([]);
+});
+
 test('ToolSchemaBuilder exposes virtual ToolSearch definition', function () {
     $builder = new ToolSchemaBuilder();
     $tool = $builder->getTool(ToolSchemaBuilder::TOOL_SEARCH, compact: true);
@@ -127,6 +149,31 @@ test('ToolSchemaBuilder searches tools and returns revealed tool names', functio
     expect($result['revealedTools'])->not->toBeEmpty();
     expect($result['matches'][0])->toHaveKey('name');
     expect($result['matches'][0])->toHaveKey('parameters');
+});
+
+test('ToolSchemaBuilder exposes compact input schema summaries', function () {
+    $builder = new ToolSchemaBuilder();
+    $schema = $builder->getToolInputSchema('CreateDraft');
+
+    expect($schema)->not->toBeNull();
+    expect($schema['type'])->toBe('object');
+    expect($schema['properties'])->toBeArray();
+    expect($schema['properties'][0])->toHaveKeys(['name', 'type', 'required']);
+
+    $propertyNames = array_column($schema['properties'], 'name');
+    expect($propertyNames)->toContain('sectionId');
+    expect($propertyNames)->toContain('entryTypeId');
+    expect($propertyNames)->toContain('canonicalId');
+});
+
+test('ToolSchemaBuilder hides chat-only tools from search unless requested', function () {
+    $builder = new ToolSchemaBuilder();
+
+    $defaultResult = $builder->searchTools('open url', limit: 5);
+    $chatResult = $builder->searchTools('open url', limit: 5, includeChatOnly: true);
+
+    expect($defaultResult['revealedTools'])->not->toContain('OpenUrl');
+    expect($chatResult['revealedTools'])->toContain('OpenUrl');
 });
 
 // ─── Anthropic message conversion ───────────────────────────────────

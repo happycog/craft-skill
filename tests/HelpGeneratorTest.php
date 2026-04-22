@@ -20,6 +20,7 @@ test('includes all commands in help output', function () {
     expect($output)->toContain('fields/list');
     expect($output)->toContain('assets/create');
     expect($output)->toContain('drafts/apply');
+    expect($output)->toContain('templates/list');
 });
 
 test('includes help flag documentation', function () {
@@ -38,6 +39,7 @@ test('getCommandDescriptions returns all commands', function () {
     expect($commands)->toHaveKey('entries/create');
     expect($commands)->toHaveKey('entries/get');
     expect($commands)->toHaveKey('fields/list');
+    expect($commands)->toHaveKey('templates/get');
 });
 
 test('getCommandDescriptions extracts first line from docblocks', function () {

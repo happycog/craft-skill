@@ -66,10 +66,11 @@
 }
 
 .skills-chat-panel {
+  position: relative;
   width: min(420px, calc(100vw - 24px));
   height: min(720px, calc(100vh - 110px));
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 24px;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.92) 100%);
@@ -78,47 +79,52 @@
   overflow: hidden;
 }
 
-.skills-chat-panelHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 18px 0;
+.skills-chat-resizeHandle {
+  position: absolute;
+  z-index: 2;
 }
 
-.skills-chat-panelHeader h2 {
-  margin: 0;
-  font-size: 24px;
-  line-height: 1.1;
-  color: #f8fafc;
+.skills-chat-resizeHandle::before {
+  content: '';
+  position: absolute;
+  background: rgba(147, 197, 253, 0);
+  transition: background 160ms ease;
 }
 
-.skills-chat-eyebrow {
-  margin: 0 0 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #93c5fd;
+.skills-chat-panel:hover .skills-chat-resizeHandle::before {
+  background: rgba(147, 197, 253, 0.16);
 }
 
-.skills-chat-meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
+.skills-chat-resizeHandle--top {
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 10px;
+  cursor: ns-resize;
 }
 
-.skills-chat-meta span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 10px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+.skills-chat-resizeHandle--top::before {
+  top: 2px;
+  left: 0;
+  right: 0;
+  height: 2px;
   border-radius: 999px;
-  background: rgba(30, 41, 59, 0.85);
-  color: #cbd5e1;
-  font-size: 12px;
+}
+
+.skills-chat-resizeHandle--left {
+  top: 24px;
+  left: 0;
+  bottom: 24px;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.skills-chat-resizeHandle--left::before {
+  top: 0;
+  right: 2px;
+  bottom: 0;
+  width: 2px;
+  border-radius: 999px;
 }
 
 .skills-chat-frame {
@@ -296,8 +302,7 @@
 }
 
 .skills-tool-summary {
-  display: grid;
-  gap: 10px;
+  display: block;
   padding: 14px 16px;
   list-style: none;
   cursor: pointer;
@@ -324,6 +329,24 @@
   content: 'Hide result';
 }
 
+.skills-tool-body {
+  display: grid;
+  gap: 12px;
+}
+
+.skills-tool-section {
+  display: grid;
+  gap: 6px;
+}
+
+.skills-tool-label {
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .skills-tool-detail {
   margin: 0;
   padding: 8px 10px;
@@ -347,6 +370,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
+}
+
+.skills-tool-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .skills-tool-status {
@@ -499,12 +530,11 @@
     height: min(640px, calc(100vh - 88px));
   }
 
-  .skills-chat-panelHeader,
-  .skills-chat-composerFooter {
-    display: grid;
+  .skills-chat-resizeHandle {
+    display: none;
   }
 
-  .skills-chat-meta {
-    justify-content: flex-start;
+  .skills-chat-composerFooter {
+    display: grid;
   }
 }
