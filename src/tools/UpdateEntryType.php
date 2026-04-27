@@ -84,7 +84,7 @@ class UpdateEntryType
             $entryType->handle = $handle;
         }
 
-        if ($description !== null) {
+        if ($description !== null && version_compare(Craft::$app->getVersion(), '5.8.0', '>=')) {
             $entryType->description = $description;
         }
 

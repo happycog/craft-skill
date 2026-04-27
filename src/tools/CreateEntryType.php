@@ -71,7 +71,9 @@ class CreateEntryType
         $entryType = new EntryType();
         $entryType->name = $name;
         $entryType->handle = $handle;
-        $entryType->description = $description;
+        if (version_compare(Craft::$app->getVersion(), '5.8.0', '>=')) {
+            $entryType->description = $description;
+        }
         $entryType->hasTitleField = $hasTitleField;
         $entryType->titleTranslationMethod = $titleTranslationMethodConstant;
         $entryType->titleTranslationKeyFormat = $titleTranslationKeyFormat;
@@ -113,7 +115,7 @@ class CreateEntryType
             'uid' => $savedEntryType->uid,
             'name' => $savedEntryType->name,
             'handle' => $savedEntryType->handle,
-            'description' => $savedEntryType->description,
+            'description' => version_compare(Craft::$app->getVersion(), '5.8.0', '>=') ? $savedEntryType->description : null,
             'hasTitleField' => $savedEntryType->hasTitleField,
             'titleTranslationMethod' => $savedEntryType->titleTranslationMethod,
             'titleTranslationKeyFormat' => $savedEntryType->titleTranslationKeyFormat,

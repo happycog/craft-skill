@@ -127,7 +127,7 @@ plugins:
   commerce:
     edition: pro
     enabled: true
-    schemaVersion: 5.6.0.0
+    schemaVersion: 5.6.1.1
   skills:
     edition: standard
     enabled: true
