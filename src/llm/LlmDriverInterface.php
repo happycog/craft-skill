@@ -23,6 +23,10 @@ interface LlmDriverInterface
      * Callback event shapes:
      *   ['type' => 'text',       'content' => string]          — partial text
      *   ['type' => 'tool_start', 'id' => string, 'name' => string, 'input' => array]
+     *   ['type' => 'heartbeat']                                  — emitted during
+     *     long upstream silences so the controller can keep the SSE connection
+     *     alive. Drivers SHOULD emit these every few seconds while blocked on
+     *     a slow provider; the controller surfaces them as SSE comments.
      *
      * @param  array<int, array<string, mixed>>  $messages     Conversation in internal format
      * @param  array<int, array<string, mixed>>  $tools        Tool definitions (from ToolSchemaBuilder)

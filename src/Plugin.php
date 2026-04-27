@@ -63,7 +63,10 @@ class Plugin extends BasePlugin
             return;
         }
         $matchedElement = $urlManager->getMatchedElement();
-        $pageContext = $llm->pageContext($matchedElement instanceof ElementInterface ? $matchedElement : null);
+        $pageContext = $llm->pageContext(
+            $matchedElement instanceof ElementInterface ? $matchedElement : null,
+            $event->template,
+        );
         $pageContextJson = json_encode($pageContext, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $chatHost = Html::tag('craft-skill-chat', '', [

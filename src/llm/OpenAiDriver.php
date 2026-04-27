@@ -154,6 +154,14 @@ final class OpenAiDriver implements LlmDriverInterface
      */
     private function streamRequest(array $body, callable $onEvent): array
     {
+        // See AnthropicDriver for why this exists — keeps the SSE socket alive
+        // while OpenAI-compatible servers (esp. slow local inference backends
+        // like Ollama) are "warming up" and not yet emitting tokens.
+        $heartbeat = new HttpHeartbeat();
+        $progress = static function (int $dlTotal, int $dlNow, int $ulTotal, int $ulNow) use ($heartbeat, $onEvent): void {
+            $heartbeat->tick($onEvent);
+        };
+
         try {
             $response = $this->client->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
                 'headers' => [
@@ -161,9 +169,10 @@ final class OpenAiDriver implements LlmDriverInterface
                     'Content-Type'  => 'application/json',
                     'Accept'        => 'text/event-stream',
                 ],
-                'json'    => $body,
-                'stream'  => true,
-                'timeout' => 300,
+                'json'     => $body,
+                'stream'   => true,
+                'timeout'  => 300,
+                'progress' => $progress,
             ]);
         } catch (ClientException $e) {
             $errorBody = $e->getResponse()->getBody()->getContents();

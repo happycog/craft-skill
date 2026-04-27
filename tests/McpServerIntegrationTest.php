@@ -72,6 +72,39 @@ test('initialize handshake returns server capabilities and a session id', functi
     expect($sessionId)->not->toBeEmpty();
 });
 
+test('MCP sessions survive beyond the SDK default 1-hour TTL', function () {
+    // OpenCode keeps a single MCP client connection open for the life of its
+    // `opencode serve` process and only hits us when the user sends a chat
+    // message. With the SDK's stock 3600s TTL, any idle window over an hour
+    // made the next tool call fail with "Session not found or has expired."
+    // McpServerFactory bumps the TTL to 30 days to match real-world usage.
+    $factory = Craft::$container->get(McpServerFactory::class);
+    $server  = $factory->create();
+    $sessionId = mcpInitialize($server);
+
+    $sessionFile = Craft::$app->getPath()->getRuntimePath()
+        . DIRECTORY_SEPARATOR . 'craft-skills-mcp'
+        . DIRECTORY_SEPARATOR . $sessionId;
+    expect(is_file($sessionFile))->toBeTrue();
+
+    // Backdate to 2 hours — past the SDK default, well inside our 30-day TTL.
+    touch($sessionFile, time() - 7200);
+
+    $response = mcpSend($server, [
+        'jsonrpc' => '2.0',
+        'id'      => 99,
+        'method'  => 'tools/list',
+        'params'  => (object) [],
+    ], $sessionId);
+
+    expect($response->getStatusCode())->toBe(200);
+
+    /** @var array{result?: array{tools: array<int, array{name: string}>}, error?: array{message: string}} $payload */
+    $payload = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+    expect($payload)->toHaveKey('result');
+    expect($payload)->not->toHaveKey('error');
+});
+
 test('session persists across separate server instances', function () {
     $factory = Craft::$container->get(McpServerFactory::class);
 

@@ -158,6 +158,16 @@ final class AnthropicDriver implements LlmDriverInterface
      */
     private function streamRequest(array $body, callable $onEvent): array
     {
+        // `progress` (mapped to CURLOPT_XFERINFOFUNCTION under cURL) fires
+        // repeatedly during the entire transfer — including the idle window
+        // between sending the request and receiving the first response byte,
+        // which on large prompts can easily run past an intermediary's idle
+        // timeout. The heartbeat keeps the SSE connection warm.
+        $heartbeat = new HttpHeartbeat();
+        $progress = static function (int $dlTotal, int $dlNow, int $ulTotal, int $ulNow) use ($heartbeat, $onEvent): void {
+            $heartbeat->tick($onEvent);
+        };
+
         try {
             $response = $this->client->post(self::API_URL, [
                 'headers' => [
@@ -166,9 +176,10 @@ final class AnthropicDriver implements LlmDriverInterface
                     'content-type'       => 'application/json',
                     'accept'             => 'text/event-stream',
                 ],
-                'json'    => $body,
-                'stream'  => true,
-                'timeout' => 300,
+                'json'     => $body,
+                'stream'   => true,
+                'timeout'  => 300,
+                'progress' => $progress,
             ]);
         } catch (ClientException $e) {
             $errorBody = $e->getResponse()->getBody()->getContents();

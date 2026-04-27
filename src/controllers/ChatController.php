@@ -41,13 +41,21 @@ class ChatController extends CraftController
      *   message   — the new user text
      *   pageContext — structured request/element context for the prompt
      */
-    public function actionStream(): Response|null
+    public function actionStream(): Response
     {
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if ($currentUser === null || !$currentUser->can('accessCp')) {
             throw new ForbiddenHttpException('You must be logged in with control panel access to use the chat.');
         }
+
+        // PHP's default session handler holds an exclusive lock on the session
+        // file for the whole request. The agentic loop can run for minutes, so
+        // keeping the lock would block every other request from the same
+        // browser (page loads, XHRs, even other chat streams) until we finish.
+        // We've already read the user's identity — close the session now so
+        // the lock is released before the long-running work begins.
+        Craft::$app->getSession()->close();
 
         // Give the agentic loop generous room to finish.
         set_time_limit(300);
@@ -76,6 +84,15 @@ class ChatController extends CraftController
 
         // ── Prepare SSE transport ────────────────────────────────────
         $this->beginSse();
+        $response = Craft::$app->getResponse();
+        // We're writing headers + body ourselves via native header()/echo.
+        // Mark the Response as already sent so Application::run() skips its
+        // own $response->send() — that would blow up sendHeaders() and append
+        // an HTML error page to the SSE body the client just finished reading.
+        $response->isSent = true;
+        // Push bytes out immediately so intermediaries (nginx, CF, browser) commit
+        // to the stream before the first slow upstream call.
+        $this->sendSseComment('stream-open');
 
         // ── Build conversation ───────────────────────────────────────
         $messages   = $history;
@@ -104,6 +121,15 @@ class ChatController extends CraftController
                     $systemPrompt,
                     function (array $event): void {
                         $eventType = is_string($event['type'] ?? null) ? $event['type'] : 'unknown';
+
+                        // Heartbeats from drivers are surfaced as SSE comments, not
+                        // data events — they only exist to keep the socket alive
+                        // while the upstream LLM is silent.
+                        if ($eventType === 'heartbeat') {
+                            $this->sendSseComment('driver-wait');
+                            return;
+                        }
+
                         $this->sendSseEvent($eventType, $event);
                     },
                 );
@@ -121,6 +147,9 @@ class ChatController extends CraftController
 
             if ($hasToolCalls) {
                 foreach ($toolCalls as $toolCall) {
+                    // Keep the socket warm while the (potentially slow) tool runs.
+                    $this->sendSseComment('tool-' . $toolCall['name']);
+
                     $result = $this->executeTool(
                         $schemaBuilder,
                         $toolCall['name'],
@@ -157,7 +186,11 @@ class ChatController extends CraftController
 
         $this->sendSseEvent('done', ['messages' => $newMessages]);
 
-        return null;
+        // Must return the Response (not null). Craft's _processActionRequest
+        // treats a null return as "no action matched" and falls through to
+        // regular URL routing, which 404s on /actions/* URLs — that 404 is
+        // what triggers the error page appended to the SSE body.
+        return $response;
     }
 
     // ------------------------------------------------------------------
@@ -237,6 +270,26 @@ class ChatController extends CraftController
 
         echo "event: {$event}\n";
         echo 'data: ' . json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+        flush();
+    }
+
+    /**
+     * Emit an SSE comment frame to keep the connection alive during
+     * otherwise-silent server-side work (LLM round-trip, slow tool call).
+     *
+     * Browsers and SSE parsers ignore `:`-prefixed frames entirely, but the
+     * bytes flowing through reset idle timers on reverse proxies and
+     * client-side fetch readers.
+     */
+    private function sendSseComment(string $note = ''): void
+    {
+        if (connection_aborted()) {
+            return;
+        }
+
+        // Strip anything that could break the SSE framing (newlines, CR).
+        $safe = preg_replace('/[\r\n]+/', ' ', $note) ?? '';
+        echo ': ' . $safe . "\n\n";
         flush();
     }
 }

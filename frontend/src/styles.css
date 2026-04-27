@@ -48,7 +48,10 @@
 
 .skills-chat-launcher:focus-visible,
 .skills-chat-composer textarea:focus-visible,
-.skills-chat-composerFooter button:focus-visible {
+.skills-chat-composerFooter button:focus-visible,
+.skills-chat-targetButton:focus-visible,
+.skills-target-composer textarea:focus-visible,
+.skills-target-composerFooter button:focus-visible {
   outline: 2px solid #93c5fd;
   outline-offset: 2px;
 }
@@ -420,6 +423,10 @@
   line-height: 1.5;
 }
 
+.skills-chat-composerField {
+  position: relative;
+}
+
 .skills-chat-composer textarea {
   width: 100%;
   min-height: 92px;
@@ -433,14 +440,54 @@
   line-height: 1.5;
 }
 
+.skills-chat-composerField textarea {
+  padding-right: 52px;
+}
+
 .skills-chat-composer textarea::placeholder {
   color: #94a3b8;
+}
+
+.skills-chat-targetButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.skills-chat-targetButton:hover:not(:disabled) {
+  border-color: rgba(125, 211, 252, 0.6);
+  background: rgba(30, 64, 175, 0.28);
+  color: #7dd3fc;
+}
+
+.skills-chat-targetButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.skills-chat-targetButton svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .skills-chat-composerFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
+   flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -449,7 +496,8 @@
   font-size: 12px;
 }
 
-.skills-chat-composerFooter button {
+.skills-chat-composerFooter button,
+.skills-target-composerFooter button:not(.skills-chat-secondaryButton) {
   appearance: none;
   border: 0;
   border-radius: 999px;
@@ -461,9 +509,100 @@
   cursor: pointer;
 }
 
-.skills-chat-composerFooter button:disabled {
+.skills-chat-secondaryButton {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: rgba(30, 41, 59, 0.9);
+  color: #e2e8f0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.skills-chat-composerFooter button:disabled,
+.skills-target-composerFooter button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.skills-target-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482999;
+  pointer-events: none;
+}
+
+.skills-target-highlight {
+  position: fixed;
+  border: 2px solid #38bdf8;
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.12);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35), 0 20px 50px rgba(15, 23, 42, 0.25);
+}
+
+.skills-target-composer {
+  position: fixed;
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.92) 100%);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(24px);
+  color: #e2e8f0;
+  pointer-events: auto;
+}
+
+.skills-target-composerLabel {
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.skills-target-composerMeta {
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.skills-target-composerText {
+  max-height: 88px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-y: auto;
+}
+
+.skills-target-composer textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.skills-target-composer textarea::placeholder {
+  color: #94a3b8;
+}
+
+.skills-target-composerFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .skills-cursor {
@@ -535,6 +674,14 @@
   }
 
   .skills-chat-composerFooter {
+    display: grid;
+  }
+
+  .skills-target-composer {
+    width: min(360px, calc(100vw - 24px)) !important;
+  }
+
+  .skills-target-composerFooter {
     display: grid;
   }
 }

@@ -87,6 +87,7 @@ test('chat widget injection includes serialized page context', function () {
     expect($event->output)->toContain('<craft-skill-chat')
         ->toContain('data-page-context=')
         ->toContain('&quot;surface&quot;:&quot;site&quot;')
+        ->toContain('&quot;template&quot;:&quot;news/_entry&quot;')
         ->toContain('&quot;elementId&quot;:' . $entry->id)
         ->toContain('&quot;elementTitle&quot;:&quot;Injected Entry&quot;')
         ->toContain('&quot;elementSlug&quot;:&quot;injected-entry&quot;')
@@ -129,5 +130,6 @@ test('chat widget injection includes draftId when route params indicate a draft'
     $method->invoke($plugin, $event);
 
     expect($event->output)->toContain('&quot;draftId&quot;:456')
+        ->toContain('&quot;template&quot;:&quot;news/_entry&quot;')
         ->toContain('&quot;routeParams&quot;:{&quot;siteId&quot;:' . $entry->siteId . ',&quot;draftId&quot;:456}');
 });

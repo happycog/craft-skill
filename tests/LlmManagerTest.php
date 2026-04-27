@@ -10,6 +10,7 @@ test('buildSystemPrompt includes structured page context', function () {
         'surface' => 'site',
         'currentUrl' => 'https://example.test/news/hello-world',
         'controlPanelUrl' => 'https://example.test/admin',
+        'template' => 'news/_entry',
         'requestPath' => 'news/hello-world',
         'requestedRoute' => 'templates/render',
         'routeParams' => [
@@ -31,6 +32,7 @@ test('buildSystemPrompt includes structured page context', function () {
         ->toContain('- Current surface: site')
         ->toContain('- URL: https://example.test/news/hello-world')
         ->toContain('- Control panel URL: https://example.test/admin')
+        ->toContain('- Template: news/_entry')
         ->toContain('- Request path: news/hello-world')
         ->toContain('- Requested route: templates/render')
         ->toContain('- Route params: {"foo":"bar","nested":{"count":2}}')
@@ -51,10 +53,11 @@ test('pageContext includes matched element metadata', function () {
         ->create();
 
     $llm = Craft::$container->get(LlmManager::class);
-    $context = $llm->pageContext($entry);
+    $context = $llm->pageContext($entry, 'news/_entry');
 
     expect($context)->toMatchArray([
         'surface' => 'site',
+        'template' => 'news/_entry',
         'elementId' => $entry->id,
         'elementType' => $entry::class,
         'elementTitle' => 'Context Entry',
@@ -62,6 +65,37 @@ test('pageContext includes matched element metadata', function () {
         'elementUri' => 'news/context-entry',
         'siteId' => $entry->siteId,
     ]);
+});
+
+test('resolveOpenCodeDirectory prefers explicit override from config', function () {
+    $llm    = Craft::$container->get(LlmManager::class);
+    $method = new ReflectionMethod($llm, 'resolveOpenCodeDirectory');
+
+    $result = $method->invoke($llm, ['directory' => '/custom/path']);
+
+    expect($result)->toBe('/custom/path');
+});
+
+test('resolveOpenCodeDirectory falls back through @config, @templates, @root', function () {
+    $llm    = Craft::$container->get(LlmManager::class);
+    $method = new ReflectionMethod($llm, 'resolveOpenCodeDirectory');
+
+    $result = $method->invoke($llm, []);
+
+    $config    = Craft::getAlias('@config');
+    $templates = Craft::getAlias('@templates');
+    $root      = Craft::getAlias('@root');
+
+    // In this project both @config and @templates exist, so @config wins.
+    // The general contract: result is whichever of those exist, or @root.
+    $expected = match (true) {
+        is_string($config) && is_dir($config)       => $config,
+        is_string($templates) && is_dir($templates) => $templates,
+        default                                      => $root,
+    };
+
+    expect($result)->toBe($expected);
+    expect(is_dir($result))->toBeTrue();
 });
 
 test('pageContext includes draftId from route params', function () {
@@ -77,9 +111,10 @@ test('pageContext includes draftId from route params', function () {
     ], merge: false);
 
     $llm = Craft::$container->get(LlmManager::class);
-    $context = $llm->pageContext($entry);
+    $context = $llm->pageContext($entry, 'news/_entry');
 
     expect($context)->toMatchArray([
+        'template' => 'news/_entry',
         'draftId' => 789,
         'routeParams' => [
             'siteId' => $entry->siteId,

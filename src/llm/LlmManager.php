@@ -12,10 +12,10 @@ use craft\helpers\UrlHelper;
  * Factory that resolves the active LLM driver from `config/ai.php`.
  *
  * The config file should return an array with keys:
- *   - provider   — 'anthropic' (default) or 'openai'
- *   - apiKey     — your LLM provider API key
+ *   - provider   — 'anthropic' (default), 'openai', or 'opencode'
+ *   - apiKey     — your LLM provider API key (or OpenCode server basic-auth password)
  *   - model      — model identifier (optional, defaults per-provider)
- *   - baseUrl    — OpenAI-compatible base URL (optional, only for openai provider)
+ *   - baseUrl    — API base URL (optional — used by openai & opencode providers)
  *   - systemPrompt — custom system prompt (optional)
  *
  * Copy `vendor/happycog/craft-skill/stubs/config/ai.php` into your
@@ -23,7 +23,7 @@ use craft\helpers\UrlHelper;
  *
  * Usage:
  *   $manager = Craft::$container->get(LlmManager::class);
- *   $driver  = $manager->driver();  // AnthropicDriver | OpenAiDriver
+ *   $driver  = $manager->driver();  // AnthropicDriver | OpenAiDriver | OpenCodeDriver
  */
 final class LlmManager
 {
@@ -55,6 +55,11 @@ final class LlmManager
                 apiKey:  $apiKey,
                 model:   $model ?: 'gpt-4o',
                 baseUrl: $baseUrl ?: 'https://api.openai.com/v1',
+            ),
+            'opencode' => new OpenCodeDriver(
+                baseUrl:   $baseUrl ?: 'http://127.0.0.1:4096',
+                password:  $apiKey,
+                directory: $this->resolveOpenCodeDirectory($config),
             ),
             default => new AnthropicDriver(
                 apiKey: $apiKey,
@@ -94,15 +99,9 @@ ToolSearch is available to help you discover relevant tools and inspect paramete
 The initial tool definitions may be intentionally minimal to keep context small. When a tool's parameters are unclear, use `ToolSearch` to inspect likely tools before calling them.
 
 Guidelines:
-- When a user asks to change the content of an existing entry **always** create or update a draft.
-- If you know a draftId use draft tools.
-- Use live entry updates for content **only** if the user clearly asks to publish immediately or avoid drafts.
 - Always call `OpenUrl` after a content change so the user can see their changes in the browser. You can call this with any URL (an entry URL, a preview URL, etc...)
 - After making changes, provide the Craft control panel link so the user can review.
 - When a tool call returns an error, read the full tool response carefully before retrying because it often includes helpful formatting, debugging tips, or corrected parameter examples.
-
-**Never** edit live entry content directly unless you are specifically instructed to do so by the user.
-**Never** apply draft changes unless you are specifically instructed to do so by the user.
 PROMPT;
 
         $pageContext = $this->normalizePageContext($pageContext);
@@ -125,6 +124,7 @@ PROMPT;
      */
     public function aiWidgetSystemPrompt(
         ?string $currentUrl = null,
+        ?string $template = null,
         ?string $requestPath = null,
         ?string $requestedRoute = null,
         ?array $routeParams = null,
@@ -141,6 +141,7 @@ PROMPT;
             'role' => 'assistant',
             'content' => $this->buildSystemPrompt([
                 'currentUrl' => $currentUrl,
+                'template' => $template,
                 'requestPath' => $requestPath,
                 'requestedRoute' => $requestedRoute,
                 'routeParams' => $routeParams,
@@ -171,6 +172,7 @@ PROMPT;
             'surface' => 'Current surface',
             'currentUrl' => 'URL',
             'controlPanelUrl' => 'Control panel URL',
+            'template' => 'Template',
             'requestPath' => 'Request path',
             'requestedRoute' => 'Requested route',
             'elementId' => 'Element ID',
@@ -214,7 +216,7 @@ PROMPT;
     /**
      * @return array<string, mixed>
      */
-    public function pageContext(?ElementInterface $element = null): array
+    public function pageContext(?ElementInterface $element = null, ?string $template = null): array
     {
         $request = Craft::$app->getRequest();
         $urlManager = Craft::$app->getUrlManager();
@@ -226,6 +228,10 @@ PROMPT;
             'requestedRoute' => Craft::$app->requestedRoute,
             'routeParams' => $this->normalizeRouteParams($urlManager->getRouteParams() ?? []),
         ];
+
+        if (is_string($template) && trim($template) !== '') {
+            $context['template'] = $template;
+        }
 
         $controlPanelUrl = UrlHelper::cpUrl('');
 
@@ -299,11 +305,58 @@ PROMPT;
     }
 
     /**
-     * Check whether the driver is properly configured (API key present).
+     * Resolve the working directory to hand OpenCode.
+     *
+     * Must be a subdirectory of the project root (not the root itself):
+     * OpenCode's config walker (`afs.up({ start, stop: worktree })`) returns
+     * an empty range when `start === worktree`, so passing @root directly
+     * skips project-local opencode.json entirely. Handing it a real subpath
+     * of @root makes the walk climb through and pick up any opencode.json
+     * sitting at the root. Tries @config first, then @templates, then falls
+     * back to @root (which loses project-local config but at least gives
+     * OpenCode a valid cwd).
+     *
+     * Users can override with a `directory` key in config/ai.php.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function resolveOpenCodeDirectory(array $config): string
+    {
+        $override = $config['directory'] ?? null;
+
+        if (is_string($override) && trim($override) !== '') {
+            return $override;
+        }
+
+        foreach (['@config', '@templates'] as $alias) {
+            $path = Craft::getAlias($alias);
+
+            if (is_string($path) && $path !== '' && is_dir($path)) {
+                return $path;
+            }
+        }
+
+        $root = Craft::getAlias('@root');
+
+        return is_string($root) ? $root : '';
+    }
+
+    /**
+     * Check whether the driver is properly configured.
+     *
+     * Hosted providers require an API key; the OpenCode provider connects to
+     * a local server and doesn't, so it's always considered configured.
      */
     public function isConfigured(): bool
     {
-        $apiKey = $this->config()['apiKey'] ?? '';
+        $config   = $this->config();
+        $provider = is_string($config['provider'] ?? null) ? $config['provider'] : 'anthropic';
+
+        if ($provider === 'opencode') {
+            return true;
+        }
+
+        $apiKey = $config['apiKey'] ?? '';
 
         return is_string($apiKey) && trim($apiKey) !== '';
     }
